@@ -1,0 +1,81 @@
+/* EVOSHUB — Components */
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--font-body); font-weight:500; font-size:15px; padding:13px 26px; border-radius:10px; cursor:pointer; border:none; transition:opacity .2s, transform .15s; white-space:nowrap; }
+.btn:hover { transform:translateY(-1px); }
+.btn:active { transform:translateY(0); }
+.btn--primary   { background:var(--blue); color:#fff; }
+.btn--primary:hover { opacity:.88; }
+.btn--secondary { background:var(--green-dim); color:var(--green); border:1px solid rgba(0,196,122,.25); }
+.btn--secondary:hover { background:rgba(0,196,122,.16); }
+.btn--ghost     { background:transparent; color:var(--text2); border:1px solid var(--border2); }
+.btn--ghost:hover { border-color:var(--text3); color:var(--text); }
+
+/* Cards */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px; box-shadow:var(--shadow-sm); transition:border-color .25s, box-shadow .25s, transform .2s; }
+.card:hover { border-color:var(--border2); box-shadow:var(--shadow-md); transform:translateY(-3px); }
+
+/* Typography helpers */
+.section-label { display:inline-block; font-size:11px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--blue); margin-bottom:14px; }
+.section-title  { font-family:var(--font-display); font-weight:700; font-size:clamp(26px,5vw,42px); letter-spacing:-1px; color:var(--text); line-height:1.15; margin-bottom:16px; word-break:break-word; }
+.section-desc   { font-size:clamp(14.5px,2.2vw,16px); color:var(--text2); line-height:1.75; max-width:560px; }
+
+/* Badges */
+.badge        { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:100px; font-size:11px; font-weight:600; letter-spacing:.5px; }
+.badge--live  { background:rgba(0,196,122,.12); color:var(--green); border:1px solid rgba(0,196,122,.25); }
+.badge--soon  { background:rgba(15,23,42,.04); color:var(--text3); border:1px solid var(--border); }
+
+/* Nav logo */
+.nav-logo        { display:flex; align-items:center; gap:10px; min-width:0; flex-shrink:0; }
+.nav-logo__icon  { width:34px; height:34px; background:var(--blue); border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:15px; color:#fff; flex-shrink:0; }
+.nav-logo__text  { font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--text); white-space:nowrap; }
+
+/* Nav links */
+.nav-links { display:flex; align-items:center; gap:clamp(16px,2.4vw,32px); list-style:none; }
+.nav-links a { font-size:14px; color:var(--text2); transition:color .2s; }
+.nav-links a:hover, .nav-links a.active { color:var(--text); }
+
+/* Hamburger */
+.hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:8px; margin:-8px; flex-shrink:0; }
+.hamburger span { display:block; width:22px; height:2px; background:var(--text); border-radius:2px; transition:transform .2s, opacity .2s; }
+.hamburger.is-open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+.hamburger.is-open span:nth-child(2) { opacity:0; }
+.hamburger.is-open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 860px) {
+  .nav-links  { display:none; }
+  .hamburger  { display:flex; }
+  .nav-links--open {
+    display:flex; flex-direction:column; align-items:stretch;
+    position:absolute; top:100%; left:0; right:0;
+    background:var(--bg); padding:12px 5% 20px;
+    border-bottom:1px solid var(--border); box-shadow:var(--shadow-md);
+    gap:4px; max-height:calc(100vh - 60px); overflow-y:auto;
+  }
+  .nav-links--open li { width:100%; }
+  .nav-links--open a:not(.btn) { display:block; padding:12px 4px; font-size:15px; border-bottom:1px solid var(--border); }
+  .nav-links--open .btn { width:100%; margin-top:8px; }
+}
+
+@media (max-width: 480px) {
+  .btn { padding:12px 18px; font-size:14px; }
+}
+
+/* Reusable auto-fit card grid — naturally collapses to one column on
+   narrow phones without a media query, and never overflows. */
+.auto-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+
+/* Site footer, shared markup across every public-facing page. */
+.site-footer { background:var(--bg2); border-top:1px solid var(--border); padding:52px var(--gutter) 32px; margin-top:var(--space-section); }
+.site-footer__bottom { border-top:1px solid var(--border); padding-top:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.site-footer__links { list-style:none; display:flex; flex-direction:column; gap:10px; }
+.site-footer__links a { font-size:13.5px; color:var(--text3); transition:color .2s; }
+.site-footer__links a:hover { color:var(--text); }
+.evoxera-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 8px 14px; margin-top: 16px;
+  font-size: 12.5px; color: var(--text2);
+}
+.evoxera-badge img { width: 20px; height: 20px; object-fit: contain; border-radius: 4px; }
+.evoxera-badge__fallback { width: 20px; height: 20px; background: var(--blue); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: #fff; }
