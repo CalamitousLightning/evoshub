@@ -1,0 +1,28 @@
+/* EVOSHUB — Brand Theme (tech grid + gradient text + scanline) */
+.hero-grid-bg {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%);
+}
+.gradient-text {
+  background: linear-gradient(135deg, var(--blue-light) 0%, var(--blue) 45%, var(--green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Faint animated scanline overlay for that console feel — subtle, opacity driven by theme */
+.scanline-overlay {
+  position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(148,196,255,0.02) 0px,
+    rgba(148,196,255,0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: var(--scan-op);
+  mix-blend-mode: overlay;
+}
