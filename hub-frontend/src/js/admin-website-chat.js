@@ -1,11 +1,15 @@
 // EVOSHUB — Admin/agent inbox for the Website Creation product.
 //
-// Every read/write here still goes through the same RLS policies as the
-// visitor side — this file has no special privilege of its own. It works
-// only because the signed-in user's row exists in admin_agents, which
-// is_website_admin() checks server-side. There is nothing a browser devtools
-// session could do here that the database wouldn't independently re-check.
-import { supabase, isCurrentUserAdmin } from './supabase-client.js'
+// Auth note: agents sign in through the custom FastAPI backend
+// (POST /api/admin/login against public.users + admin_agents), NOT
+// through Supabase Auth — there is no corresponding auth.users row for
+// agents, so supabase.auth.getSession() will always be null here. The
+// session of record is the bearer token in sessionStorage, re-verified
+// live against admin_agents.is_active on every /api/admin/me call.
+import { supabase } from './supabase-client.js'
+
+const API_BASE = "https://evoxera.onrender.com"
+const TOKEN_STORAGE_KEY = "evoshub_admin_token"
 
 const whoamiEl    = document.getElementById('admin-whoami')
 const signoutBtn  = document.getElementById('admin-signout')
@@ -20,24 +24,43 @@ let requests = []
 let activeRequestId = null
 let chatChannel = null
 let requestsChannel = null
+let currentUser = null // { id, username, email, ... } from /api/admin/me
 
 // --- Gate the whole page behind a real server-side admin check -------------------
 async function guard() {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return redirectToLogin()
+  const token = sessionStorage.getItem(TOKEN_STORAGE_KEY)
+  if (!token) {
+    redirectToLogin()
+    return null
+  }
 
-  const admin = await isCurrentUserAdmin()
-  if (!admin) return redirectToLogin()
-
-  whoamiEl.textContent = session.user.email || 'Agent'
-  return session
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) {
+      sessionStorage.removeItem(TOKEN_STORAGE_KEY)
+      redirectToLogin()
+      return null
+    }
+    const data = await res.json()
+    currentUser = data.user
+    whoamiEl.textContent = currentUser?.display_name || currentUser?.username || currentUser?.email || 'Agent'
+    return currentUser
+  } catch {
+    // Network error on the guard check shouldn't force a logout — leave
+    // the token in place and let the user retry rather than bouncing
+    // them out on a transient connectivity blip.
+    console.error('[admin-inbox] guard check failed (network error)')
+    return null
+  }
 }
 function redirectToLogin() {
   window.location.href = '/admin-login.html'
 }
 
-signoutBtn.addEventListener('click', async () => {
-  await supabase.auth.signOut()
+signoutBtn.addEventListener('click', () => {
+  sessionStorage.removeItem(TOKEN_STORAGE_KEY)
   redirectToLogin()
 })
 
@@ -150,12 +173,12 @@ statusSel.addEventListener('change', async () => {
 async function sendReply() {
   const body = inputEl.value.trim()
   if (!body || !activeRequestId) return
-  const { data: { session } } = await supabase.auth.getSession()
+  if (!currentUser) return
 
   sendBtn.disabled = true
   const { error } = await supabase.from('website_chat_messages').insert({
     request_id: activeRequestId,
-    sender_id: session.user.id,
+    sender_id: currentUser.id, // bigint public.users.id, not a Supabase auth UUID
     sender_role: 'admin',
     body,
   })
@@ -174,8 +197,8 @@ inputEl.addEventListener('keydown', (e) => {
 
 // --- Boot -----------------------------------------------------------------------
 ;(async function init() {
-  const session = await guard()
-  if (!session) return
+  const user = await guard()
+  if (!user) return
   await loadRequests()
   subscribeToRequestChanges()
 })()
