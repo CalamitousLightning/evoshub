@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>(function(){try{var t=localStorage.getItem('evos-theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
   <meta charset="UTF-8">
+  <script>(function(){try{var t=localStorage.getItem('evos-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="EVOXERA TECHNOLOGY is a technology company providing digital solutions and online services — operating EVOS Business Hub, the ecosystem behind EVOS Data Services, EVOS GPT, and more.">
   <meta property="og:title" content="EVOS Business Hub — EVOXERA Technology">
@@ -117,8 +117,7 @@
       display: flex;
       align-items: center;
       gap: 7px;
-      font-size: 12.5px;
-      font-family: var(--font-mono);
+      font-size: 13px;
       color: var(--text3);
     }
     .trust-dot {
@@ -285,7 +284,6 @@
   <ul class="nav-links">
     <li><a href="#">Home</a></li>
     <li><a href="#services">Services</a></li>
-    <li><a href="/business-tools.html">Business</a></li>
     <li><a href="/website-creation.html">Website Creation</a></li>
     <li><a href="#about">About</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -295,13 +293,11 @@
       </a>
     </li>
   </ul>
-  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-    <button class="theme-toggle" aria-label="Toggle theme" type="button">
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-    </button>
-    <div class="hamburger"><span></span><span></span><span></span></div>
-  </div>
+  <button class="theme-toggle" data-theme-toggle role="switch" aria-checked="true" aria-label="Toggle dark / light theme">
+    <span class="theme-toggle__icon theme-toggle__icon--moon">🌙</span>
+    <span class="theme-toggle__icon theme-toggle__icon--sun">☀️</span>
+  </button>
+  <div class="hamburger"><span></span><span></span><span></span></div>
 </nav>
 
 <!-- ══ HERO ══ -->
@@ -309,7 +305,9 @@
   <div class="hero-grid-bg" style="position:absolute;inset:0;"></div>
   <div class="hero-glow"></div>
 
-  <span class="prompt-chip" style="margin-bottom:22px;position:relative;">whoami --ecosystem<span class="blink-cursor"></span></span>
+  <div class="badge badge--live" style="margin-bottom:24px;position:relative;">
+    <span class="badge-pulse"></span>&nbsp;Ghana's Digital Ecosystem Platform
+  </div>
 
   <h1>EVOS<br><span class="gradient-text">Business Hub</span></h1>
 
@@ -468,12 +466,12 @@
 
   <!-- COMING SOON GRID -->
   <div class="grid-4" style="gap:16px;">
-    <a href="/business-tools.html" class="card fade-up" style="text-decoration:none;">
-      <span class="badge badge--live" style="margin-bottom:14px;"><span class="badge-pulse"></span>&nbsp;1 Tool Active</span>
+    <div class="card fade-up">
+      <span class="badge badge--soon" style="margin-bottom:14px;">Coming Soon</span>
       <div style="font-size:28px;margin-bottom:10px;">💼</div>
       <h3 style="font-family:var(--font-display);font-size:16px;font-weight:600;margin-bottom:6px;">Business Tools</h3>
-      <p style="font-size:13px;color:var(--text2);line-height:1.6;">Website Creation is live. Freelancing tools, invoicing & more unlocking soon.</p>
-    </a>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;">Invoicing, inventory & management for SMEs and startups.</p>
+    </div>
     <div class="card fade-up">
       <span class="badge badge--soon" style="margin-bottom:14px;">Coming Soon</span>
       <div style="font-size:28px;margin-bottom:10px;">🪙</div>
@@ -668,7 +666,7 @@
         <ul class="site-footer__links">
           <li><a href="https://evosdata.xyz" style="color:var(--green);" target="_blank" rel="noopener">📶 EVOS Data ↗</a></li>
           <li><a href="https://evosgpt.xyz" style="color:var(--green);" target="_blank" rel="noopener">🤖 EVOS GPT ↗</a></li>
-          <li><a href="/business-tools.html" style="color:var(--blue);">💼 Business Tools ↗</a></li>
+          <li><span style="opacity:.5;">💼 Biz Tools (Soon)</span></li>
           <li><span style="opacity:.5;">🪙 EVS Utility (Soon)</span></li>
         </ul>
       </div>

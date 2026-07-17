@@ -1,22 +1,11 @@
 // EVOSHUB — Admin/agent inbox for the Website Creation product.
 //
-// This talks only to the FastAPI backend, never to Supabase directly.
-// Why: website_requests / website_chat_messages RLS requires a real
-// Supabase Auth session (auth.uid()), and admin agents don't have one —
-// they authenticate via the custom public.users + admin_agents flow. The
-// backend re-verifies that same admin bearer token (already sitting in
-// sessionStorage from admin-login.js — no separate sign-in step needed)
-// and does the actual Supabase reads/writes server-side with the
-// service_role key, which is allowed to bypass RLS.
-//
-// "Live" chat here means polling every few seconds, not a Supabase
-// Realtime subscription — Realtime's client-side channel also assumes a
-// Supabase Auth session, which doesn't apply to admins for the same
-// reason above.
-
-const API_BASE = "https://evoxera.onrender.com"
-const TOKEN_STORAGE_KEY = "evoshub_admin_token"
-const POLL_INTERVAL_MS = 4000
+// Every read/write here still goes through the same RLS policies as the
+// visitor side — this file has no special privilege of its own. It works
+// only because the signed-in user's row exists in admin_agents, which
+// is_website_admin() checks server-side. There is nothing a browser devtools
+// session could do here that the database wouldn't independently re-check.
+import { supabase, isCurrentUserAdmin } from './supabase-client.js'
 
 const whoamiEl    = document.getElementById('admin-whoami')
 const signoutBtn  = document.getElementById('admin-signout')
@@ -29,50 +18,26 @@ const sendBtn     = document.getElementById('admin-chat-send')
 
 let requests = []
 let activeRequestId = null
-let knownMessageIds = new Set()
-let requestsPollTimer = null
-let messagesPollTimer = null
+let chatChannel = null
+let requestsChannel = null
 
-function authHeaders() {
-  const token = sessionStorage.getItem(TOKEN_STORAGE_KEY)
-  return token ? { Authorization: `Bearer ${token}` } : {}
+// --- Gate the whole page behind a real server-side admin check -------------------
+async function guard() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return redirectToLogin()
+
+  const admin = await isCurrentUserAdmin()
+  if (!admin) return redirectToLogin()
+
+  whoamiEl.textContent = session.user.email || 'Agent'
+  return session
 }
-
 function redirectToLogin() {
   window.location.href = '/admin-login.html'
 }
 
-// --- Gate the whole page behind a real server-side admin check -------------------
-async function guard() {
-  const token = sessionStorage.getItem(TOKEN_STORAGE_KEY)
-  if (!token) {
-    redirectToLogin()
-    return null
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/me`, { headers: authHeaders() })
-    if (!res.ok) {
-      sessionStorage.removeItem(TOKEN_STORAGE_KEY)
-      redirectToLogin()
-      return null
-    }
-    const data = await res.json()
-    whoamiEl.textContent = data.user?.display_name || data.user?.username || data.user?.email || 'Agent'
-    return data.user
-  } catch {
-    // Network error on the guard check shouldn't force a logout — leave
-    // the token in place and let the user retry, rather than bouncing
-    // them out on a transient connectivity blip.
-    console.error('[admin-inbox] guard check failed (network error)')
-    return null
-  }
-}
-
-signoutBtn.addEventListener('click', () => {
-  clearInterval(requestsPollTimer)
-  clearInterval(messagesPollTimer)
-  sessionStorage.removeItem(TOKEN_STORAGE_KEY)
+signoutBtn.addEventListener('click', async () => {
+  await supabase.auth.signOut()
   redirectToLogin()
 })
 
@@ -98,21 +63,27 @@ function renderThreadList() {
 }
 
 async function loadRequests() {
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/website-requests`, { headers: authHeaders() })
-    if (res.status === 401 || res.status === 403) return redirectToLogin()
-    if (!res.ok) throw new Error(`status ${res.status}`)
-    const data = await res.json()
-    requests = data.requests || []
-    renderThreadList()
-  } catch (err) {
-    console.error('[admin-inbox] failed to load requests', err)
+  const { data, error } = await supabase
+    .from('website_requests')
+    .select('id, full_name, email, package, status, project_brief, created_at')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('[admin-inbox] failed to load requests', error)
+    return
   }
+  requests = data
+  renderThreadList()
 }
 
-function startRequestsPolling() {
-  clearInterval(requestsPollTimer)
-  requestsPollTimer = setInterval(loadRequests, POLL_INTERVAL_MS)
+function subscribeToRequestChanges() {
+  if (requestsChannel) supabase.removeChannel(requestsChannel)
+  requestsChannel = supabase
+    .channel('admin_website_requests')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'website_requests' }, () => {
+      loadRequests()
+    })
+    .subscribe()
 }
 
 // --- Chat panel ---------------------------------------------------------------------
@@ -131,45 +102,6 @@ function renderMessage(msg) {
   logEl.scrollTop = logEl.scrollHeight
 }
 
-async function loadMessages(requestId, { silent = false } = {}) {
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/website-requests/${requestId}/messages`, {
-      headers: authHeaders(),
-    })
-    if (res.status === 401 || res.status === 403) return redirectToLogin()
-    if (!res.ok) throw new Error(`status ${res.status}`)
-    const data = await res.json()
-    const messages = data.messages || []
-
-    if (!silent) {
-      // Full repaint on first open.
-      logEl.innerHTML = ''
-      knownMessageIds = new Set()
-      messages.forEach((m) => {
-        renderMessage(m)
-        knownMessageIds.add(m.id)
-      })
-      return
-    }
-
-    // Polling tick: only append messages we haven't rendered yet, so the
-    // log doesn't flicker/rebuild every 4 seconds.
-    messages.forEach((m) => {
-      if (!knownMessageIds.has(m.id)) {
-        renderMessage(m)
-        knownMessageIds.add(m.id)
-      }
-    })
-  } catch (err) {
-    console.error('[admin-inbox] failed to load messages', err)
-  }
-}
-
-function startMessagesPolling(requestId) {
-  clearInterval(messagesPollTimer)
-  messagesPollTimer = setInterval(() => loadMessages(requestId, { silent: true }), POLL_INTERVAL_MS)
-}
-
 async function openRequest(requestId) {
   activeRequestId = requestId
   renderThreadList()
@@ -185,64 +117,54 @@ async function openRequest(requestId) {
   inputEl.disabled = false
   sendBtn.disabled = false
 
-  await loadMessages(requestId)
-  startMessagesPolling(requestId)
+  const { data, error } = await supabase
+    .from('website_chat_messages')
+    .select('id, sender_role, body, created_at')
+    .eq('request_id', requestId)
+    .order('created_at', { ascending: true })
+
+  logEl.innerHTML = ''
+  if (!error) data.forEach(renderMessage)
+
+  if (chatChannel) supabase.removeChannel(chatChannel)
+  chatChannel = supabase
+    .channel(`admin_chat_${requestId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'website_chat_messages', filter: `request_id=eq.${requestId}` },
+      (payload) => renderMessage(payload.new)
+    )
+    .subscribe()
 
   // Mark as in_chat the first time an agent opens it.
   if (req.status === 'new') {
-    await updateStatus(requestId, 'in_chat')
-    req.status = 'in_chat'
-    statusSel.value = 'in_chat'
-    renderThreadList()
-  }
-}
-
-async function updateStatus(requestId, status) {
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/website-requests/${requestId}/status`, {
-      method: 'PATCH',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    })
-    if (res.status === 401 || res.status === 403) return redirectToLogin()
-    if (!res.ok) throw new Error(`status ${res.status}`)
-  } catch (err) {
-    console.error('[admin-inbox] status update failed', err)
+    await supabase.from('website_requests').update({ status: 'in_chat' }).eq('id', requestId)
   }
 }
 
 statusSel.addEventListener('change', async () => {
   if (!activeRequestId) return
-  await updateStatus(activeRequestId, statusSel.value)
-  const req = requests.find((r) => r.id === activeRequestId)
-  if (req) req.status = statusSel.value
-  renderThreadList()
+  await supabase.from('website_requests').update({ status: statusSel.value }).eq('id', activeRequestId)
 })
 
 async function sendReply() {
   const body = inputEl.value.trim()
   if (!body || !activeRequestId) return
+  const { data: { session } } = await supabase.auth.getSession()
 
   sendBtn.disabled = true
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/website-requests/${activeRequestId}/messages`, {
-      method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body }),
-    })
-    if (res.status === 401 || res.status === 403) return redirectToLogin()
-    if (!res.ok) throw new Error(`status ${res.status}`)
-    const data = await res.json()
-    if (data.message) {
-      renderMessage(data.message)
-      knownMessageIds.add(data.message.id)
-    }
-    inputEl.value = ''
-  } catch (err) {
-    console.error('[admin-inbox] send failed', err)
-  } finally {
-    sendBtn.disabled = false
+  const { error } = await supabase.from('website_chat_messages').insert({
+    request_id: activeRequestId,
+    sender_id: session.user.id,
+    sender_role: 'admin',
+    body,
+  })
+  sendBtn.disabled = false
+  if (error) {
+    console.error('[admin-inbox] send failed', error)
+    return
   }
+  inputEl.value = ''
 }
 
 sendBtn.addEventListener('click', sendReply)
@@ -252,8 +174,8 @@ inputEl.addEventListener('keydown', (e) => {
 
 // --- Boot -----------------------------------------------------------------------
 ;(async function init() {
-  const user = await guard()
-  if (!user) return
+  const session = await guard()
+  if (!session) return
   await loadRequests()
-  startRequestsPolling()
+  subscribeToRequestChanges()
 })()
