@@ -43,9 +43,36 @@
     .tool-card--active .tool-card__icon { background: var(--green-dim); border-color: rgba(44,230,166,.30); }
     .tool-card__status { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .lock-icon { width: 13px; height: 13px; color: var(--text3); }
+
+    /* Active card gets a slow-rotating gradient ring around its border
+       instead of a flat highlight — makes it read as "the live one"
+       at a glance without needing extra copy. */
+    .tool-card--active {
+      position: relative;
+      border-color: transparent;
+      background:
+        linear-gradient(var(--surface), var(--surface)) padding-box,
+        conic-gradient(from var(--ring-angle, 0deg), var(--blue), var(--green), var(--blue-light), var(--blue)) border-box;
+      border: 1px solid transparent;
+      animation: ring-rotate 6s linear infinite;
+    }
+    @property --ring-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+    @keyframes ring-rotate { to { --ring-angle: 360deg; } }
+    .tool-card--active::after {
+      content: '✨';
+      position: absolute; top: 14px; right: 16px;
+      font-size: 14px;
+      animation: sparkle-pop 2.4s ease-in-out infinite;
+    }
+    @keyframes sparkle-pop {
+      0%, 100% { opacity: .35; transform: scale(.85) rotate(0deg); }
+      50%      { opacity: 1;   transform: scale(1.1) rotate(12deg); }
+    }
   </style>
 </head>
 <body>
+
+<div class="starfield" aria-hidden="true"></div>
 
 <!-- ══ NAV ══ -->
 <nav>
@@ -230,5 +257,6 @@
 
 <script type="module" src="../js/nav.js"></script>
 <script type="module" src="../js/scroll.js"></script>
+<script type="module" src="../js/starfield.js"></script>
 </body>
 </html>

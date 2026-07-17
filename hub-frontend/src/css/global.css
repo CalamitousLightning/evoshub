@@ -1,89 +1,87 @@
-/* EVOSHUB — Global Variables, Theme System & Reset */
+/* EVOSHUB — Global Variables & Reset
+   Tech theme: dark-first "console" aesthetic with a full light-mode swap.
+   Toggle by setting [data-theme="light"] or [data-theme="dark"] on <html>. */
 
-/* ══════════════════════════════════════════════════════════════
-   DARK THEME (default) — deep space-navy base, glass surfaces,
-   electric blue / emerald / violet accent trio, monospace details
-   for a dashboard / terminal feel.
-   ══════════════════════════════════════════════════════════════ */
 :root,
-:root[data-theme="dark"] {
-  --bg:        #05070D;
-  --bg2:       #090C15;
-  --surface:   rgba(255,255,255,0.035);
-  --surface2:  rgba(255,255,255,0.06);
-  --border:    rgba(255,255,255,0.09);
-  --border2:   rgba(255,255,255,0.16);
-
-  --blue:      #4F7DFB;
-  --blue-light:#22D3EE;
-  --blue-dim:  rgba(79,125,251,0.14);
-  --green:     #2DD4A7;
-  --green-dim: rgba(45,212,167,0.14);
-  --violet:    #A855F7;
-  --violet-dim:rgba(168,85,247,0.14);
-  --amber:     #FBBF24;
-  --amber-dim: rgba(251,191,36,0.14);
-
-  --text:      #F1F5F9;
-  --text2:     #97A3B6;
-  --text3:     #5C6679;
-
-  --glow-strength: 1;
-  --scheme: dark;
+[data-theme="dark"] {
   color-scheme: dark;
+
+  --bg:        #05070D;
+  --bg2:       #0A0E17;
+  --surface:   #0D121C;
+  --surface2:  #131A28;
+  --border:    rgba(148,196,255,0.10);
+  --border2:   rgba(148,196,255,0.20);
+
+  --blue:      #3E8BFF;
+  --blue-light:#5FE3FF;
+  --blue-dim:  rgba(62,139,255,0.12);
+  --green:     #2CE6A6;
+  --green-dim: rgba(44,230,166,0.12);
+  --amber:     #F5B942;
+  --amber-dim: rgba(245,185,66,0.12);
+
+  --text:      #EAF1FF;
+  --text2:     #93A2C2;
+  --text3:     #5B6684;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.30), 0 1px 10px rgba(0,0,0,.35);
+  --shadow-md: 0 8px 24px rgba(0,0,0,.45);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,.55);
+
+  --glow-blue: 0 0 0 1px rgba(62,139,255,.35), 0 0 24px rgba(62,139,255,.18);
+  --glow-green:0 0 0 1px rgba(44,230,166,.30), 0 0 24px rgba(44,230,166,.14);
+  --grid-line: rgba(148,196,255,0.06);
+  --scan-op:   0.5;
+  --star-op:   1;
+  --star-color: 255,255,255;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   LIGHT THEME — same structure, bright airy surfaces, softened
-   glows so the tech details read as "crisp" rather than "muddy".
-   ══════════════════════════════════════════════════════════════ */
-:root[data-theme="light"] {
-  --bg:        #F7F9FC;
-  --bg2:       #FFFFFF;
-  --surface:   #FFFFFF;
-  --surface2:  #F0F3F8;
-  --border:    rgba(15,23,42,0.08);
-  --border2:   rgba(15,23,42,0.14);
-
-  --blue:      #2F6FED;
-  --blue-light:#0EA5E9;
-  --blue-dim:  rgba(47,111,237,0.08);
-  --green:     #0EA46A;
-  --green-dim: rgba(14,164,106,0.10);
-  --violet:    #9333EA;
-  --violet-dim:rgba(147,51,234,0.09);
-  --amber:     #D97706;
-  --amber-dim: rgba(217,119,6,0.10);
-
-  --text:      #0F172A;
-  --text2:     #475569;
-  --text3:     #94A3B8;
-
-  --glow-strength: 0.4;
-  --scheme: light;
+[data-theme="light"] {
   color-scheme: light;
+
+  --bg:        #F7F9FC;
+  --bg2:       #EEF2F8;
+  --surface:   #FFFFFF;
+  --surface2:  #F1F4FA;
+  --border:    rgba(15,23,42,0.09);
+  --border2:   rgba(15,23,42,0.16);
+
+  --blue:      #2158D6;
+  --blue-light:#0EA5C4;
+  --blue-dim:  rgba(33,88,214,0.08);
+  --green:     #0E9F6E;
+  --green-dim: rgba(14,159,110,0.10);
+  --amber:     #B5760A;
+  --amber-dim: rgba(181,118,10,0.10);
+
+  --text:      #0B1220;
+  --text2:     #48526B;
+  --text3:     #8894AC;
+
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.05), 0 1px 8px rgba(15,23,42,.06);
+  --shadow-md: 0 4px 16px rgba(15,23,42,.09);
+  --shadow-lg: 0 12px 40px rgba(15,23,42,.13);
+
+  --glow-blue: 0 0 0 1px rgba(33,88,214,.18), 0 0 20px rgba(33,88,214,.08);
+  --glow-green:0 0 0 1px rgba(14,159,110,.16), 0 0 20px rgba(14,159,110,.07);
+  --grid-line: rgba(15,23,42,0.045);
+  --scan-op:   0.18;
+  --star-op:   0.45;
+  --star-color: 33,88,214;
 }
 
 :root {
   --font-display: 'Syne', sans-serif;
   --font-body:    'DM Sans', sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
+  --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --radius-sm: 8px;
   --radius:    12px;
   --radius-lg: 20px;
   --radius-xl: 28px;
 
-  --shadow-sm: 0 1px 2px rgba(0,0,0,.16), 0 1px 8px rgba(0,0,0,.10);
-  --shadow-md: 0 4px 20px rgba(0,0,0,.24);
-  --shadow-lg: 0 16px 48px rgba(0,0,0,.36);
-
   --space-section: clamp(48px, 9vw, 96px);
   --gutter:        clamp(20px, 5vw, 5%);
-}
-:root[data-theme="light"] {
-  --shadow-sm: 0 1px 2px rgba(15,23,42,.04), 0 1px 8px rgba(15,23,42,.05);
-  --shadow-md: 0 4px 16px rgba(15,23,42,.08);
-  --shadow-lg: 0 12px 40px rgba(15,23,42,.12);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -97,43 +95,21 @@ body  {
   min-width: 320px;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  transition: background-color .3s ease, color .3s ease;
-  position: relative;
+  transition: background-color .35s ease, color .35s ease;
 }
 img, svg { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
 table { max-width: 100%; }
+code, .mono { font-family: var(--font-mono); }
 
-/* Faint fixed dot-grid + drifting gradient mesh behind every page —
-   defined once here so no page markup is needed to get it. */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background-image: radial-gradient(var(--border2) 1px, transparent 1px);
-  background-size: 28px 28px;
-  opacity: calc(0.5 * var(--glow-strength));
-  pointer-events: none;
-  z-index: 0;
-}
-body::after {
-  content: '';
-  position: fixed; inset: -10%;
-  background:
-    radial-gradient(circle at 12% 8%,  rgba(79,125,251, calc(0.16 * var(--glow-strength))) 0%, transparent 40%),
-    radial-gradient(circle at 88% 18%, rgba(45,212,167, calc(0.12 * var(--glow-strength))) 0%, transparent 38%),
-    radial-gradient(circle at 50% 95%, rgba(168,85,247, calc(0.10 * var(--glow-strength))) 0%, transparent 42%);
-  pointer-events: none;
-  z-index: 0;
-  animation: meshDrift 26s ease-in-out infinite alternate;
-}
-@keyframes meshDrift {
-  0%   { transform: translate(0,0) scale(1); }
-  100% { transform: translate(-2%, 2%) scale(1.06); }
-}
-body > * { position: relative; z-index: 1; }
+::selection { background: var(--blue); color: #fff; }
 
-/* Visible, on-brand keyboard focus everywhere instead of the browser
-   default (or nothing, which some of the reset above would leave). */
+/* Slim techy scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
 a:focus-visible, button:focus-visible, input:focus-visible,
 textarea:focus-visible, select:focus-visible {
   outline: 2px solid var(--blue);
