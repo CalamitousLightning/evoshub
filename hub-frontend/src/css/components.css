@@ -1,23 +1,81 @@
-/* EVOSHUB — Components (tech theme) */
+/* EVOSHUB — Components (tech theme, glass surfaces + accent-topped cards) */
 
 /* Buttons */
-.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--font-body); font-weight:500; font-size:15px; padding:13px 26px; border-radius:10px; cursor:pointer; border:1px solid transparent; transition:opacity .2s, transform .15s, box-shadow .2s, border-color .2s; white-space:nowrap; }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--font-body); font-weight:500; font-size:15px; padding:13px 26px; border-radius:10px; cursor:pointer; border:1px solid transparent; transition:opacity .2s, transform .15s, box-shadow .25s, border-color .2s; white-space:nowrap; }
 .btn:hover { transform:translateY(-1px); }
 .btn:active { transform:translateY(0); }
-.btn--primary   { background:var(--blue); color:#fff; box-shadow:var(--glow-blue); }
-.btn--primary:hover { opacity:.92; box-shadow:0 0 0 1px rgba(62,139,255,.5), 0 0 30px rgba(62,139,255,.32); }
+.btn--primary   { background:linear-gradient(135deg, var(--blue) 0%, var(--blue-light) 130%); color:#fff; box-shadow:0 0 0 1px rgba(255,255,255,.06) inset, 0 8px 24px -8px rgba(62,139,255, calc(0.9 * var(--glow-strength))); }
+.btn--primary:hover { box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 10px 32px -6px rgba(62,139,255, var(--glow-strength)); }
 .btn--secondary { background:var(--green-dim); color:var(--green); border:1px solid rgba(44,230,166,.30); }
 .btn--secondary:hover { background:rgba(44,230,166,.18); box-shadow:var(--glow-green); }
 .btn--ghost     { background:transparent; color:var(--text2); border:1px solid var(--border2); }
 .btn--ghost:hover { border-color:var(--text3); color:var(--text); }
 
-/* Cards */
-.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px; box-shadow:var(--shadow-sm); transition:border-color .25s, box-shadow .25s, transform .2s; position:relative; }
-.card:hover { border-color:rgba(62,139,255,.35); box-shadow:var(--shadow-md), var(--glow-blue); transform:translateY(-3px); }
+/* ══════════════════════════════════════════════════════════════
+   CARDS — glass panels in the EVOSHUB tech aesthetic, restyled after
+   a Fastline-style pattern: a coloured accent bar across the top,
+   an icon dropped into a small gradient badge, and a confident lift
+   + glow on hover instead of a flat border change.
+   ══════════════════════════════════════════════════════════════ */
+.card {
+  background:var(--surface);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:28px;
+  box-shadow:var(--shadow-sm);
+  transition:border-color .25s, box-shadow .25s, transform .2s;
+  position:relative;
+  overflow:hidden;
+}
+/* Accent bar — rotates blue / violet / green across siblings, same
+   idea as a coloured top border but drawn as a pseudo-element so it
+   never fights the card's own border-radius. */
+.card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg, var(--blue), var(--blue-light));
+  opacity:.85;
+}
+.card:nth-of-type(2)::before,
+.card:nth-child(2)::before  { background:linear-gradient(90deg, var(--violet), var(--blue-light)); }
+.card:nth-of-type(3)::before,
+.card:nth-child(3)::before  { background:linear-gradient(90deg, var(--green), var(--blue-light)); }
+.card:hover {
+  border-color:var(--border2);
+  box-shadow:var(--shadow-md), 0 0 32px -12px rgba(62,139,255, calc(0.5 * var(--glow-strength)));
+  transform:translateY(-6px);
+}
+
+/* Cards with their own bespoke treatment (the big "live" service
+   cards, the rotating-ring active tool card) skip the accent bar so
+   it doesn't compete with their existing highlight. */
+.live-card::before,
+.tool-card--active::before { display:none; }
 
 /* Locked / disabled tool card */
 .card--locked { opacity:.55; filter:grayscale(.6); pointer-events:none; cursor:not-allowed; }
 .card--locked:hover { transform:none; box-shadow:var(--shadow-sm); border-color:var(--border); }
+.card--locked::before { opacity:.35; }
+
+/* Icon badge — the little rounded gradient square that sits above a
+   card's title, in place of a bare emoji. Drop into any card:
+   <div class="card-icon">🌐</div> */
+.card-icon {
+  width:52px; height:52px;
+  border-radius:14px;
+  background:linear-gradient(135deg, var(--blue) 0%, var(--violet) 130%);
+  color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px;
+  margin-bottom:16px;
+  box-shadow:0 6px 18px -6px rgba(62,139,255, calc(0.6 * var(--glow-strength)));
+  flex-shrink:0;
+}
+.card-icon--green  { background:linear-gradient(135deg, var(--green) 0%, var(--blue-light) 130%); box-shadow:0 6px 18px -6px rgba(44,230,166, calc(0.6 * var(--glow-strength))); }
+.card-icon--amber  { background:linear-gradient(135deg, var(--amber) 0%, var(--violet) 130%); box-shadow:0 6px 18px -6px rgba(245,185,66, calc(0.6 * var(--glow-strength))); }
+.card-icon--muted  { background:var(--surface2); color:var(--text2); box-shadow:none; border:1px solid var(--border2); }
 
 /* Typography helpers */
 .section-label { display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--blue); margin-bottom:14px; }
@@ -26,14 +84,14 @@
 .section-desc   { font-size:clamp(14.5px,2.2vw,16px); color:var(--text2); line-height:1.75; max-width:560px; }
 
 /* Badges */
-.badge        { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:6px; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:.5px; border:1px solid var(--border2); }
+.badge        { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:100px; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:.5px; border:1px solid var(--border2); }
 .badge--live  { background:rgba(44,230,166,.10); color:var(--green); border-color:rgba(44,230,166,.30); }
 .badge--soon  { background:var(--surface2); color:var(--text3); border-color:var(--border); }
 .badge--locked{ background:var(--surface2); color:var(--text3); border-color:var(--border); }
 
 /* Nav logo */
 .nav-logo        { display:flex; align-items:center; gap:10px; min-width:0; flex-shrink:0; }
-.nav-logo__icon  { width:34px; height:34px; background:var(--blue); border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:15px; color:#fff; flex-shrink:0; box-shadow:var(--glow-blue); }
+.nav-logo__icon  { width:34px; height:34px; background:linear-gradient(135deg, var(--blue), var(--violet)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:15px; color:#fff; flex-shrink:0; box-shadow:var(--glow-blue); }
 .nav-logo__text  { font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--text); white-space:nowrap; }
 
 /* Nav links */
@@ -100,6 +158,15 @@
 }
 .evoxera-badge img { width: 20px; height: 20px; object-fit: contain; border-radius: 4px; }
 .evoxera-badge__fallback { width: 20px; height: 20px; background: var(--blue); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: #fff; }
+
+/* Footer mark — the "©" in the copyright line doubles as the admin
+   sign-in entry point. It is styled to be completely indistinguishable
+   from plain text (same colour, no underline, default cursor) so it
+   reads as ordinary copyright boilerplate to every visitor; only
+   someone who already knows to click it will ever use it. */
+.footer-mark { color:inherit; text-decoration:none; cursor:default; }
+.footer-mark:hover, .footer-mark:active { color:inherit; text-decoration:none; }
+.footer-mark:focus-visible { outline:1px dotted var(--text3); outline-offset:3px; border-radius:2px; }
 
 /* Terminal-style prompt chip (hero / tool cards) */
 .prompt-chip {

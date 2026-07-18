@@ -7,10 +7,16 @@
   mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%);
 }
 .gradient-text {
-  background: linear-gradient(135deg, var(--blue-light) 0%, var(--blue) 45%, var(--green) 100%);
+  background: linear-gradient(100deg, var(--blue) 0%, var(--violet) 45%, var(--green) 90%);
+  background-size: 220% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: gradientShift 8s ease-in-out infinite alternate;
+}
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
 
 /* Faint animated scanline overlay for that console feel — subtle, opacity driven by theme */
