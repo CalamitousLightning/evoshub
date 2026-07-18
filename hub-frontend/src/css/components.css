@@ -28,6 +28,11 @@
   transition:border-color .25s, box-shadow .25s, transform .2s;
   position:relative;
   overflow:hidden;
+  /* 3D tilt-on-hover state — driven by feature-cards-3d.js via
+     pointermove, capped at ±5deg. Sits at 0 at rest so cards with
+     no JS bound (or with motion3d disabled) are unaffected. */
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
 }
 /* Accent bar — rotates blue / violet / green across siblings, same
    idea as a coloured top border but drawn as a pseudo-element so it
@@ -45,7 +50,8 @@
 .card:hover {
   border-color:var(--border2);
   box-shadow:var(--shadow-md), 0 0 32px -12px rgba(62,139,255, calc(0.5 * var(--glow-strength)));
-  transform:translateY(-6px);
+  transform:perspective(800px) translateY(-6px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transition:border-color .25s, box-shadow .25s, transform .15s ease-out;
 }
 
 /* Cards with their own bespoke treatment (the big "live" service

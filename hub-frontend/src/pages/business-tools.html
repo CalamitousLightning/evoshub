@@ -24,6 +24,7 @@
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/animations.css">
   <link rel="stylesheet" href="../css/evoshub-theme.css">
+  <link rel="stylesheet" href="../css/motion-3d.css">
 
   <style>
     .biz-hero {
@@ -78,6 +79,7 @@
 <body>
 
 <div class="starfield" aria-hidden="true"></div>
+<canvas id="bg3d-canvas" aria-hidden="true"></canvas>
 
 <!-- ══ NAV ══ -->
 <nav>
@@ -108,11 +110,11 @@
 <div class="biz-hero">
   <div class="hero-grid-bg" style="position:absolute;inset:0;top:0;height:420px;"></div>
   <div class="fade-up" style="position:relative;">
-    <span class="prompt-chip" style="margin-bottom:20px;">evos --run business-tools<span class="blink-cursor"></span></span>
-    <h1 style="font-family:var(--font-display);font-weight:800;font-size:clamp(34px,6vw,58px);letter-spacing:-1.8px;line-height:1.05;margin-top:18px;margin-bottom:14px;">
+    <span class="prompt-chip" data-flow-in data-depth="4" style="margin-bottom:20px;">evos --run business-tools<span class="blink-cursor"></span></span>
+    <h1 data-flow-in data-depth="12" style="font-family:var(--font-display);font-weight:800;font-size:clamp(34px,6vw,58px);letter-spacing:-1.8px;line-height:1.05;margin-top:18px;margin-bottom:14px;">
       One console.<br><span class="gradient-text">Every business tool.</span>
     </h1>
-    <p style="font-size:15.5px;color:var(--text2);max-width:560px;line-height:1.7;">
+    <p data-flow-in data-depth="7" style="font-size:15.5px;color:var(--text2);max-width:560px;line-height:1.7;">
       This is the EVOS toolkit for founders and freelancers. <strong style="color:var(--text);">Website Creation is live</strong> — the rest are unlocking in stages as we build them out.
     </p>
   </div>
@@ -120,7 +122,7 @@
 
 <!-- ══ TOOLS GRID ══ -->
 <section class="section" style="padding-top:8px;">
-  <div class="auto-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));">
+  <div class="auto-grid" data-stagger-cards style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));">
 
     <!-- ★ ACTIVE — Website Creation -->
     <a href="/website-creation.html" class="card tool-card tool-card--active fade-up" style="text-decoration:none;">
@@ -263,5 +265,9 @@
 <script type="module" src="../js/nav.js"></script>
 <script type="module" src="../js/scroll.js"></script>
 <script type="module" src="../js/starfield.js"></script>
+<script type="module" src="../js/motion3d.js"></script>
+<script type="module" src="../js/hero-flow.js"></script>
+<script type="module" src="../js/feature-cards-3d.js"></script>
+<script type="module" src="../js/bg-particles.js"></script>
 </body>
 </html>

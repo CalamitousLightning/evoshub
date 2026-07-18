@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/animations.css">
   <link rel="stylesheet" href="../css/evoshub-theme.css">
+  <link rel="stylesheet" href="../css/motion-3d.css">
 
   <style>
     /* Color tokens now live in global.css (single source of truth for
@@ -305,18 +306,19 @@
 </nav>
 
 <!-- ══ HERO ══ -->
+<canvas id="bg3d-canvas" aria-hidden="true"></canvas>
 <div class="hero">
   <div class="hero-grid-bg" style="position:absolute;inset:0;"></div>
   <div class="hero-glow"></div>
 
-  <span class="prompt-chip" style="margin-bottom:22px;position:relative;">whoami --ecosystem<span class="blink-cursor"></span></span>
+  <span class="prompt-chip" data-flow-in data-depth="4" style="margin-bottom:22px;position:relative;">whoami --ecosystem<span class="blink-cursor"></span></span>
 
-  <h1>EVOS<br><span class="gradient-text">Business Hub</span></h1>
+  <h1 data-flow-in data-depth="12">EVOS<br><span class="gradient-text">Business Hub</span></h1>
 
-  <p class="hero-sub">Building Digital Solutions for Africa and Beyond.</p>
-  <p class="hero-sub2">Data services, AI tools, business software — all under one roof.</p>
+  <p class="hero-sub" data-flow-in data-depth="9">Building Digital Solutions for Africa and Beyond.</p>
+  <p class="hero-sub2" data-flow-in data-depth="7">Data services, AI tools, business software — all under one roof.</p>
 
-  <div class="hero-btns">
+  <div class="hero-btns" data-flow-in data-depth="5">
     <a href="#services" class="btn btn--primary">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       Get Started
@@ -467,7 +469,7 @@
   </div>
 
   <!-- COMING SOON GRID -->
-  <div class="grid-4" style="gap:16px;">
+  <div class="grid-4" data-stagger-cards style="gap:16px;">
     <a href="/business-tools.html" class="card fade-up" style="text-decoration:none;">
       <span class="badge badge--live" style="margin-bottom:14px;"><span class="badge-pulse"></span>&nbsp;1 Tool Active</span>
       <div class="card-icon" style="font-size:20px;width:44px;height:44px;">💼</div>
@@ -502,7 +504,7 @@
     <h2 class="section-title">Built to be trusted</h2>
     <p style="font-size:15px;color:var(--text2);">Everything we build is centred around speed, security, and your experience.</p>
   </div>
-  <div class="grid-4">
+  <div class="grid-4" data-stagger-cards>
     <div class="card fade-up" style="text-align:center;">
       <div class="why-icon" style="background:var(--blue-dim);margin:0 auto 14px;">⚡</div>
       <h4 style="font-family:var(--font-display);font-weight:600;margin-bottom:8px;">Fast Services</h4>
