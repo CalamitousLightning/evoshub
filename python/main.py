@@ -42,7 +42,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 _allowed_origins = [
     o.strip()
-    for o in os.getenv("ALLOWED_ORIGINS", "https://evoshub.xyz,http://localhost:5173").split(",")
+    for o in os.getenv("ALLOWED_ORIGINS", "https://evoshub.xyz,http://localhost:5173,https://evoshub.fly.dev").split(",")
     if o.strip()
 ]
 app.add_middleware(
