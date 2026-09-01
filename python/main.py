@@ -41,16 +41,20 @@ async def global_exception_handler(request: Request, exc: Exception):
     print(f"Unhandled error on {request.url.path}: {exc!r}")
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 _allowed_origins = [
-    o.strip()
-    for o in os.getenv("ALLOWED_ORIGINS", "https://evoshub.xyz,http://localhost:5173,https://evoshub.fly.dev").split(",")
+    o.strip().rstrip("/")
+    for o in os.getenv(
+        "ALLOWED_ORIGINS",
+        "https://evoshub.xyz,https://www.evoshub.xyz,http://localhost:5173"
+    ).split(",")
     if o.strip()
 ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "PUT"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
