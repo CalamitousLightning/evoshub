@@ -85,3 +85,8 @@ required, it's all Supabase (Postgres + Realtime + RLS).
   `X-Content-Type-Options`, `Referrer-Policy`, and a `Content-Security-Policy`
   that only allows connections to Supabase and same-origin scripts. The
   backend's CORS is restricted to an explicit `ALLOWED_ORIGINS` allowlist.
+
+## EVS (EVOS) Token V1
+EVS (EVOS) Token is hosted by EVOS Business Hub at `/evs`. The active V1 features are EVS login, wallet, 24-hour server-authoritative mining, atomic claiming, ledger and transaction history. Purchases, withdrawals, transfers, referrals and on-chain features remain disabled.
+
+Run `supabase/migrations/20260901_evs_evos_token_v1.sql` against the shared Supabase project only after reviewing the existing `public.users` schema. Configure `python/.env` from `python/.env.example`; never commit secrets.

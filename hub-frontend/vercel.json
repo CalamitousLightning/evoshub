@@ -5,7 +5,9 @@
     { "source": "/contact",  "destination": "/src/pages/contact.html" },
     { "source": "/website-creation", "destination": "/src/pages/website-creation.html" },
     { "source": "/admin-login", "destination": "/src/pages/admin-login.html" },
-    { "source": "/admin-website-chat", "destination": "/src/pages/admin-website-chat.html" }
+    { "source": "/admin-website-chat", "destination": "/src/pages/admin-website-chat.html" },
+    { "source": "/evs", "destination": "/src/pages/evs/index.html" },
+    { "source": "/evs/", "destination": "/src/pages/evs/index.html" }
   ],
   "routes": [
     { "handle": "filesystem" },

@@ -17,6 +17,7 @@ export default defineConfig({
         adminWebsiteChat:  'src/pages/admin-website-chat.html',
         comingSoon:        'src/pages/coming-soon.html',
         notFound:          'src/pages/404.html',
+        evs:               'src/pages/evs/index.html',
       }
     }
   }

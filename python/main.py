@@ -13,6 +13,10 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 from routes import admin, contact, website_requests
 from utils.rate_limit import limiter
+from utils.evs_supabase import supabase
+from evs.routes import router as evs_router
+from evs.routes_admin import router as evs_admin_router
+from evs.routes_auth import router as evs_auth_router
 _IS_PROD = os.getenv("ENVIRONMENT", "development").strip().lower() == "production"
 app = FastAPI(
     title="EVOS Business Hub API",
@@ -45,7 +49,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH"],
+    allow_methods=["GET", "POST", "PATCH", "PUT"],
     allow_headers=["Authorization", "Content-Type"],
 )
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -89,6 +93,9 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(admin.router, prefix="/api")
 app.include_router(contact.router, prefix="/api")
 app.include_router(website_requests.router, prefix="/api")
+app.include_router(evs_auth_router, prefix="/api/evs/auth", tags=["evs-auth"])
+app.include_router(evs_router, prefix="/api/evs", tags=["evs"])
+app.include_router(evs_admin_router, prefix="/api/admin/evs", tags=["evs-admin"])
 @app.get("/")
 def root():
     return {
