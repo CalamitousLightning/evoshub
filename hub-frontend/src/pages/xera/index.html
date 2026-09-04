@@ -78,6 +78,9 @@
       <div class="topbar-inner">
         <div class="wordmark"><span class="dot"></span>XERA</div>
         <div class="topbar-actions">
+          <button class="icon-btn" id="openEcosystem" aria-label="Ecosystem" title="Ecosystem">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9s1.3-6.5 3.8-9z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          </button>
           <button class="icon-btn" id="openStats" aria-label="XERA statistics" title="XERA statistics">
             <svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M11 20V4M18 20v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
@@ -127,6 +130,18 @@
               How XERA mining works
             </button>
           </div>
+        </div>
+
+        <div class="panel daily-panel" id="dailyPanel" hidden>
+          <div class="section-title">Daily claim</div>
+          <div class="daily-card">
+            <div class="daily-info">
+              <div class="daily-amount"><span id="dailyAmount">0</span><small>XERA / day</small></div>
+              <div class="daily-streak" id="dailyStreak"></div>
+            </div>
+            <button type="button" class="btn daily-btn" id="dailyClaimBtn">Claim</button>
+          </div>
+          <p class="daily-note" id="dailyNote"></p>
         </div>
 
         <div class="panel soon-panel">
@@ -183,6 +198,21 @@
         <li>The displayed reward is an estimate and is subject to the platform's mining rules, which can adjust the rate as the network grows.</li>
       </ul>
       <button class="btn" id="closeMiningInfoBtn" type="button">Got it</button>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: Ecosystem ===== -->
+  <div class="modal-overlay" id="ecosystemModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ecosystemTitle">
+      <div class="modal-head">
+        <h2 id="ecosystemTitle">Ecosystem</h2>
+        <button class="icon-btn" id="closeEcosystem" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 5L19 19M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <p class="ecosystem-sub">Explore the rest of the Evoxera ecosystem.</p>
+      <div class="ecosystem-grid" id="ecosystemGrid"></div>
+      <p class="stats-note" id="ecosystemError"></p>
     </div>
   </div>
 
