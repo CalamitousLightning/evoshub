@@ -289,6 +289,7 @@
     <li><a href="#about">EVOXERA</a></li>
     <li><a href="#ecosystem">Ecosystem</a></li>
     <li><a href="#products">Products</a></li>
+    <li><a href="#tier-3">Tier 3</a></li>
     <li><a href="/business-tools.html">Business Hub</a></li>
     <li><a href="/xera">XERA</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -385,19 +386,23 @@
     </div>
   </div>
 
-  <!-- Fork into Tier 01 / Tier 02 -->
-  <svg class="eco-fork" viewBox="0 0 360 110" aria-hidden="true">
-    <path d="M180 0 C180 40, 70 40, 70 100" />
-    <path d="M180 0 C180 40, 290 40, 290 100" />
-    <path class="eco-fork__flow" d="M180 0 C180 40, 70 40, 70 100" />
-    <path class="eco-fork__flow delay" d="M180 0 C180 40, 290 40, 290 100" />
-    <circle cx="180" cy="2" r="3" />
+  <!-- Fork into Tier 01 / Tier 02 / Tier 03 -->
+  <svg class="eco-fork3" viewBox="0 0 480 110" aria-hidden="true">
+    <path d="M240 0 C240 40, 70 40, 70 100" />
+    <path d="M240 0 C240 46, 240 46, 240 100" />
+    <path d="M240 0 C240 40, 410 40, 410 100" />
+    <path class="eco-fork__flow" d="M240 0 C240 40, 70 40, 70 100" />
+    <path class="eco-fork__flow delay1" d="M240 0 C240 46, 240 46, 240 100" />
+    <path class="eco-fork__flow delay2" d="M240 0 C240 40, 410 40, 410 100" />
+    <circle cx="240" cy="2" r="3" />
     <circle cx="70" cy="100" r="3" />
-    <circle cx="290" cy="100" r="3" />
+    <circle cx="240" cy="100" r="3" />
+    <circle cx="410" cy="100" r="3" />
   </svg>
-  <div style="display:flex;justify-content:space-between;max-width:360px;margin:-6px auto 0;font-family:var(--font-mono);font-size:11px;color:var(--text3);letter-spacing:.5px;">
-    <span>Tier 01 →</span>
-    <span>← Tier 02</span>
+  <div class="eco-fork3__labels">
+    <span>Tier 01 · Core →</span>
+    <span>Tier 02 · Expansion</span>
+    <span>← Tier 03 · Future</span>
   </div>
 </section>
 
@@ -430,6 +435,12 @@
         <span class="app-card__action">Open<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
       </div>
     </a>
+  </div>
+
+  <!-- ── Progression connector ── -->
+  <div class="tier-connector">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16M6 14l6 6 6-6"/></svg>
+    <span class="tier-connector__label">Foundation → Expansion</span>
   </div>
 
   <!-- ══ TIER 02 — EXPANDING PRODUCTS ══ -->
@@ -474,21 +485,46 @@
   </div>
 </section>
 
-<!-- ══ FUTURE EVOLUTION ══ -->
-<section class="section eco-section" style="border-top:1px solid var(--border);text-align:center;">
-  <div class="fade-up" style="max-width:560px;margin:0 auto;">
-    <span class="eco-kicker">What's Next</span>
-    <h2 class="section-title" style="margin:10px auto 8px;">The system evolves</h2>
-    <p class="section-desc" style="margin:0 auto;">EVOS is designed as an expanding ecosystem. New products and services can become part of the platform as EVOXERA TECHNOLOGY continues to build.</p>
+<!-- ── Progression connector ── -->
+<div class="tier-connector">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16M6 14l6 6 6-6"/></svg>
+  <span class="tier-connector__label">Expansion → Evolution</span>
+</div>
+
+<!-- ══ TIER 03 — FUTURE EVOLUTION ══ -->
+<section id="tier-3" class="section eco-section" style="border-top:1px solid var(--border);">
+  <div class="fade-up tier-head">
+    <span class="tier-num">TIER 03 · FUTURE EVOLUTION</span>
+    <h2 class="section-title">The next stage of evolution</h2>
+    <p class="section-desc" style="margin:12px auto 0;">EVOS is built as an open, expanding architecture. Future products and technologies will plug into the same foundation as they're built — no false promises, just room to grow.</p>
   </div>
+
+  <div class="tier3-grid fade-up" data-stagger-cards>
+    <div class="tier3-card">
+      <div class="tier3-card__glyph">✳</div>
+      <div class="tier3-card__title">Next-gen AI tools</div>
+      <p class="tier3-card__desc">Deeper AI integration across the ecosystem, building on the EVOS GPT foundation.</p>
+    </div>
+    <div class="tier3-card">
+      <div class="tier3-card__glyph">◇</div>
+      <div class="tier3-card__title">Cross-product rewards</div>
+      <p class="tier3-card__desc">XERA expanding as the shared value layer connecting products across EVOS Hub.</p>
+    </div>
+    <div class="tier3-card">
+      <div class="tier3-card__glyph">△</div>
+      <div class="tier3-card__title">New EVOS products</div>
+      <p class="tier3-card__desc">Additional platforms and services, announced as EVOXERA TECHNOLOGY builds them.</p>
+    </div>
+  </div>
+
   <div class="evo-strip fade-up">
-    <span class="evo-strip__step">Tier 01</span>
+    <span class="evo-strip__step">Tier 01 · Live</span>
     <span class="evo-strip__arrow">→</span>
-    <span class="evo-strip__step">Tier 02</span>
+    <span class="evo-strip__step">Tier 02 · Live</span>
     <span class="evo-strip__arrow">→</span>
-    <span class="evo-strip__step evo-strip__step--future">Tier 03</span>
+    <span class="evo-strip__step evo-strip__step--future">Tier 03 · In Motion</span>
     <span class="evo-strip__arrow">→</span>
-    <span class="evo-strip__step evo-strip__step--future">Future Systems</span>
+    <span class="evo-strip__step evo-strip__step--future">What's Next</span>
   </div>
 </section>
 
@@ -641,7 +677,7 @@
 
         <!-- EVOXERA credit -->
         <div class="evoxera-badge">
-          <img src="/assets/images/evoshub.jpeg" alt="EVOXERA"
+          <img src="/assets/images/evoxera.png" alt="EVOXERA"
                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div class="evoxera-badge__fallback" style="display:none;">EX</div>
           <span>Powered by <strong style="color:var(--text);">EVOXERA TECHNOLOGY</strong></span>
