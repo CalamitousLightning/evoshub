@@ -75,11 +75,14 @@
     .hero h1 {
       font-family: var(--font-display);
       font-weight: 800;
-      font-size: clamp(44px, 8vw, 86px);
+      font-size: clamp(32px, 9.5vw, 86px);
       line-height: 1.03;
       letter-spacing: -2.5px;
       margin-bottom: 14px;
       position: relative;
+      max-width: 100%;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
     .hero-sub {
       font-size: clamp(15px, 2vw, 19px);
@@ -277,7 +280,7 @@
        rather than relying on one global breakpoint for everything. */
     @media (max-width: 400px) {
       .badge { font-size: 10px; padding: 4px 8px; }
-      .hero h1 { letter-spacing: -1.5px; }
+      .hero h1 { font-size: clamp(28px, 10.5vw, 40px); letter-spacing: -1.5px; }
       .hero-btns .btn { flex: 1 1 auto; font-size: 14px; padding: 12px 16px; }
       .trust-bar { gap: 14px; }
       .trust-divider { display: none; }
