@@ -27,7 +27,7 @@
 .xera-public-stars{position:absolute;inset:0;overflow:hidden}
 .xera-public-stars .xera-star{position:absolute;border-radius:50%;background:#bffcff;box-shadow:0 0 7px rgba(95,247,229,.55);opacity:0;animation:xera-public-twinkle var(--star-duration,3.8s) ease-in-out var(--star-delay,0s) infinite}
 .xera-public-stars .xera-shooting-star{position:absolute;width:3px;height:3px;border-radius:50%;background:#bffcff;box-shadow:0 0 9px 2px rgba(95,247,229,.75);opacity:0;animation:xera-public-shoot 8s linear var(--shoot-delay,0s) infinite}
-.xera-public-stars .xera-shooting-star::before{content:;position:absolute;right:1px;top:50%;width:120px;height:1px;transform:translateY(-50%);background:linear-gradient(90deg,rgba(95,247,229,.7),transparent)}
+.xera-public-stars .xera-shooting-star::before{content:"";position:absolute;right:1px;top:50%;width:120px;height:1px;transform:translateY(-50%);background:linear-gradient(90deg,rgba(95,247,229,.7),transparent)}
 @keyframes xera-public-twinkle{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:var(--star-opacity,.75);transform:scale(1)}}
 @keyframes xera-public-shoot{0%,2%{opacity:0;transform:translate(0,0)}4%{opacity:1}17%{opacity:0;transform:translate(-360px,240px)}100%{opacity:0;transform:translate(-360px,240px)}}
 .xera-public-content{position:relative;z-index:1}
