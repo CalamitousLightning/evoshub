@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="../../css/layout.css">
   <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="../../css/animations.css">
+  <link rel="stylesheet" href="../../css/xera-space.css">
   <style>
     .tk-main{ padding-top:140px; max-width:960px; position:relative; }
 
@@ -125,6 +126,8 @@
   </style>
 </head>
 <body>
+  <div class="xera-public-space" aria-hidden="true"><div class="xera-public-stars" id="xeraPublicStars"></div></div>
+
   <nav>
     <a class="nav-logo" href="/"><div class="nav-logo__icon">EH</div><span class="nav-logo__text">EVOSHUB</span></a>
     <ul class="nav-links">
@@ -419,5 +422,6 @@
       document.getElementById('heroCta').textContent = 'Continue to your dashboard';
     }
   </script>
+  <script type="module" src="../../js/xera-space.js"></script>
 </body>
 </html>
