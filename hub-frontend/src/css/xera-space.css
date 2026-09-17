@@ -34,3 +34,57 @@
 body > nav,body > main,body > footer{position:relative;z-index:1}
 @media(max-width:760px){.xera-public-space::before{width:360px;height:360px;right:-180px;top:-70px;opacity:.34}}
 @media(prefers-reduced-motion:reduce){.xera-public-stars .xera-star,.xera-public-stars .xera-shooting-star{animation:none}}
+
+
+/* ---- XERA rotating cinematic scene backgrounds ----
+   Decorative only. This layer is shared by the public XERA pages and app shell.
+   It never participates in application state, mining, wallet, API or blockchain logic. */
+.xera-scene-bg{
+  position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+  background:#020611;
+}
+.xera-scene-bg::before{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(70% 80% at 50% 48%,rgba(2,8,20,.12),rgba(2,6,16,.72) 88%),
+    linear-gradient(180deg,rgba(1,5,15,.58),rgba(1,5,15,.78));
+  z-index:2;
+}
+.xera-scene-bg .xera-scene{
+  position:absolute;inset:-2%;
+  background-position:center;background-size:cover;background-repeat:no-repeat;
+  opacity:0;transform:scale(1.035);
+  transition:opacity 1.35s ease,transform 10s ease;
+  filter:saturate(.9) contrast(1.04);
+}
+.xera-scene-bg .xera-scene.active{
+  opacity:.34;transform:scale(1);
+}
+.xera-scene-bg .xera-scene.previous{
+  opacity:.0;
+}
+.xera-scene-bg .xera-scene.active::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(2,7,17,.40),transparent 42%,rgba(2,7,17,.34)),
+             linear-gradient(0deg,rgba(2,7,17,.55),transparent 50%);
+}
+.xera-bg-vignette{
+  position:absolute;inset:0;z-index:3;
+  box-shadow:inset 0 0 180px 70px rgba(0,0,0,.28);
+}
+.xera-bg-noise{
+  position:absolute;inset:0;z-index:4;opacity:.035;
+  background-image:radial-gradient(rgba(255,255,255,.7) .6px,transparent .7px);
+  background-size:5px 5px;
+  mix-blend-mode:screen;
+}
+body.xera-scene-enabled > .app,
+body.xera-scene-enabled > nav,
+body.xera-scene-enabled > main,
+body.xera-scene-enabled > footer,
+body.xera-scene-enabled .xera-public-content{
+  position:relative;z-index:1;
+}
+@media(prefers-reduced-motion:reduce){
+  .xera-scene-bg .xera-scene{transition:none;transform:none}
+}

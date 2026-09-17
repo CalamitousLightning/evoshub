@@ -976,3 +976,12 @@ body{
     .btn,.icon-btn,.chip,.mini-card,.ring-card,.wp-stat{transition:none}
     .mini-card:hover,.ring-card:hover,.wp-stat:hover,.chip:hover{transform:none}
 }
+
+
+/* Rotating XERA cinematic background sits behind the authenticated app shell. */
+body.xera-scene-enabled .app{position:relative;z-index:1}
+body.xera-scene-enabled .wallet-shell{position:relative;z-index:1}
+body.xera-scene-enabled .auth-form,
+body.xera-scene-enabled .auth-tabs,
+body.xera-scene-enabled .brand-mark,
+body.xera-scene-enabled .auth-foot.legal{position:relative;z-index:2}
