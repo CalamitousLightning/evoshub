@@ -989,3 +989,246 @@ body{
 .xera-public-space > .xera-public-stars{z-index:2}
 @media(max-width:760px){.xera-bg-slide.is-active{opacity:.30}.xera-bg-rotator::after{background:linear-gradient(180deg,rgba(2,7,18,.34),rgba(2,7,18,.66) 65%,rgba(2,7,18,.86)),radial-gradient(circle at 50% 40%,transparent 12%,rgba(2,7,18,.38) 100%)}}
 @media(prefers-reduced-motion:reduce){.xera-bg-slide{transition:opacity .2s ease,transform .2s ease}.xera-bg-slide.is-active{transform:none}}
+
+/* ========================================================================
+   XERA FUTURE GLASS UI — visual-only skin
+   Designed to match the cinematic XERA/EVOXERA dashboard direction:
+   translucent technical panels, luminous edges, layered depth and HUD detail.
+   No application/business logic is changed.
+   ======================================================================== */
+.app{position:relative;z-index:1}
+
+:root{
+  --xg-panel:rgba(7,17,38,.48);
+  --xg-panel-strong:rgba(5,14,32,.68);
+  --xg-panel-soft:rgba(18,42,78,.34);
+  --xg-line:rgba(89,213,255,.22);
+  --xg-line-hot:rgba(72,216,255,.48);
+  --xg-glow:rgba(44,167,255,.24);
+}
+
+/* The cinematic background should be visible through the interface. */
+.xera-space .xera-bg-rotator{z-index:0}
+.xera-bg-slide.is-active{opacity:.54;filter:saturate(1.02) contrast(1.06) brightness(.88)}
+.xera-bg-rotator::after{
+  background:
+    linear-gradient(180deg,rgba(1,6,18,.16),rgba(1,7,19,.42) 62%,rgba(1,5,15,.62)),
+    radial-gradient(circle at 50% 42%,transparent 15%,rgba(1,6,18,.26) 100%);
+}
+
+/* Shared glass-card treatment. */
+.mini-card,
+.balance-block,
+.ring-card,
+.daily-card,
+.dash-col-right,
+.coming-later-item,
+.chain-wallet-row,
+.chain-claim-row,
+.stat-item,
+.profile-link,
+.chip,
+.auth-tabs,
+.modal-card{
+  background:
+    linear-gradient(145deg,rgba(20,55,94,.34),rgba(3,12,29,.54)),
+    rgba(4,13,29,.42);
+  border:1px solid rgba(107,218,255,.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.075),
+    inset 0 -1px 0 rgba(35,170,255,.045),
+    0 18px 55px rgba(0,0,0,.25),
+    0 0 0 1px rgba(55,180,255,.025);
+  backdrop-filter:blur(20px) saturate(135%);
+  -webkit-backdrop-filter:blur(20px) saturate(135%);
+}
+
+.mini-card,
+.balance-block,
+.ring-card,
+.daily-card,
+.dash-col-right,
+.coming-later-item,
+.chain-wallet-row,
+.chain-claim-row,
+.stat-item,
+.profile-link,
+.chip{
+  position:relative;
+  overflow:hidden;
+}
+
+.mini-card::before,
+.balance-block::before,
+.ring-card::after,
+.daily-card::before,
+.dash-col-right::before,
+.coming-later-item::before,
+.chain-wallet-row::before,
+.chain-claim-row::before,
+.stat-item::before,
+.profile-link::before,
+.chip::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(115deg,rgba(105,224,255,.10),transparent 24%,transparent 70%,rgba(96,102,255,.08)),
+    radial-gradient(80% 100% at 0% 0%,rgba(47,184,255,.10),transparent 58%);
+  opacity:.9;
+}
+
+.mini-card::after,
+.balance-block::after,
+.daily-card::after,
+.dash-col-right::after,
+.coming-later-item::after,
+.chain-wallet-row::after,
+.chain-claim-row::after,
+.stat-item::after,
+.profile-link::after,
+.chip::after{
+  content:"";
+  position:absolute;
+  left:14px;right:14px;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(106,227,255,.38),transparent);
+  pointer-events:none;
+}
+
+.mini-card > *,
+.balance-block > *,
+.ring-card > *,
+.daily-card > *,
+.dash-col-right > *,
+.coming-later-item > *,
+.chain-wallet-row > *,
+.chain-claim-row > *,
+.stat-item > *,
+.profile-link > *,
+.chip > *{position:relative;z-index:1}
+
+/* Technical micro-grid inside panels. */
+.mini-card,
+.balance-block,
+.ring-card,
+.dash-col-right{
+  background-image:
+    linear-gradient(rgba(89,213,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(89,213,255,.018) 1px,transparent 1px),
+    linear-gradient(145deg,rgba(20,55,94,.34),rgba(3,12,29,.54));
+  background-size:24px 24px,24px 24px,100% 100%;
+}
+
+.mini-card:hover,
+.balance-block:hover,
+.ring-card:hover,
+.daily-card:hover,
+.coming-later-item:hover,
+.chain-wallet-row:hover,
+.chain-claim-row:hover,
+.stat-item:hover,
+.profile-link:hover,
+.chip:hover{
+  border-color:var(--xg-line-hot);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    0 22px 65px rgba(0,0,0,.30),
+    0 0 28px rgba(35,171,255,.08);
+}
+
+/* Top navigation becomes a transparent HUD rather than a solid bar. */
+.topbar{
+  background:rgba(2,8,21,.48);
+  border-bottom:1px solid rgba(91,215,255,.14);
+  backdrop-filter:blur(22px) saturate(140%);
+  -webkit-backdrop-filter:blur(22px) saturate(140%);
+  box-shadow:0 12px 40px rgba(0,0,0,.14);
+}
+.topbar .wordmark{letter-spacing:.035em}
+.topbar .wordmark .dot{box-shadow:0 0 12px rgba(51,230,200,.8)}
+.icon-btn{
+  background:rgba(8,27,51,.52);
+  border-color:rgba(92,215,255,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 20px rgba(43,155,255,.06);
+}
+.tab-nav-item{position:relative}
+.tab-nav-item.active{
+  color:#6defff;
+  text-shadow:0 0 18px rgba(73,220,255,.35);
+  border-bottom-color:#42dfff;
+}
+
+/* Glass buttons with a more technical illuminated edge. */
+.btn{
+  background:linear-gradient(135deg,rgba(38,120,220,.94),rgba(48,82,190,.92));
+  border:1px solid rgba(104,224,255,.28);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 8px 25px rgba(25,102,220,.22);
+}
+.btn:hover{filter:brightness(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 10px 30px rgba(25,145,255,.30)}
+.info-link{color:#66e7ff;text-shadow:0 0 14px rgba(75,219,255,.22)}
+
+/* Balance becomes a glass display module. */
+.balance-block .amount{text-shadow:0 0 28px rgba(62,196,255,.12)}
+.status-pill{
+  border:1px solid rgba(51,214,166,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 20px rgba(51,214,166,.08);
+}
+
+/* Mining card: stronger HUD core while keeping existing mining controls. */
+.ring-card{border-color:rgba(77,220,255,.24)}
+.mining-scene::before{
+  content:"";position:absolute;inset:18px;border-radius:50%;
+  border:1px solid rgba(91,224,255,.12);
+  box-shadow:0 0 45px rgba(45,166,255,.10),inset 0 0 35px rgba(45,166,255,.06);
+  animation:xera-core-pulse 4s ease-in-out infinite;
+}
+@keyframes xera-core-pulse{0%,100%{transform:scale(.96);opacity:.55}50%{transform:scale(1.03);opacity:1}}
+
+/* Mini coin / XERA identity gets a luminous glass rim. */
+.mini-coin,.xera-coin,.brand-mark img{
+  border:1px solid rgba(104,228,255,.32);
+}
+
+/* Activity rows read as small glass telemetry modules. */
+.activity-row{
+  margin:5px 0;
+  padding:12px 10px;
+  border:1px solid rgba(88,210,255,.10);
+  border-radius:12px;
+  background:rgba(7,20,40,.30);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.activity-row:last-child{border-bottom:1px solid rgba(88,210,255,.10)}
+.activity-icon{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 18px rgba(51,214,166,.08)}
+
+/* Coming-soon chips become technical modules. */
+.chip{opacity:.72}
+.chip svg{color:#61dfff;text-shadow:0 0 12px rgba(67,218,255,.4)}
+.chip .soon{background:rgba(10,34,62,.72);border:1px solid rgba(92,215,255,.12)}
+
+/* Public XERA pages: make document cards translucent over the cinematic scene. */
+.xera-public-content > *{position:relative}
+.xera-public-content .card,
+.xera-public-content .panel,
+.xera-public-content .section,
+.xera-public-content .wp-card,
+.xera-public-content .content-card,
+.xera-public-content .roadmap-card,
+.xera-public-content .stat-card,
+.xera-public-content .faq-item,
+.xera-public-content .disclosure-card,
+.xera-public-content .tokenomics-card{
+  background:linear-gradient(145deg,rgba(17,49,82,.36),rgba(3,12,28,.58));
+  border:1px solid rgba(100,220,255,.17);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 20px 60px rgba(0,0,0,.22);
+  backdrop-filter:blur(18px) saturate(130%);
+  -webkit-backdrop-filter:blur(18px) saturate(130%);
+}
+
+@media(max-width:760px){
+  .xera-bg-slide.is-active{opacity:.44}
+  .mini-card,.balance-block,.ring-card,.daily-card,.dash-col-right{backdrop-filter:blur(17px) saturate(125%);-webkit-backdrop-filter:blur(17px) saturate(125%)}
+}
+@media(prefers-reduced-motion:reduce){.mining-scene::before{animation:none}}
