@@ -977,11 +977,15 @@ body{
     .mini-card:hover,.ring-card:hover,.wp-stat:hover,.chip:hover{transform:none}
 }
 
-
-/* Rotating XERA cinematic background sits behind the authenticated app shell. */
-body.xera-scene-enabled .app{position:relative;z-index:1}
-body.xera-scene-enabled .wallet-shell{position:relative;z-index:1}
-body.xera-scene-enabled .auth-form,
-body.xera-scene-enabled .auth-tabs,
-body.xera-scene-enabled .brand-mark,
-body.xera-scene-enabled .auth-foot.legal{position:relative;z-index:2}
+/* XERA cinematic rotating background layer */
+.xera-bg-rotator{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;isolation:isolate}
+.xera-bg-rotator::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,7,18,.28),rgba(2,7,18,.58) 62%,rgba(2,7,18,.82)),radial-gradient(circle at 50% 45%,transparent 18%,rgba(2,7,18,.35) 100%);z-index:3}
+.xera-bg-slide{position:absolute;inset:-4%;width:108%;height:108%;object-fit:cover;opacity:0;transform:scale(1.045) translate3d(0,0,0);filter:saturate(.92) contrast(1.04);transition:opacity 1.25s ease,transform 12s ease;will-change:opacity,transform}
+.xera-bg-slide.is-active{opacity:.38;transform:scale(1.01) translate3d(var(--xera-parallax-x,0px),var(--xera-parallax-y,0px),0)}
+.xera-bg-slide.is-previous{opacity:.16}
+.xera-public-space .xera-bg-rotator{position:absolute;z-index:0}
+.xera-space .xera-bg-rotator{position:absolute;z-index:0}
+.xera-space > .xera-nebula,.xera-space > .xera-globe,.xera-space > .xera-orbit,.xera-space > .xera-starfield,.xera-space > .xera-scanline{z-index:2}
+.xera-public-space > .xera-public-stars{z-index:2}
+@media(max-width:760px){.xera-bg-slide.is-active{opacity:.30}.xera-bg-rotator::after{background:linear-gradient(180deg,rgba(2,7,18,.34),rgba(2,7,18,.66) 65%,rgba(2,7,18,.86)),radial-gradient(circle at 50% 40%,transparent 12%,rgba(2,7,18,.38) 100%)}}
+@media(prefers-reduced-motion:reduce){.xera-bg-slide{transition:opacity .2s ease,transform .2s ease}.xera-bg-slide.is-active{transform:none}}

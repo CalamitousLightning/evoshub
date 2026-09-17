@@ -1,80 +1,87 @@
-// XERA — shared ambient space + rotating cinematic background layer.
-// Decorative only: no application state, API, mining, wallet or blockchain behavior.
+// XERA — cinematic ambient visual system.
+// Visual-only: rotating branded backgrounds + stars + subtle pointer parallax.
+// It never reads or changes auth, mining, wallet, Supabase, API or blockchain state.
 (() => {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const isXera = /(^|\/)xera(?:\/|$)/.test(window.location.pathname);
-  if (!isXera) return;
+  const root = document.querySelector('.xera-space') || document.querySelector('.xera-public-space');
+  if (!root) return;
 
-  const bgPaths = [
-    '/assets/images/xera-backgrounds/xera-cosmic-network.jpg',
-    '/assets/images/xera-backgrounds/xera-global-grid.jpg',
-    '/assets/images/xera-backgrounds/xera-future-city.jpg',
-    '/assets/images/xera-backgrounds/xera-data-center.jpg',
-    '/assets/images/xera-backgrounds/xera-digital-mining.jpg',
-    '/assets/images/xera-backgrounds/xera-ai-core.jpg',
-    '/assets/images/xera-backgrounds/xera-connected-world.jpg',
-    '/assets/images/xera-backgrounds/xera-blockchain.jpg',
-    '/assets/images/xera-backgrounds/xera-evolution-horizon.jpg'
+  const publicRoot = root.classList.contains('xera-public-space');
+  const imageBase = '/assets/images/xera-gallery/';
+  const images = [
+    'xera-future-city.jpg',
+    'xera-global-network.jpg',
+    'xera-ai-data-core.jpg',
+    'xera-digital-mining.jpg'
   ];
 
-  // Shared background layer works on both the public XERA pages and /xera app.
-  const layer = document.createElement('div');
-  layer.className = 'xera-scene-bg';
-  layer.setAttribute('aria-hidden', 'true');
+  // Pick a meaningful first scene for each page, then continue rotating.
+  const path = location.pathname.toLowerCase();
+  let preferred = 0;
+  if (path.includes('tokenomics')) preferred = 1;
+  else if (path.includes('stats')) preferred = 2;
+  else if (path.includes('roadmap')) preferred = 0;
+  else if (path.includes('faq')) preferred = 2;
+  else if (path.includes('disclosure')) preferred = 1;
+  else if (path.includes('whitepaper')) preferred = 0;
+  else if (path.includes('dashboard') || root.classList.contains('xera-space')) preferred = 3;
 
-  const scenes = bgPaths.map((src, i) => {
-    const scene = document.createElement('div');
-    scene.className = 'xera-scene';
-    scene.dataset.scene = String(i);
-    scene.style.backgroundImage = `url("${src}")`;
-    layer.appendChild(scene);
-    return scene;
+  const rotator = document.createElement('div');
+  rotator.className = 'xera-bg-rotator';
+  rotator.setAttribute('aria-hidden', 'true');
+  root.prepend(rotator);
+
+  const ordered = images.map((_, i) => images[(preferred + i) % images.length]);
+  const slides = ordered.map((src, i) => {
+    const img = document.createElement('img');
+    img.className = 'xera-bg-slide' + (i === 0 ? ' is-active' : '');
+    img.src = imageBase + src;
+    img.alt = '';
+    img.decoding = 'async';
+    img.loading = i === 0 ? 'eager' : 'lazy';
+    rotator.appendChild(img);
+    return img;
   });
-  const vignette = document.createElement('div');
-  vignette.className = 'xera-bg-vignette';
-  const noise = document.createElement('div');
-  noise.className = 'xera-bg-noise';
-  layer.append(vignette, noise);
-  document.body.prepend(layer);
-  document.body.classList.add('xera-scene-enabled');
 
-  // Continue the sequence between XERA page navigations during the same visit.
-  const key = 'xera-scene-index';
-  let current = Number(sessionStorage.getItem(key));
-  if (!Number.isInteger(current) || current < 0 || current >= scenes.length) {
-    current = Math.floor(Math.random() * scenes.length);
-  }
-  const show = (index) => {
-    scenes.forEach((s, i) => {
-      s.classList.toggle('active', i === index);
-      s.classList.remove('previous');
-    });
-    sessionStorage.setItem(key, String(index));
+  // Warm all assets without blocking the page, so transitions don't flash.
+  slides.slice(1).forEach(img => { const pre = new Image(); pre.src = img.src; });
+
+  let active = 0;
+  let timer = null;
+  const show = (next) => {
+    slides[active].classList.remove('is-active');
+    slides[active].classList.add('is-previous');
+    slides[next].classList.remove('is-previous');
+    slides[next].classList.add('is-active');
+    active = next;
   };
-  show(current);
-
-  // Preload all scenes so switching is smooth rather than flashing.
-  bgPaths.forEach(src => { const img = new Image(); img.src = src; });
 
   if (!reduced) {
-    window.setInterval(() => {
-      current = (current + 1) % scenes.length;
-      show(current);
-    }, 11000);
+    timer = window.setInterval(() => show((active + 1) % slides.length), 11000);
+
+    let px = 0, py = 0, raf = 0;
+    const update = () => {
+      raf = 0;
+      rotator.style.setProperty('--xera-parallax-x', `${px}px`);
+      rotator.style.setProperty('--xera-parallax-y', `${py}px`);
+    };
+    window.addEventListener('pointermove', (e) => {
+      px = ((e.clientX / Math.max(window.innerWidth, 1)) - .5) * 14;
+      py = ((e.clientY / Math.max(window.innerHeight, 1)) - .5) * 10;
+      if (!raf) raf = requestAnimationFrame(update);
+    }, { passive: true });
   }
 
-  // Existing ambient starfield behavior.
+  // Existing star system, preserved.
   const field = document.getElementById('xeraStarfield') || document.getElementById('xeraPublicStars');
   if (!field) return;
-
   const count = window.innerWidth < 640 ? 46 : window.innerWidth < 1000 ? 72 : 104;
   const frag = document.createDocumentFragment();
   for (let i = 0; i < count; i++) {
     const star = document.createElement('span');
     star.className = 'xera-star';
     const size = (Math.random() * 2 + 0.7).toFixed(2);
-    star.style.width = `${size}px`;
-    star.style.height = `${size}px`;
+    star.style.width = `${size}px`; star.style.height = `${size}px`;
     star.style.left = `${(Math.random() * 100).toFixed(2)}%`;
     star.style.top = `${(Math.random() * 100).toFixed(2)}%`;
     star.style.setProperty('--star-delay', `${(Math.random() * 7).toFixed(2)}s`);
@@ -93,4 +100,6 @@
     }
   }
   field.appendChild(frag);
+
+  window.addEventListener('pagehide', () => { if (timer) clearInterval(timer); }, { once: true });
 })();
