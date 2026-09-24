@@ -445,7 +445,11 @@ BEGIN
         RETURN v_session;
     END IF;
 
-    IF v_payment.status <> 'PENDING' THEN
+    -- EXPIRED is allowed through: a customer can legitimately finish
+    -- Paystack checkout after the stale-payment sweep has released their
+    -- reservation. Rejecting that would take their money and give them
+    -- nothing, so we try to re-reserve below instead.
+    IF v_payment.status NOT IN ('PENDING', 'EXPIRED') THEN
         RAISE EXCEPTION 'payment_already_finalized' USING ERRCODE = 'P0209';
     END IF;
 
@@ -460,6 +464,18 @@ BEGIN
            OR UPPER(p_verified_currency) <> UPPER(v_payment.currency) THEN
             RAISE EXCEPTION 'payment_verification_failed' USING ERRCODE = 'P0213';
         END IF;
+    END IF;
+
+    IF v_payment.status = 'EXPIRED' THEN
+        SELECT * INTO v_session FROM xera_hashrate_sessions WHERE id = v_payment.session_id FOR UPDATE;
+        IF NOT FOUND OR v_session.status <> 'EXPIRED' THEN
+            RAISE EXCEPTION 'payment_already_finalized' USING ERRCODE = 'P0209';
+        END IF;
+        -- Re-take the reservation the sweep released. Raises
+        -- entitlement_cap_exceeded (whole function rolls back, payment stays
+        -- EXPIRED) if the pool can no longer back the session — the caller
+        -- then flags the payment for a manual refund.
+        PERFORM xera_reserve_mining_entitlement(v_session.reserved_entitlement, 'HASHRATE_LATE_PAYMENT');
     END IF;
 
     IF p_tx_hash IS NOT NULL THEN
@@ -564,6 +580,7 @@ DECLARE
     v_session xera_hashrate_sessions;
     v_payment xera_hashrate_payments;
     v_wallet xera_wallets;
+    v_alloc  xera_allocations;
     v_elapsed_days INTEGER;
     v_target NUMERIC(20,4);
     v_reward NUMERIC(20,4);
@@ -626,6 +643,12 @@ BEGIN
         RAISE EXCEPTION 'nothing_to_claim' USING ERRCODE = 'P0218';
     END IF;
 
+    -- Lock order (allocations, then wallet) matches xera_claim_mining_reward
+    -- so a user claiming free-mining and hashrate rewards at the same time
+    -- can't deadlock. The canonical ledger needs no update here: the full
+    -- entitlement was already reserved at purchase.
+    SELECT * INTO v_alloc FROM xera_allocations WHERE id = 1 FOR UPDATE;
+
     SELECT * INTO v_wallet
     FROM xera_wallets
     WHERE user_id = p_user_id
@@ -668,6 +691,16 @@ BEGIN
         updated_at = now()
     WHERE id = v_wallet.id
     RETURNING cached_balance INTO v_new_balance;
+
+    -- Keep the legacy distributed counter (public stats, free-mining rate)
+    -- in step with what has actually been paid out. Clamped so the
+    -- xera_mining_distributed_within_allocation CHECK can never turn a
+    -- paid-for claim into an error.
+    UPDATE xera_allocations
+    SET mining_distributed = mining_distributed
+            + GREATEST(0, LEAST(v_reward, v_alloc.mining_allocation - v_alloc.mining_distributed)),
+        updated_at = now()
+    WHERE id = 1;
 
     v_new_status := CASE
         WHEN v_target >= v_session.maximum_entitlement THEN 'COMPLETED'
@@ -764,3 +797,30 @@ GRANT SELECT, INSERT, UPDATE ON
     xera_mining_entitlement_state, xera_hashrate_tiers, xera_hashrate_sessions, xera_hashrate_payments
     TO service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO service_role;
+
+-- ------------------------------------------------------------
+-- 5. RPC EXECUTE PRIVILEGES
+-- ------------------------------------------------------------
+-- Postgres grants EXECUTE on new functions to PUBLIC by default, and every
+-- function above is SECURITY DEFINER — so without this, anyone holding the
+-- public Supabase anon key could call them straight through PostgREST's
+-- /rest/v1/rpc/<name> and bypass the FastAPI layer entirely: reserve the
+-- whole mining allocation, or purchase + "confirm" a hashrate session
+-- without paying. The blockchain hardening migration does the same for its
+-- functions (see its RPC-endpoint note); this covers every xera_* function
+-- in one pass, including the free-mining ones redefined above.
+DO $$
+DECLARE
+    f RECORD;
+BEGIN
+    FOR f IN
+        SELECT p.oid::regprocedure AS sig
+        FROM pg_proc p
+        JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public' AND p.proname LIKE 'xera\_%'
+    LOOP
+        EXECUTE format('REVOKE EXECUTE ON FUNCTION %s FROM PUBLIC, anon, authenticated', f.sig);
+        EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO service_role', f.sig);
+    END LOOP;
+END;
+$$;
