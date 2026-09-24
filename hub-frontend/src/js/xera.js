@@ -560,7 +560,6 @@ function renderHashrateCards(tiers, state) {
           <div class="hashrate-card-art">
             <span class="hashrate-badge">0${index}</span>
             <img src="/assets/images/hashrate/hashrate-${index}.jpg" alt="XERA — ${esc(art.name)}" loading="lazy">
-            <img class="hashrate-logo" src="/assets/images/xeracoin.jpg" alt="XERA logo">
           </div>
           <div class="hashrate-card-body">
             <h3>${esc(art.name)}</h3>
