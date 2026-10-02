@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#F7F9FC">
+  <meta name="theme-color" content="#04060A">
+  <meta name="color-scheme" content="dark">
   <meta name="description" content="EVOXERA TECHNOLOGY — creating evolution for the future.">
   <meta property="og:title" content="EVOXERA TECHNOLOGY — Creating Evolution for the Future">
   <meta property="og:description" content="Welcome to Evoxera Technology. The front door to the Evos Hub ecosystem.">
@@ -17,7 +18,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Michroma&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="../css/global.css">
   <link rel="stylesheet" href="../css/evoxera-launch.css">
@@ -26,15 +27,44 @@
 </head>
 <body>
   <main class="launch" id="launch" aria-label="Evoxera Technology">
+    <canvas class="fx-canvas" aria-hidden="true"></canvas>
     <a class="launch__skip" href="/appevoxera">Skip</a>
 
-    <img class="launch__logo" src="/assets/images/evoxera.png" alt="Evoxera Technology" width="1536" height="1024" fetchpriority="high">
-    <h1 class="launch__title">Welcome to<span>Evoxera Technology</span></h1>
+    <div class="launch__stage">
+      <div class="launch__aura" aria-hidden="true"></div>
+      <svg class="launch__orbit" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="ex-ring-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#085CDD" stop-opacity="0"/>
+            <stop offset=".55" stop-color="#2F7BFF"/>
+            <stop offset="1" stop-color="#4CC3FF"/>
+          </linearGradient>
+        </defs>
+        <g class="spin">
+          <g transform="rotate(-24 200 200)">
+            <ellipse class="ring" pathLength="1" cx="200" cy="200" rx="192" ry="74"/>
+            <circle class="node" cx="345" cy="153" r="3.2"/>
+          </g>
+          <g transform="rotate(34 200 200)">
+            <ellipse class="ring ring--b" pathLength="1" cx="200" cy="200" rx="176" ry="62"/>
+          </g>
+        </g>
+      </svg>
+      <div class="launch__tile">
+        <img class="launch__logo" src="/assets/icons/icon-512.png" alt="Evoxera Technology" width="512" height="512" fetchpriority="high">
+      </div>
+    </div>
+
+    <h1 class="launch__title">
+      <span class="launch__welcome">Welcome to</span>
+      <span class="launch__name"><b>Evoxera</b> <i>Technology</i></span>
+    </h1>
     <p class="launch__tag">Creating evolution for the future.</p>
 
     <div class="launch__bar" aria-hidden="true"></div>
   </main>
 
   <script type="module" src="../js/evoxera-launch.js"></script>
+  <script type="module" src="../js/evoxera-fx.js"></script>
 </body>
 </html>
