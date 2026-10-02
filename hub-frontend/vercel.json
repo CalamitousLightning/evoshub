@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/appevoxera", "destination": "/appevoxera.html" },
+    { "source": "/home", "destination": "/home.html" },
     { "source": "/about", "destination": "/about.html" },
     { "source": "/services", "destination": "/services.html" },
     { "source": "/contact", "destination": "/contact.html" },
