@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#05070D">
+  <meta name="description" content="Evoxera Technology product hub — explore EvosData, XERA and what's coming next.">
+  <title>Evoxera Technology — Products</title>
+
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/icons/favicon-48.png">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/evoshub-theme.css">
+  <link rel="stylesheet" href="../css/evoxera-launch.css">
+</head>
+<body>
+  <div class="ehub">
+    <header class="ehub__top">
+      <a class="ehub__brand" href="/appevoxera" aria-label="Evoxera Technology">
+        <span class="ehub__mark" role="img" aria-label="Evoxera Technology logo"></span>
+        <span class="ehub__brand-name">Evoxera Technology<small>Evos Hub</small></span>
+      </a>
+      <div class="ehub__actions">
+        <button type="button" class="ehub__install" id="install-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+          Install Evos Hub
+        </button>
+        <button class="theme-toggle" aria-label="Toggle theme" type="button">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="ehub__main">
+      <p class="ehub__eyebrow">Evoxera Technology</p>
+      <h1 class="ehub__title">Creating evolution<span class="gradient-text">for the future.</span></h1>
+      <p class="ehub__sub">Explore the Evoxera ecosystem.</p>
+
+      <h2 class="ehub__label">Products</h2>
+
+      <div class="pgrid">
+        <a class="pcard pcard--green" id="card-evosdata" href="https://evosdata.xyz" target="_blank" rel="noopener">
+          <span class="pcard__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 18v-3M9.3 18v-6M14.7 18v-9M20 18V4"/></svg></span>
+          <span class="pcard__name">EvosData</span>
+          <span class="pcard__desc">Data and connectivity services.</span>
+          <span class="pcard__meta">
+            <span class="pcard__tag"><i></i>Available in Ghana</span>
+            <span class="pcard__open">Open EvosData <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </span>
+        </a>
+
+        <a class="pcard" href="/xera">
+          <span class="pcard__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9 8l6 8M15 8l-6 8"/></svg></span>
+          <span class="pcard__name">XERA</span>
+          <span class="pcard__desc">Evoxera's XERA ecosystem.</span>
+          <span class="pcard__meta">
+            <span></span>
+            <span class="pcard__open">Open XERA <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </span>
+        </a>
+
+        <div class="pcard pcard--violet pcard--soon" aria-disabled="true">
+          <span class="pcard__name">More products coming soon</span>
+        </div>
+      </div>
+    </main>
+
+    <footer class="ehub__foot">
+      <span>© 2026 Evoxera Technology</span>
+      <a href="/home">Evos Hub website</a>
+    </footer>
+  </div>
+
+  <div class="edlg" id="evosdata-dialog" role="dialog" aria-modal="true" aria-labelledby="evosdata-dialog-title" hidden>
+    <div class="edlg__panel">
+      <h2 id="evosdata-dialog-title">EvosData is currently available only in Ghana.</h2>
+      <p>We're focused on Ghana for now. Other Evoxera products are open to everyone.</p>
+      <div class="edlg__btns">
+        <button type="button" class="btn btn--primary" id="evosdata-dialog-close">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/appevoxera.js"></script>
+</body>
+</html>

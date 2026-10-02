@@ -1,0 +1,183 @@
+/* EVOXERA — launch screen + product hub (/ and /appevoxera)
+   Built on the shared tokens in global.css. The launch screen is always
+   light so the Evoxera logo (white-background artwork) blends in cleanly. */
+
+/* ───────── Launch screen ───────── */
+.launch {
+  --l-bg: #F7F9FC;
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: clamp(18px, 3.2vh, 28px);
+  padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(60vmax 60vmax at 50% 38%, rgba(62,139,255,.10), transparent 60%),
+    radial-gradient(40vmax 40vmax at 82% 96%, rgba(168,85,247,.07), transparent 60%),
+    var(--l-bg);
+  color: #0B1220;
+  text-align: center;
+  overflow: hidden;
+  transition: opacity .55s ease, transform .55s ease;
+}
+.launch.is-leaving { opacity: 0; transform: scale(1.015); }
+
+.launch__logo {
+  width: min(78vw, 440px); height: auto;
+  mix-blend-mode: multiply;           /* white logo background dissolves into the page */
+  opacity: 0; transform: scale(.92);
+  animation: launch-logo .9s cubic-bezier(.2,.7,.2,1) .15s forwards;
+}
+.launch__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(20px, 4.6vw, 34px);
+  letter-spacing: .14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  opacity: 0; transform: translateY(10px);
+  animation: launch-rise .7s ease .85s forwards;
+}
+.launch__title span {
+  display: block;
+  background: linear-gradient(90deg, #2158D6, #0EA5C4);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.launch__tag {
+  font-size: clamp(13px, 2.4vw, 17px);
+  color: #48526B;
+  letter-spacing: .04em;
+  opacity: 0; transform: translateY(8px);
+  animation: launch-rise .7s ease 1.3s forwards;
+}
+.launch__bar {
+  position: absolute; left: 50%; bottom: max(36px, env(safe-area-inset-bottom));
+  width: 120px; height: 2px; margin-left: -60px;
+  background: rgba(33,88,214,.14); border-radius: 2px; overflow: hidden;
+}
+.launch__bar::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, #2158D6, #0EA5C4);
+  transform: translateX(-100%);
+  animation: launch-bar 2.4s ease-in-out .3s forwards;
+}
+.launch__skip {
+  position: absolute; top: max(16px, env(safe-area-inset-top)); right: 16px;
+  font: 500 12px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase;
+  color: #5B6684; padding: 10px 12px; border-radius: 8px;
+  opacity: 0; animation: launch-fade .4s ease 1s forwards;
+}
+.launch__skip:hover, .launch__skip:focus-visible { color: #2158D6; background: rgba(33,88,214,.08); outline: none; }
+
+@keyframes launch-logo { to { opacity: 1; transform: scale(1); } }
+@keyframes launch-rise { to { opacity: 1; transform: translateY(0); } }
+@keyframes launch-bar  { to { transform: translateX(0); } }
+@keyframes launch-fade { to { opacity: 1; } }
+
+/* Reduced motion: show everything immediately, no movement */
+@media (prefers-reduced-motion: reduce) {
+  .launch__logo, .launch__title, .launch__tag, .launch__skip { animation: none; opacity: 1; transform: none; }
+  .launch__bar { display: none; }
+  .launch, .launch.is-leaving { transition: none; transform: none; }
+}
+
+/* ───────── Product hub (/appevoxera) ───────── */
+.ehub {
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
+  padding: max(20px, env(safe-area-inset-top)) var(--gutter) max(24px, env(safe-area-inset-bottom));
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(55vmax 40vmax at 50% -8%, rgba(62,139,255,.16), transparent 65%),
+    radial-gradient(40vmax 30vmax at 100% 100%, rgba(168,85,247,.10), transparent 65%),
+    var(--bg);
+}
+.ehub::before {  /* faint grid, reuses the global grid token */
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 20%, #000 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 20%, #000 0%, transparent 70%);
+}
+.ehub > * { position: relative; }
+
+.ehub__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 880px; width: 100%; margin: 0 auto; }
+.ehub__brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ehub__mark {
+  width: 40px; height: 40px; flex-shrink: 0; border-radius: 11px;
+  background: #FAFBFD url('/assets/icons/icon-192.png') center / cover no-repeat;  /* ET emblem cut from the existing logo */
+  box-shadow: var(--glow-blue);
+}
+.ehub__brand-name { font: 700 13px/1.2 var(--font-display); letter-spacing: .16em; text-transform: uppercase; }
+.ehub__brand-name small { display: block; font: 400 11px/1.4 var(--font-body); letter-spacing: .02em; text-transform: none; color: var(--text3); margin-top: 2px; }
+
+.ehub__actions { display: flex; align-items: center; gap: 8px; }
+.ehub__install {
+  display: none;                          /* shown only when the browser offers install */
+  align-items: center; gap: 6px;
+  font: 500 13px/1 var(--font-body); color: var(--text);
+  padding: 9px 14px; border-radius: 999px; cursor: pointer;
+  background: var(--surface2); border: 1px solid var(--border2);
+  transition: border-color .2s, box-shadow .2s;
+}
+.ehub__install.is-available { display: inline-flex; }
+.ehub__install:hover, .ehub__install:focus-visible { border-color: var(--blue); box-shadow: var(--glow-blue); outline: none; }
+
+.ehub__main { flex: 1; width: 100%; max-width: 880px; margin: 0 auto; padding: clamp(36px, 8vh, 80px) 0 32px; }
+.ehub__eyebrow { font: 500 12px/1 var(--font-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--blue-light); margin-bottom: 18px; }
+.ehub__title { font-family: var(--font-display); font-weight: 800; font-size: clamp(32px, 7.5vw, 64px); line-height: 1.04; letter-spacing: -1.5px; }
+.ehub__title .gradient-text { display: block; }
+.ehub__sub { color: var(--text2); font-size: clamp(15px, 2vw, 18px); margin-top: 14px; max-width: 520px; }
+
+.ehub__label { font: 500 12px/1 var(--font-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--text3); margin: clamp(36px, 7vh, 56px) 0 16px; }
+
+.pgrid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .pgrid { grid-template-columns: 1fr 1fr; } }
+
+.pcard {
+  display: flex; flex-direction: column; gap: 6px; text-align: left;
+  padding: 22px; border-radius: var(--radius-lg); cursor: pointer;
+  background: var(--surface); border: 1px solid var(--border);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  color: inherit; font: inherit; width: 100%;
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+  opacity: 0; transform: translateY(12px);
+  animation: launch-rise .6s ease forwards;
+}
+.pcard:nth-child(2) { animation-delay: .08s; }
+.pcard:nth-child(3) { animation-delay: .16s; }
+.pcard:hover, .pcard:focus-visible { transform: translateY(-3px); border-color: var(--border2); box-shadow: var(--glow-blue); outline: none; }
+.pcard--green:hover, .pcard--green:focus-visible { box-shadow: var(--glow-green); }
+.pcard--violet:hover, .pcard--violet:focus-visible { box-shadow: var(--glow-violet); }
+.pcard__icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 10px; background: var(--blue-dim); color: var(--blue-light); }
+.pcard--green .pcard__icon  { background: var(--green-dim);  color: var(--green); }
+.pcard--violet .pcard__icon { background: var(--violet-dim); color: var(--violet); }
+.pcard__icon svg { width: 22px; height: 22px; }
+.pcard__name { font: 700 20px/1.2 var(--font-display); }
+.pcard__desc { color: var(--text2); font-size: 14.5px; }
+.pcard__meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; font-size: 13px; }
+.pcard__tag { display: inline-flex; align-items: center; gap: 6px; color: var(--text3); font-family: var(--font-mono); font-size: 12px; }
+.pcard__tag i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; }
+.pcard__open { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; color: var(--text); }
+.pcard__open svg { width: 14px; height: 14px; transition: transform .2s; }
+.pcard:hover .pcard__open svg { transform: translateX(3px); }
+.pcard--soon { grid-column: 1 / -1; cursor: default; border-style: dashed; background: transparent; }
+.pcard--soon:hover { transform: none; box-shadow: none; border-color: var(--border); }
+.pcard--soon .pcard__name { color: var(--text2); font-size: 17px; }
+
+.ehub__foot { max-width: 880px; width: 100%; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; color: var(--text3); font-size: 12.5px; padding-top: 18px; border-top: 1px solid var(--border); }
+.ehub__foot a:hover { color: var(--text); }
+
+/* ───────── EvosData availability dialog ───────── */
+.edlg { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; z-index: 50; background: rgba(2,4,10,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.edlg.is-open { display: flex; }
+.edlg__panel { width: 100%; max-width: 400px; padding: 26px; border-radius: var(--radius-lg); background: var(--surface-solid); border: 1px solid var(--border2); box-shadow: var(--shadow-lg); text-align: center; }
+.edlg__panel h2 { font: 700 20px/1.25 var(--font-display); margin-bottom: 10px; }
+.edlg__panel p { color: var(--text2); font-size: 14.5px; }
+.edlg__btns { display: flex; gap: 10px; margin-top: 22px; }
+.edlg__btns .btn { flex: 1; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pcard { animation: none; opacity: 1; transform: none; }
+  .pcard:hover, .pcard:focus-visible { transform: none; }
+}
