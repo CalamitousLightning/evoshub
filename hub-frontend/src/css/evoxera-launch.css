@@ -252,6 +252,47 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
 .ptile:hover .ptile__art, .ptile:focus-visible .ptile__art { opacity: .95; }
 .ptile__face > :not(.ptile__art) { position: relative; z-index: 1; }
 
+/* Glass logo plate: the product mark sits submerged in frosted glass, and clears on hover */
+.ptile__face > .ptile__glass {
+  position: absolute; z-index: 1; top: clamp(18px, 2.4vw, 30px); right: clamp(18px, 2.4vw, 30px);
+  width: clamp(76px, 20vw, 112px); aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; pointer-events: none;
+  border-radius: 24px; color: rgb(var(--rgb));
+  background: linear-gradient(145deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .03) 55%, rgba(255, 255, 255, .08));
+  -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, .2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), inset 0 -10px 24px rgba(var(--rgb), .08), 0 14px 34px rgba(0, 0, 0, .35), 0 0 calc(var(--lit) * 36px) rgba(var(--rgb), .25);
+  transition: box-shadow .6s ease, border-color .5s ease;
+}
+.ptile__glass::before { /* frost grain + soft top-left glare */
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(120% 80% at 18% 0%, rgba(255, 255, 255, .28), transparent 55%);
+}
+.ptile__glass::after { /* specular sweep on hover */
+  content: ''; position: absolute; inset: -20% auto -20% -60%; width: 45%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent); transform: skewX(-18deg) translateX(0);
+  transition: transform 1s var(--ex-ease); opacity: .8;
+}
+.ptile__logo {
+  position: relative; width: 56%; height: 56%; opacity: .38; filter: blur(2.2px) drop-shadow(0 0 8px rgba(var(--rgb), .5));
+  transform: scale(.94); transition: opacity .6s ease, filter .6s ease, transform .8s var(--ex-ease);
+}
+.ptile:hover .ptile__logo, .ptile:focus-visible .ptile__logo { opacity: 1; filter: blur(0) drop-shadow(0 0 10px rgba(var(--rgb), .7)); transform: scale(1); }
+.ptile:hover .ptile__glass, .ptile:focus-visible .ptile__glass { border-color: rgba(var(--rgb), .55); }
+.ptile:hover .ptile__glass::after, .ptile:focus-visible .ptile__glass::after { transform: skewX(-18deg) translateX(520%); }
+/* Real logo image inside the glass (shown once it has loaded; the glyph above is the fallback) */
+.ptile__img {
+  position: absolute; inset: 20%; width: 60%; height: 60%; object-fit: cover; border-radius: 22%; display: none; user-select: none;
+  opacity: .42; filter: blur(2.4px) saturate(.9); transform: scale(.94);
+  transition: opacity .6s ease, filter .6s ease, transform .8s var(--ex-ease);
+}
+.ptile--xera .ptile__img { border-radius: 50%; transform: scale(.94); }
+.ptile__glass.has-img .ptile__img { display: block; }
+.ptile__glass.has-img .ptile__logo { display: none; }
+.ptile:hover .ptile__img, .ptile:focus-visible .ptile__img { opacity: 1; filter: blur(0) saturate(1.05); transform: scale(1); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ptile__face > .ptile__glass { background: rgba(20, 28, 42, .78); }
+}
+
 .ptile__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ptile__tag {
   display: inline-flex; align-items: center; gap: 9px; font: 400 9px/1 var(--ex-label); letter-spacing: .3em; text-transform: uppercase;
@@ -375,6 +416,6 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
   .launch__orbit .spin, .art-orbit, .art-arc--drift, .ehub__status i { animation: none; }
   .launch__tile::after, .launch__bar { display: none; }
   .launch, .launch.is-leaving .launch__stage { transition: none; transform: none; }
-  .ptile, .ptile__art { transition: none; }
+  .ptile, .ptile__art, .ptile__logo, .ptile__glass, .ptile__glass::after, .ptile__img { transition: none; }
   .ptile:hover, .ptile:focus-visible { transform: none; }
 }

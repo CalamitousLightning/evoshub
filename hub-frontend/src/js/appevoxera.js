@@ -40,3 +40,12 @@ card?.addEventListener('click', (e) => {
 closeBtn?.addEventListener('click', closeDialog)
 dialog?.addEventListener('click', (e) => { if (e.target === dialog) closeDialog() })
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dialog && !dialog.hidden) closeDialog() })
+
+// ── Glass logo plates: use the real logo image once it loads, else keep the glyph fallback ──
+document.querySelectorAll('.ptile__glass').forEach((glass) => {
+  const img = glass.querySelector('.ptile__img')
+  if (!img) return
+  const ready = () => { if (img.naturalWidth > 0) glass.classList.add('has-img') }
+  if (img.complete) ready()
+  else img.addEventListener('load', ready, { once: true })
+})
