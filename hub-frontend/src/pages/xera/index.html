@@ -126,6 +126,11 @@
         <label for="regPassword2">Confirm password</label>
         <input id="regPassword2" type="password" autocomplete="new-password" minlength="8" required/>
       </div>
+      <div class="field">
+        <label for="regRef">Invite code <span class="opt">(optional)</span></label>
+        <input id="regRef" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="64" pattern="[A-Za-z0-9_\-]{3,64}" title="Letters, numbers, dashes and underscores"/>
+        <span class="field-hint" id="regRefHint"></span>
+      </div>
       <button class="btn" type="submit">Create account</button>
       <p class="auth-error" id="registerError" role="alert"></p>
       <p class="auth-foot">Already have an EVOS account? <button type="button" class="linklike" id="goLogin">Sign in</button></p>
@@ -431,9 +436,26 @@
             <p class="reward-line" id="rewardsTotalClaims"></p>
             <p class="reward-line" id="rewardsNextClaim"></p>
           </div>
+          <div class="mini-card" id="referralCard">
+            <div class="mini-card-head"><span class="mini-card-title">Invite friends</span></div>
+            <p class="reward-line" id="refBlurb">Share your invite link. Friends who join through it are linked to you across the EVOS ecosystem.</p>
+            <div class="ref-code-row">
+              <div><span class="ref-label">Your invite code</span><code id="refCode">—</code></div>
+              <button type="button" class="btn btn-sm ref-copy" id="refCopyCode">Copy</button>
+            </div>
+            <button type="button" class="btn" id="refShare" disabled>Share invite link</button>
+            <a class="btn ref-wa" id="refWhatsApp" href="#" target="_blank" rel="noopener" hidden>Send on WhatsApp</a>
+            <div class="ref-stats">
+              <div><b id="refTotal">0</b><span>Invited</span></div>
+              <div><b id="refQualified">0</b><span>Active</span></div>
+              <div><b id="refEarned">0</b><span>XERA earned</span></div>
+            </div>
+            <p class="reward-line" id="refInvitedBy" hidden></p>
+            <div class="ref-recent" id="refRecent"></div>
+            <p class="banner-error" id="refError"></p>
+          </div>
           <div class="section-title">Coming later</div>
           <div class="coming-later-list">
-            <div class="coming-later-item"><b>Referral rewards</b><span class="soon">SOON</span><p>Earn XERA for inviting people to the ecosystem.</p></div>
             <div class="coming-later-item"><b>Achievements</b><span class="soon">SOON</span><p>Milestones for mining and claiming consistently.</p></div>
             <div class="coming-later-item"><b>Ecosystem rewards</b><span class="soon">SOON</span><p>Bonuses tied to activity across other EVOS products.</p></div>
           </div>

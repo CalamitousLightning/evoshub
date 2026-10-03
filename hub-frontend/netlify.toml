@@ -80,6 +80,14 @@
   to = "/xera/app.html"
   status = 200
 [[redirects]]
+  from = "/xera/invite"
+  to = "/xera/invite.html"
+  status = 200
+[[redirects]]
+  from = "/xera/invite/"
+  to = "/xera/invite.html"
+  status = 200
+[[redirects]]
   from = "/xera/whitepaper"
   to = "/xera/whitepaper.html"
   status = 200
