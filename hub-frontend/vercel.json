@@ -1,4 +1,7 @@
 {
+  "redirects": [
+    { "source": "/store/:path*", "destination": "/evosdata/store/:path*", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/appevoxera", "destination": "/appevoxera.html" },
     { "source": "/home", "destination": "/home.html" },
