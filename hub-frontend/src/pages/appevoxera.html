@@ -152,9 +152,9 @@
             </span>
           </span>
         </a>
-        <div class="ptile ptile--soon" aria-disabled="true">
-          <span class="ptile__face"><span class="ptile__label">Coming soon</span><span class="ptile__slot" aria-hidden="true"></span></span>
-        </div>
+        <button type="button" class="ptile ptile--soon ptile--more" id="card-more" aria-haspopup="dialog" aria-controls="more-dialog">
+          <span class="ptile__face"><span class="ptile__label">Other products &amp; ecosystem</span><span class="ptile__slot" aria-hidden="true"></span></span>
+        </button>
       </section>
     </main>
 
@@ -172,6 +172,24 @@
       <div class="edlg__btns">
         <button type="button" class="edlg__ok" id="evosdata-dialog-close">OK</button>
         <button type="button" class="edlg__go" id="evosdata-dialog-proceed">Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="edlg" id="more-dialog" role="dialog" aria-modal="true" aria-labelledby="more-dialog-title" hidden>
+    <div class="edlg__panel edlg__panel--list">
+      <h2 id="more-dialog-title">Other products &amp; ecosystem</h2>
+      <p>More from Evoxera Technology, live now.</p>
+      <ul class="edlg__list">
+        <li>
+          <a class="edlg__item" href="/website-creation" id="more-website">
+            <span class="edlg__item-text"><strong>Website Creation</strong><span>Get a professional website built by our team.</span></span>
+            <span class="edlg__pill"><i></i>Active</span>
+          </a>
+        </li>
+      </ul>
+      <div class="edlg__btns">
+        <button type="button" class="edlg__ok" id="more-dialog-close">Close</button>
       </div>
     </div>
   </div>

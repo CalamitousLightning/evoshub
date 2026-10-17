@@ -369,6 +369,27 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
 .edlg__go:hover { border-color: var(--ex-blue); box-shadow: 0 10px 30px -12px rgba(47, 123, 255, .6); }
 .edlg__go:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
+/* "Other products & ecosystem" tile (button) + popup list */
+.ptile--more { width: 100%; padding: 1px; border: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.ptile--more:hover { transform: translateY(-2px); }
+.ptile--more:focus-visible { outline: 2px solid var(--ex-cyan); outline-offset: 3px; }
+.ptile--more .ptile__label { color: var(--ex-dim); }
+.ptile--more .ptile__slot { border-style: solid; border-color: rgba(120, 200, 255, .55); }
+.ptile--more .ptile__slot::after { background: var(--ex-cyan); }
+.edlg__panel--list { max-width: 440px; text-align: left; }
+.edlg__list { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 10px; }
+.edlg__item {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 16px; color: var(--ex-text);
+  border: 1px solid var(--ex-line); border-radius: 16px; background: rgba(190, 210, 245, .04); transition: border-color .25s, box-shadow .25s, transform .2s;
+}
+.edlg__item:hover { border-color: var(--ex-blue); box-shadow: 0 10px 30px -14px rgba(47, 123, 255, .6); transform: translateY(-1px); }
+.edlg__item:focus-visible { outline: 2px solid var(--ex-cyan); outline-offset: 3px; }
+.edlg__item-text { display: grid; gap: 4px; }
+.edlg__item-text strong { font: 700 15px/1.2 var(--ex-display); }
+.edlg__item-text span { font: 300 13px/1.4 var(--ex-body); color: var(--ex-dim); }
+.edlg__pill { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; font: 400 9px/1 var(--ex-label); letter-spacing: .22em; text-transform: uppercase; color: var(--ex-cyan); }
+.edlg__pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--ex-cyan); animation: ex-pulse 2.4s ease-in-out infinite; }
+
 @keyframes ex-line  { from { transform: translateY(105%); } to { transform: none; } }
 @keyframes ex-up    { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 @keyframes ex-fade-in { from { opacity: 0; } to { opacity: 1; } }
