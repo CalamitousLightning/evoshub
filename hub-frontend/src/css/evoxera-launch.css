@@ -369,13 +369,10 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
 .edlg__go:hover { border-color: var(--ex-blue); box-shadow: 0 10px 30px -12px rgba(47, 123, 255, .6); }
 .edlg__go:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
-/* "Other products & ecosystem" tile (button) + popup list */
-.ptile--more { width: 100%; padding: 1px; border: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
-.ptile--more:hover { transform: translateY(-2px); }
-.ptile--more:focus-visible { outline: 2px solid var(--ex-cyan); outline-offset: 3px; }
-.ptile--more .ptile__label { color: var(--ex-dim); }
-.ptile--more .ptile__slot { border-style: solid; border-color: rgba(120, 200, 255, .55); }
-.ptile--more .ptile__slot::after { background: var(--ex-cyan); }
+/* "Other products & ecosystem" tile: a full app tile (button) in the same family as EvosData / XERA / EVOSGPT */
+.ptile--more { --rgb: 176, 124, 255; --h: 230px; width: 100%; font: inherit; text-align: left; border: 0; }
+.ptile--more:focus-visible { outline: none; }
+.ptile--more .ptile__name { font-size: clamp(24px, 7.2vw, 48px); }
 .edlg__panel--list { max-width: 440px; text-align: left; }
 .edlg__list { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 10px; }
 .edlg__item {
@@ -407,6 +404,7 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
   .ptile__open::before { display: none; }
   .ptile__open svg { order: 0; width: 44px; height: 44px; padding: 13px; }
   .ptile--soon { --h: 72px; grid-column: 1 / -1; }
+  .ptile--more { grid-column: 1 / -1; --cut: 26px; --h: 230px; }
   .ptile--soon .ptile__face { padding: 14px 16px; }
   .ptile--soon .ptile__label { font-size: 8.5px; letter-spacing: .2em; white-space: nowrap; }
   .ptile--soon .ptile__slot { display: none; }
@@ -418,6 +416,7 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
   .ehub__deck { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ptile--data, .ptile--xera, .ptile--gpt { grid-column: 1 / -1; --h: 280px; }
   .ptile--soon { grid-column: 1 / -1; }
+  .ptile--more { grid-column: 1 / -1; --h: 220px; }
   .ehub__status { display: inline-flex; }
   .ehub__title { font-size: clamp(40px, 7.4vw, 100px); }
 }
@@ -429,6 +428,7 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
   .ptile--xera { grid-column: 15 / 25; grid-row: 1; --h: 100%; --cut: 34px; }
   .ptile--gpt  { grid-column: 15 / 25; grid-row: 2; --h: 100%; --cut: 34px; }
   .ptile--soon { grid-column: 1 / 25; grid-row: 3; }
+  .ptile--more { grid-column: 1 / 25; grid-row: 3; --h: 230px; --cut: 34px; }
   .ptile--data .ptile__name { font-size: clamp(40px, 4.3vw, 66px); }
   .ptile--data .ptile__art { width: min(70%, 520px); top: 4%; right: -4%; }
   .ptile--xera .ptile__name { font-size: clamp(40px, 4.2vw, 64px); }
