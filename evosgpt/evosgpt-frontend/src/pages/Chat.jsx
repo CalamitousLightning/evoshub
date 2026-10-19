@@ -101,6 +101,7 @@ export default function Chat({ setPage, user, setUser }) {
   const [nudge, setNudge]             = useState(false);
   const [limitHit, setLimitHit]       = useState(false);
   const [menuOpen, setMenuOpen]       = useState(false);
+  const [plusOpen, setPlusOpen]       = useState(false); // "+" attach/create menu next to the message box
   const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   // Image generation + vision upload
@@ -117,8 +118,24 @@ export default function Chat({ setPage, user, setUser }) {
   const bodyRef   = useRef(null);
   const taRef     = useRef(null);
   const fileRef   = useRef(null);
+  const plusRef   = useRef(null);
 
   const canGenerateImages = tier !== "Basic";
+
+  // Close the "+" menu on outside click or Escape.
+  useEffect(() => {
+    if (!plusOpen) return;
+    const onDown = (e) => { if (plusRef.current && !plusRef.current.contains(e.target)) setPlusOpen(false); };
+    const onKey  = (e) => { if (e.key === "Escape") setPlusOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [plusOpen]);
 
   useEffect(() => {
     if (!user) { setPage("login"); return; }
@@ -538,30 +555,55 @@ export default function Chat({ setPage, user, setUser }) {
           style={{ display: "none" }}
           onChange={handleFileSelect}
         />
-        <button
-          style={{ ...S.attachBtn, opacity: limitHit || imageMode ? 0.4 : 1 }}
-          title="Attach an image to ask about"
-          disabled={limitHit || imageMode}
-          onClick={() => fileRef.current?.click()}
-        >
-          📎
-        </button>
-        <button
-          style={{ ...S.attachBtn, opacity: limitHit ? 0.4 : 1, color: imageMode ? "#a78bfa" : "#94a3b8", borderColor: imageMode ? "rgba(167,139,250,0.5)" : "rgba(255,255,255,0.1)" }}
-          title={canGenerateImages ? "Generate an image" : "Upgrade to Pro to generate images"}
-          disabled={limitHit}
-          onClick={toggleImageMode}
-        >
-          🎨
-        </button>
-        <button
-          style={{ ...S.attachBtn, opacity: limitHit ? 0.4 : 1, color: docMode ? "#4ade80" : "#94a3b8", borderColor: docMode ? "rgba(74,222,128,0.5)" : "rgba(255,255,255,0.1)" }}
-          title={canGenerateImages ? "Generate a PDF/Word document" : "Upgrade to Pro to generate documents"}
-          disabled={limitHit}
-          onClick={toggleDocMode}
-        >
-          📄
-        </button>
+        {/* "+" menu (like Claude / ChatGPT): attach an image, create an image, create a document */}
+        <div ref={plusRef} style={{ position: "relative", flexShrink: 0 }}>
+          {plusOpen && (
+            <div style={S.plusMenu} role="menu">
+              <button
+                role="menuitem"
+                style={{ ...S.plusItem, opacity: imageMode ? 0.4 : 1 }}
+                disabled={imageMode}
+                onClick={() => { setPlusOpen(false); fileRef.current?.click(); }}
+              >
+                <span style={S.plusIcon}>📎</span>
+                <span style={{ flex: 1 }}>Add a photo</span>
+              </button>
+              <button
+                role="menuitem"
+                style={{ ...S.plusItem, color: imageMode ? "#a78bfa" : "#e2e8f0" }}
+                onClick={() => { setPlusOpen(false); toggleImageMode(); }}
+              >
+                <span style={S.plusIcon}>🎨</span>
+                <span style={{ flex: 1 }}>Create an image</span>
+                {!canGenerateImages ? <span style={S.plusBadge}>Pro</span> : imageMode ? <span style={{ color: "#a78bfa" }}>✓</span> : null}
+              </button>
+              <button
+                role="menuitem"
+                style={{ ...S.plusItem, color: docMode ? "#4ade80" : "#e2e8f0" }}
+                onClick={() => { setPlusOpen(false); toggleDocMode(); }}
+              >
+                <span style={S.plusIcon}>📄</span>
+                <span style={{ flex: 1 }}>Create a document</span>
+                {!canGenerateImages ? <span style={S.plusBadge}>Pro</span> : docMode ? <span style={{ color: "#4ade80" }}>✓</span> : null}
+              </button>
+            </div>
+          )}
+          <button
+            style={{
+              ...S.attachBtn, fontSize: 26, fontWeight: 300, lineHeight: 1, opacity: limitHit ? 0.4 : 1,
+              color: (imageMode || docMode || plusOpen) ? "#f1f5f9" : "#94a3b8",
+              background: plusOpen ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)",
+            }}
+            title="Add photo, create image or document"
+            aria-label="Add photo, create image or document"
+            aria-haspopup="menu"
+            aria-expanded={plusOpen}
+            disabled={limitHit}
+            onClick={() => setPlusOpen(o => !o)}
+          >
+            <span style={{ display: "inline-block", transform: plusOpen ? "rotate(45deg)" : "none", transition: "transform 0.15s ease" }}>+</span>
+          </button>
+        </div>
         <textarea
           ref={taRef}
           style={{ ...S.textarea, overflowY: "hidden" }}
@@ -614,6 +656,10 @@ const S = {
   inputBar:  { display: "flex", gap: 8, padding: "14px 16px 20px", borderTop: "1px solid rgba(255,255,255,0.06)", maxWidth: 760, margin: "0 auto", width: "100%", boxSizing: "border-box", alignItems: "flex-end" },
   textarea:  { flex: 1, resize: "none", padding: "13px 16px", borderRadius: 16, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#f1f5f9", fontSize: 14.5, outline: "none", minHeight: 50, maxHeight: 160, fontFamily: "inherit", lineHeight: 1.55, transition: "height 0.1s ease" },
   sendBtn:   { width: 46, height: 46, borderRadius: "50%", border: "none", background: "linear-gradient(135deg,#38bdf8,#0ea5e9)", color: "#000", fontSize: 18, cursor: "pointer", flexShrink: 0 },
+  plusMenu:  { position: "absolute", bottom: 56, left: 0, minWidth: 220, padding: 6, borderRadius: 16, background: "#0f1729", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 32px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", gap: 2, zIndex: 50 },
+  plusItem:  { display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", borderRadius: 10, border: "none", background: "transparent", color: "#e2e8f0", fontSize: 14, fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "inherit" },
+  plusIcon:  { width: 22, textAlign: "center", fontSize: 16 },
+  plusBadge: { fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 999, background: "rgba(167,139,250,0.18)", color: "#a78bfa", letterSpacing: 0.4 },
   attachBtn: { width: 46, height: 46, borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", fontSize: 18, cursor: "pointer", flexShrink: 0 },
 
   pendingImageBar: { display: "flex", alignItems: "center", gap: 10, maxWidth: 760, margin: "0 auto", width: "calc(100% - 32px)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "8px 10px", marginBottom: 8 },
