@@ -18,7 +18,7 @@ if (!REF_RE.test(code)) code = ''
 if (!code) { const saved = safeGet(REF_KEY); code = REF_RE.test(saved) ? saved : '' }
 
 const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
-const createUrl = (c) => '/xera' + (c ? '?ref=' + encodeURIComponent(c) : '')
+const createUrl = (c) => '/login?mode=register' + (c ? '&ref=' + encodeURIComponent(c) : '')
 
 // Already inside the installed app: skip straight to account creation.
 if (standalone) {

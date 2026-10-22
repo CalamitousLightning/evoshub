@@ -26,7 +26,7 @@ export function hubToken() {
 }
 
 export const hubSignInUrl = (next) =>
-  `/xera?next=${encodeURIComponent(next || window.location.pathname + window.location.search)}`;
+  `/login?next=${encodeURIComponent(next || window.location.pathname + window.location.search)}`;
 
 /** True when a Hub token is present and not past the expiry in its payload.
  *  Client-side convenience only; every API call is still verified server-side. */

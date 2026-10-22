@@ -1,7 +1,7 @@
 /* EVOS HUB — shared session helper.
  *
- * There is one EVOS account system today: it lives behind the XERA
- * login/register screens at /xera, backed by the shared `public.users`
+ * There is one EVOS account system today: it lives behind the Hub
+ * sign-in page at /login, backed by the shared `public.users`
  * table ("the same one EVOSGPT/EVOSDATA/admin use" — see routes_auth.py).
  * The token it issues is a general EVOS session token, not a XERA-only
  * one, so the Hub shell reads the exact same localStorage keys XERA
@@ -96,7 +96,7 @@ export function signInUrl(next, mode = 'login') {
     if (dest) q.set('next', dest);
     if (mode === 'register') q.set('mode', 'register');
     const qs = q.toString();
-    return '/xera' + (qs ? '?' + qs : '');
+    return '/login' + (qs ? '?' + qs : '');
 }
 
 // EVOS Data keeps its own session on this same origin (/evosdata). Signing out

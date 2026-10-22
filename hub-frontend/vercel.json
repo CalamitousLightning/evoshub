@@ -11,6 +11,7 @@
     { "source": "/website-creation", "destination": "/website-creation.html" },
     { "source": "/business-tools", "destination": "/business-tools.html" },
     { "source": "/admin-login", "destination": "/admin-login.html" },
+    { "source": "/login", "destination": "/login.html" },
     { "source": "/admin-website-chat", "destination": "/admin-website-chat.html" },
     { "source": "/xera", "destination": "/xera/index.html" },
     { "source": "/xera/", "destination": "/xera/index.html" },

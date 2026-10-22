@@ -40,6 +40,7 @@ export default defineConfig({
         contact:           'src/pages/contact.html',
         websiteCreation:   'src/pages/website-creation.html',
         businessTools:     'src/pages/business-tools.html',
+        login:             'src/pages/login.html',
         adminLogin:        'src/pages/admin-login.html',
         adminWebsiteChat:  'src/pages/admin-website-chat.html',
         comingSoon:        'src/pages/coming-soon.html',
