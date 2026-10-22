@@ -13,6 +13,7 @@
     { "source": "/admin-login", "destination": "/admin-login.html" },
     { "source": "/login", "destination": "/login.html" },
     { "source": "/admin-website-chat", "destination": "/admin-website-chat.html" },
+    { "source": "/admin-xera-wallet", "destination": "/admin-xera-wallet.html" },
     { "source": "/xera", "destination": "/xera/index.html" },
     { "source": "/xera/", "destination": "/xera/index.html" },
     { "source": "/xera/dashboard", "destination": "/xera/app.html" },
