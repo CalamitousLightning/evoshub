@@ -1,0 +1,47 @@
+# ---- Secrets (never commit) ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.seed
+*.keystore
+secrets/
+
+# ---- Node / frontend ----
+node_modules/
+dist/
+.vite/
+.netlify/
+.vercel/
+npm-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+
+# ---- Python backend ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+
+# ---- Hardhat (blockchain/bnb) ----
+blockchain/bnb/artifacts/
+blockchain/bnb/cache/
+blockchain/bnb/typechain-types/
+blockchain/bnb/coverage/
+blockchain/bnb/coverage.json
+
+# ---- TON blueprint (blockchain/ton) ----
+# Note: blockchain/ton/build/ is intentionally NOT ignored (compiled output is committed).
+blockchain/ton/temp/
+blockchain/ton/coverage/
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
