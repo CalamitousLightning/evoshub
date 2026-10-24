@@ -9,6 +9,7 @@ let tickHandle = null;
 import { safeNext, isExpired, notifyAuthChange } from './evos-session.js';
 import { mountGuestBanner, requireAuthFor } from './guest-access.js';
 import { maybeShowWelcome, startMiningWithOnboarding, resetLaunchSession } from './xera-launch.js';
+import { initReadiness, resetReadiness } from './xera-readiness.js';
 
 const token = () => localStorage.getItem('xera_evos_token') || '';
 const fmt = (n) => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
@@ -40,6 +41,7 @@ let signedIn = false;
 
 function clearSession() {
     resetLaunchSession();
+    resetReadiness();
     ['xera_evos_token', 'xera_evos_user', 'user', 'email', 'username', 'user_id', 'userToken', 'agentToken']
         .forEach((k) => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } });
     try { sessionStorage.removeItem('agentToken'); } catch (e) { /* ignore */ }
@@ -212,6 +214,7 @@ async function load() {
         loadDaily();
         if (!handlePaystackReturn()) loadHashrate();
         maybeShowWelcome(req);
+        initReadiness(req, () => mining);   // KYC / fee / notification cards; display only, never blocks mining
     } catch (err) {
         clearSession();       // dead or rejected session: carry on as a guest
         enterGuestMode();

@@ -136,6 +136,13 @@
             <button type="button" class="btn daily-btn" id="dailyClaimBtnDash">Claim</button>
           </div>
 
+          <!-- Server-confirmed readiness cards (js/xera-readiness.js). Hidden until the server answers. -->
+          <div id="readinessCards" hidden>
+            <div class="mini-card" id="notifCard" aria-live="polite"></div>
+            <div class="mini-card" id="kycCard" role="button" tabindex="0"></div>
+            <div class="mini-card" id="feeCard" role="button" tabindex="0"></div>
+          </div>
+
           <div class="section-title">Coming soon</div>
           <div class="chip-row">
             <div class="chip">
