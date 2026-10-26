@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0b2a1f">
+  <title>EVOLUTION 1: THE RUNNER (portrait)</title>
+  <link rel="stylesheet" href="/games/evolution-1-lanes/style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="EVOLUTION 1: THE RUNNER game"></canvas>
+
+    <button id="hook-btn" type="button" aria-label="Hook">HOOK</button>
+
+    <div id="overlay" class="overlay" role="dialog" aria-live="polite">
+      <div class="panel">
+        <p class="eyebrow">EVOXERA TECHNOLOGY</p>
+        <h1 id="ov-title">EVOLUTION 1<br><span>THE RUNNER</span></h1>
+        <p id="ov-text" class="text">A laboratory fell from the sky and became a temple in the jungle. Run toward it.</p>
+        <p id="ov-stats" class="stats" hidden></p>
+        <button id="ov-btn" class="btn" type="button">START</button>
+        <ul id="ov-help" class="help">
+          <li><b>Swipe &larr; &rarr;</b> change lane</li>
+          <li><b>Swipe &uarr;</b> jump &nbsp; <b>Swipe &darr;</b> slide</li>
+          <li><b>Tap / HOOK</b> swing over chasms &amp; pull up ledges</li>
+          <li class="kbd">Keyboard: arrows / WASD, Space = jump, X = hook</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="/games/evolution-1-lanes/core.js"></script>
+  <script src="/games/evolution-1-lanes/main.js"></script>
+</body>
+</html>
