@@ -235,46 +235,181 @@
   }
 
   // ---------------------------------------------------------------- player
+  // Explorer seen from behind. Drawn in "character units" (1 unit ~ 1 m, y up, feet at 0) so the pose maths
+  // stays readable; only the look changes here - physics, hitboxes and controls live in core.js.
+  var leanS = 0, lastPx = 0, crashAt = 0, hookSwayT = 0;
+  var SKIN = '#c68a5a', SKIN_D = '#a9714a', HAIR = '#2a1c14', JACKET = '#d9b25f', JACKET_D = '#b8913f', JACKET_L = '#ecc979',
+      PANTS = '#27405a', PANTS_D = '#1c3248', BOOT = '#3a2a1a', SOLE = '#160e08', PACK = '#2f6b4c', PACK_D = '#22513a', PACK_L = '#41905f',
+      MINT = '#7cf0cf', SCARF = '#f08a1f', SCARF_D = '#c46a0f', METAL = '#9fb2bf', METAL_D = '#6c808e', STRAP = '#4a3220';
+
+  function limb(x0, y0, x1, y1, w, col) {
+    ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  }
+  function leg(side, hipY, lift, spread, squat) {
+    var hx = side * 0.15, fx = side * (0.16 + spread), ay = lift + 0.16;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (squat) {                                                     // slide: knees pushed out
+      var kx = side * 0.36, ky = hipY * 0.6;
+      ctx.strokeStyle = PANTS; ctx.lineWidth = 0.23; ctx.beginPath(); ctx.moveTo(hx, hipY); ctx.lineTo(kx, ky); ctx.lineTo(fx, ay); ctx.stroke();
+      ctx.strokeStyle = PANTS_D; ctx.lineWidth = 0.05; ctx.beginPath(); ctx.moveTo(hx + side * 0.07, hipY - 0.05); ctx.lineTo(kx + side * 0.07, ky); ctx.stroke();
+    } else {
+      limb(hx, hipY, fx, ay, 0.23, PANTS);
+      limb(hx + side * 0.075, hipY - 0.04, fx + side * 0.075, ay + 0.1, 0.045, PANTS_D);
+    }
+    ctx.lineCap = 'butt';
+    // boot: when the foot is lifted the sole faces the camera
+    var up = Math.min(1, lift / 0.25);
+    ctx.fillStyle = BOOT; roundRect(fx - 0.115, lift + 0.02, 0.23, 0.2, 0.07); ctx.fill();
+    ctx.fillStyle = SOLE; roundRect(fx - 0.12, lift - 0.015, 0.24, 0.07 + 0.09 * up, 0.035); ctx.fill();
+    if (up > 0.4) { ctx.fillStyle = '#2d1f14'; ctx.fillRect(fx - 0.08, lift + 0.01, 0.16, 0.025); ctx.fillRect(fx - 0.08, lift + 0.07, 0.16, 0.02); }
+    ctx.fillStyle = '#5a4128'; ctx.fillRect(fx - 0.1, lift + 0.18, 0.2, 0.035);                    // boot cuff
+  }
+  function arm(side, sx, sy, hx, hy, gauntlet, t) {
+    ctx.lineCap = 'round';
+    var ex = sx + (hx - sx) * 0.5 + side * 0.07, ey = sy + (hy - sy) * 0.5;
+    limb(sx, sy, ex, ey, 0.17, JACKET_D); limb(ex, ey, hx, hy, 0.15, JACKET);
+    ctx.lineCap = 'butt';
+    if (gauntlet) {                                                   // hook launcher on the right forearm
+      var dx = hx - ex, dy = hy - ey, L = Math.sqrt(dx * dx + dy * dy) || 1, ang = Math.atan2(dy, dx);
+      ctx.save(); ctx.translate(ex + dx * 0.55, ey + dy * 0.55); ctx.rotate(ang);
+      ctx.fillStyle = METAL; roundRect(-L * 0.4, -0.1, L * 0.78, 0.2, 0.06); ctx.fill();
+      ctx.fillStyle = METAL_D; ctx.fillRect(-L * 0.4, -0.1, L * 0.78, 0.04);
+      ctx.fillStyle = MINT; ctx.globalAlpha = 0.65 + 0.35 * Math.sin(t / 220); ctx.fillRect(-0.02, -0.105, 0.07, 0.21); ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+    ctx.fillStyle = SKIN; ctx.beginPath(); ctx.arc(hx, hy, 0.085, 0, 6.3); ctx.fill();               // glove-less hand
+    ctx.fillStyle = SKIN_D; ctx.beginPath(); ctx.arc(hx + side * 0.015, hy - 0.02, 0.05, 0, 6.3); ctx.fill();
+  }
+
   function drawPlayer(t) {
-    var g = game, p = proj(g.px, g.y, 0), s = p.s, sl = g.slideT > 0, hooked = !!g.hook;
-    // ground shadow
+    var g = game, p = proj(g.px, g.y, 0), s = p.s, X = p.x, Y = p.y;
+    var playing = g.state === 'playing', over = g.state === 'over', hooked = !!g.hook;
+    var sl = g.slideT > 0 && g.onGround, air = !g.onGround && !hooked;
+
+    // ground shadow (unchanged behaviour)
     if (g.y > -0.3) {
       var gy = (g.y >= CFG.LEDGE_H - 0.2) ? CFG.LEDGE_H : 0, sp = proj(g.px, gy, 0);
       var sc = clamp(1 - (g.y - gy) / 6, 0.3, 1);
       ctx.fillStyle = 'rgba(0,0,0,' + (0.35 * sc) + ')'; ctx.beginPath(); ctx.ellipse(sp.x, sp.y, 0.55 * s * sc, 0.16 * s * sc, 0, 0, 6.3); ctx.fill();
     }
-    var ph = g.onGround && g.state === 'playing' ? g.pz * 0.85 : 1.2, sw = Math.sin(ph) * 0.3, k = sl ? 0.48 : 1;
-    var X = p.x, Y = p.y;                                    // feet position on screen
-    function Yh(h) { return Y - h * k * s; }
-    // legs
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#27405a'; ctx.lineWidth = 0.2 * s;
-    ctx.beginPath(); ctx.moveTo(X - 0.15 * s, Yh(0.85)); ctx.lineTo(X - 0.17 * s, Yh(0.05 + (g.onGround ? Math.max(0, sw) * 0.5 : 0.2))); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(X + 0.15 * s, Yh(0.85)); ctx.lineTo(X + 0.17 * s, Yh(0.05 + (g.onGround ? Math.max(0, -sw) * 0.5 : 0.35))); ctx.stroke();
-    ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 0.22 * s;                // boots
-    ctx.beginPath(); ctx.moveTo(X - 0.17 * s, Yh(0.05 + (g.onGround ? Math.max(0, sw) * 0.5 : 0.2))); ctx.lineTo(X - 0.17 * s, Yh(0.0 + (g.onGround ? Math.max(0, sw) * 0.5 : 0.2))); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(X + 0.17 * s, Yh(0.05 + (g.onGround ? Math.max(0, -sw) * 0.5 : 0.35))); ctx.lineTo(X + 0.17 * s, Yh(0.0 + (g.onGround ? Math.max(0, -sw) * 0.5 : 0.35))); ctx.stroke();
-    // torso + backpack
-    var tw = (sl ? 0.85 : 0.68) * s;
-    ctx.fillStyle = '#d9b25f'; roundRect(X - tw / 2, Yh(1.5), tw, 0.78 * k * s, 0.16 * s); ctx.fill();
-    ctx.fillStyle = '#2f6b4c'; roundRect(X - tw * 0.38, Yh(1.38), tw * 0.76, 0.55 * k * s, 0.1 * s); ctx.fill();
-    ctx.fillStyle = '#7cf0cf'; ctx.fillRect(X - tw * 0.08, Yh(1.22), tw * 0.16, 0.22 * k * s);        // EVO light on the pack
-    // arms
-    ctx.strokeStyle = '#c68a5a'; ctx.lineWidth = 0.15 * s;
-    var armSw = g.onGround ? sw * 0.9 : 0.1;
-    ctx.beginPath(); ctx.moveTo(X - tw / 2, Yh(1.38)); ctx.lineTo(X - tw / 2 - 0.08 * s, Yh(0.9 + armSw * 0.5)); ctx.stroke();
-    if (hooked) {
-      var a = g.hook.anchor, ap = proj(0, a.y, a.z - rz), hand = { x: X + tw / 2, y: Yh(1.4) };
-      ctx.beginPath(); ctx.moveTo(X + tw / 2, Yh(1.38)); ctx.lineTo(hand.x + 0.05 * s, hand.y - 0.2 * s); ctx.stroke();
-      ctx.strokeStyle = g.hook.kind === 'swing' ? '#ffe86a' : '#ffa33a'; ctx.lineWidth = Math.max(2, 0.07 * s);
-      ctx.beginPath(); ctx.moveTo(hand.x, hand.y - 0.2 * s); ctx.lineTo(ap.x, ap.y); ctx.stroke();
-    } else {
-      ctx.beginPath(); ctx.moveTo(X + tw / 2, Yh(1.38)); ctx.lineTo(X + tw / 2 + 0.08 * s, Yh(0.9 - armSw * 0.5)); ctx.stroke();
+
+    // ---- pose --------------------------------------------------------------------------------------------------
+    var ph = (playing || g.state === 'paused') ? g.pz * 0.85 : (g.state === 'menu' ? t / 115 : 0.6);
+    var running = (playing || g.state === 'paused' || g.state === 'menu') && g.onGround && !sl;
+    var sA = Math.sin(ph), bob = running ? Math.abs(Math.cos(ph)) * 0.07 : 0;
+    var hipY = 0.95, shY = 1.55, headY = 1.8, spreadL = 0, spreadR = 0, liftL = 0, liftR = 0;
+    var armLx, armLy, armRx, armRy;
+    var breath = (g.state === 'menu') ? Math.sin(t / 420) * 0.012 : 0;
+
+    if (running) {
+      liftL = Math.max(0, sA) * 0.52; liftR = Math.max(0, -sA) * 0.52;
+      armLx = -0.5; armLy = 1.08 - sA * 0.3; armRx = 0.5; armRy = 1.08 + sA * 0.3;
+    } else if (sl) {                                                   // slide: low and wide
+      hipY = 0.5; shY = 1.02; headY = 1.22; spreadL = spreadR = 0.16;
+      armLx = -0.52; armLy = 0.72; armRx = 0.52; armRy = 0.72;
+    } else if (hooked) {
+      liftL = 0.28; liftR = 0.42; spreadL = 0.04; spreadR = 0.05;
+      armLx = -0.55; armLy = 1.2; armRx = 0.5; armRy = 2.0;           // right arm overridden below
+    } else if (air && g.vy > 0.5) {                                    // rising: knees tucked, arms up
+      liftL = 0.4; liftR = 0.26; armLx = -0.5; armLy = 1.95; armRx = 0.5; armRy = 1.95; headY = 1.82;
+    } else if (air) {                                                  // falling: legs reaching, arms out
+      liftL = 0.1; liftR = 0.18; spreadL = spreadR = 0.1; armLx = -0.78; armLy = 1.55; armRx = 0.78; armRy = 1.55;
+    } else {                                                           // idle / stunned
+      armLx = -0.46; armLy = 0.98; armRx = 0.46; armRy = 0.98;
     }
-    // head
-    ctx.fillStyle = '#c68a5a'; ctx.beginPath(); ctx.arc(X, Yh(1.68), 0.22 * s, 0, 6.3); ctx.fill();
-    ctx.fillStyle = '#2a1c14'; ctx.beginPath(); ctx.arc(X, Yh(1.72), 0.23 * s, Math.PI * 1.02, Math.PI * 1.98); ctx.fill();
-    ctx.lineCap = 'butt';
+    hipY += bob; shY += bob + breath; headY += bob + breath;
+    var crashRot = 0, stars = false;
+    if (over) {
+      if (!crashAt) crashAt = t;
+      var age = (t - crashAt) / 1000;
+      if (g.reason !== 'fell') { crashRot = Math.min(age * 5.5, 1.35) * (g.lane >= 0 ? 1 : -1); stars = age > 0.25; }
+      armLx = -0.7; armLy = 1.6; armRx = 0.7; armRy = 1.6; liftL = 0.15; liftR = 0.3;
+    } else crashAt = 0;
+
+    // lean into lane changes (only while running)
+    var dpx = g.px - lastPx; lastPx = g.px;
+    var leanT = running ? clamp(dpx * 12, -0.26, 0.26) : 0;
+    leanS += (leanT - leanS) * 0.3;
+
+    // right hand reaches for the anchor while hooked (character units, relative to feet)
+    var hookEnd = null;
+    if (hooked) {
+      var a = g.hook.anchor, ap = proj(0, a.y, a.z - rz);
+      var tx = (ap.x - X) / s, ty = (Y - ap.y) / s;
+      var shx = 0.34, dx = tx - shx, dy = ty - shY, L = Math.sqrt(dx * dx + dy * dy) || 1;
+      armRx = shx + dx / L * 0.62; armRy = shY + dy / L * 0.62;
+      hookEnd = { x: ap.x, y: ap.y, kind: g.hook.kind };
+    }
+
+    // ---- draw (y-up local space) --------------------------------------------------------------------------------
+    ctx.save();
+    ctx.translate(X, Y); ctx.scale(s, -s);
+    if (crashRot) ctx.rotate(crashRot * 0.95); else ctx.rotate(-leanS * 0.55);
+
+    leg(-1, hipY, liftL, spreadL, sl); leg(1, hipY, liftR, spreadR, sl);
+
+    // torso (jacket) with shading
+    var tw = sl ? 0.74 : 0.62, tb = hipY + 0.02, tt = shY + 0.04;
+    ctx.fillStyle = JACKET; roundRect(-tw / 2, tb, tw, tt - tb, 0.16); ctx.fill();
+    ctx.fillStyle = JACKET_D; roundRect(-tw / 2, tb, tw * 0.2, tt - tb, 0.1); ctx.fill(); roundRect(tw / 2 - tw * 0.2, tb, tw * 0.2, tt - tb, 0.1); ctx.fill();
+    ctx.fillStyle = JACKET_L; ctx.fillRect(-0.025, tb + 0.05, 0.05, tt - tb - 0.12);               // back seam
+    ctx.fillStyle = STRAP; ctx.fillRect(-tw / 2, tb + 0.02, tw, 0.075);                            // belt
+    ctx.fillStyle = METAL; ctx.fillRect(-0.04, tb + 0.015, 0.08, 0.085);
+
+    // coiled rope on the left hip
+    ctx.strokeStyle = '#d8c79a'; ctx.lineWidth = 0.03;
+    for (var c = 0; c < 3; c++) { ctx.beginPath(); ctx.ellipse(-tw / 2 - 0.02, tb + 0.12 + c * 0.001, 0.09 - c * 0.012, 0.075 - c * 0.01, 0, 0, 6.3); ctx.stroke(); }
+
+    // arms (left behind the pack edge, right with the hook gauntlet)
+    arm(-1, -tw / 2 + 0.02, shY - 0.03, armLx, armLy, false, t);
+    arm(1, tw / 2 - 0.02, shY - 0.03, armRx, armRy, true, t);
+
+    // backpack with the EVO light
+    var pw = tw * 0.78, pb = tb + 0.1, pt = tt - 0.02;
+    ctx.fillStyle = '#8a5a2b'; roundRect(-pw / 2 - 0.03, pt - 0.02, pw + 0.06, 0.12, 0.06); ctx.fill();   // bedroll
+    ctx.fillStyle = '#6e4620'; ctx.fillRect(-pw * 0.2, pt - 0.02, 0.03, 0.12); ctx.fillRect(pw * 0.2 - 0.03, pt - 0.02, 0.03, 0.12);
+    ctx.fillStyle = PACK; roundRect(-pw / 2, pb, pw, pt - pb, 0.1); ctx.fill();
+    ctx.fillStyle = PACK_D; roundRect(-pw / 2, pb, pw * 0.16, pt - pb, 0.07); ctx.fill();
+    ctx.fillStyle = PACK_L; ctx.fillRect(-pw / 2 + pw * 0.2, pb + 0.04, pw * 0.6, 0.03);
+    ctx.fillStyle = PACK_D; roundRect(-pw / 2 - 0.04, pb + 0.06, 0.09, 0.2, 0.04); ctx.fill(); roundRect(pw / 2 - 0.05, pb + 0.06, 0.09, 0.2, 0.04); ctx.fill();   // side pouches
+    var gl = 0.7 + 0.3 * Math.sin(t / 260);
+    ctx.fillStyle = 'rgba(124,240,207,' + (0.22 * gl) + ')'; ctx.beginPath(); ctx.arc(0, (pb + pt) / 2 + 0.02, 0.17, 0, 6.3); ctx.fill();
+    ctx.fillStyle = MINT; ctx.globalAlpha = gl; roundRect(-0.045, (pb + pt) / 2 - 0.08, 0.09, 0.2, 0.04); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = STRAP; ctx.fillRect(-pw / 2 + 0.02, pt - 0.14, pw - 0.04, 0.03);                // chest-strap hint
+
+    // scarf tails flick in the wind
+    var wv = running ? Math.sin(t / 90) * 0.06 + (-leanS) * 0.5 : Math.sin(t / 300) * 0.02;
+    ctx.fillStyle = SCARF; ctx.beginPath(); ctx.moveTo(-0.17, shY + 0.02); ctx.quadraticCurveTo(-0.3 + wv, shY - 0.15, -0.34 + wv * 1.6, shY - 0.34); ctx.lineTo(-0.2 + wv, shY - 0.3); ctx.quadraticCurveTo(-0.14, shY - 0.1, -0.06, shY + 0.02); ctx.fill();
+    ctx.fillStyle = SCARF_D; ctx.beginPath(); ctx.moveTo(0.17, shY + 0.02); ctx.quadraticCurveTo(0.3 + wv, shY - 0.1, 0.32 + wv * 1.8, shY - 0.26); ctx.lineTo(0.2 + wv, shY - 0.24); ctx.quadraticCurveTo(0.14, shY - 0.08, 0.06, shY + 0.02); ctx.fill();
+    ctx.fillStyle = SCARF; roundRect(-0.24, shY - 0.02, 0.48, 0.1, 0.05); ctx.fill();                    // neck wrap
+
+    // head from behind: hair, headband, goggle strap
+    var hr = 0.215;
+    ctx.fillStyle = SKIN; roundRect(-0.07, shY + 0.02, 0.14, 0.12, 0.04); ctx.fill();                  // neck
+    ctx.fillStyle = HAIR; ctx.beginPath(); ctx.arc(0, headY, hr, 0, 6.3); ctx.fill();
+    ctx.fillStyle = '#3b2a1d'; ctx.beginPath(); ctx.arc(-0.05, headY + 0.07, hr * 0.62, 0.3, 2.5); ctx.fill();   // hair highlight
+    ctx.fillStyle = SKIN; ctx.beginPath(); ctx.ellipse(-hr * 0.96, headY - 0.03, 0.035, 0.06, 0, 0, 6.3); ctx.fill(); ctx.beginPath(); ctx.ellipse(hr * 0.96, headY - 0.03, 0.035, 0.06, 0, 0, 6.3); ctx.fill();   // ears
+    ctx.fillStyle = '#1f4f46'; ctx.fillRect(-hr * 0.99, headY + 0.03, hr * 1.98, 0.07);               // goggle strap
+    ctx.fillStyle = MINT; ctx.fillRect(-0.03, headY + 0.03, 0.06, 0.07);                              // strap buckle
+    ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.beginPath(); ctx.arc(-0.07, headY + 0.1, 0.07, 3.4, 5.2); ctx.fill();
+
+    if (stars) {                                                       // dizzy stars after a crash
+      for (var q = 0; q < 3; q++) {
+        var qa = t / 220 + q * 2.1; ctx.fillStyle = '#ffe86a';
+        ctx.beginPath(); ctx.arc(Math.cos(qa) * 0.34, headY + 0.34 + Math.sin(qa) * 0.07, 0.045, 0, 6.3); ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    // hook rope from the gauntlet to the anchor (screen space)
+    if (hookEnd) {
+      var hx = X + armRx * s, hy = Y - armRy * s;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = hookEnd.kind === 'swing' ? '#ffe86a' : '#ffa33a'; ctx.lineWidth = Math.max(2, 0.07 * s);
+      ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hookEnd.x, hookEnd.y); ctx.stroke();
+      ctx.fillStyle = METAL; ctx.beginPath(); ctx.arc(hookEnd.x, hookEnd.y, Math.max(2.5, 0.06 * s), 0, 6.3); ctx.fill();
+      ctx.lineCap = 'butt';
+    }
   }
   function roundRect(x, y, w, h, r) {
     r = Math.min(r, w / 2, Math.abs(h) / 2);
