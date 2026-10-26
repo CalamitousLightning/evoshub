@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0b2a1f">
+  <title>EVOLUTION 1: THE RUNNER</title>
+  <link rel="stylesheet" href="/games/evolution-1-runner/style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="stage">
+      <canvas id="game" aria-label="EVOLUTION 1: THE RUNNER game"></canvas>
+
+      <div id="overlay" class="overlay" role="dialog" aria-live="polite">
+        <div class="panel">
+          <p class="eyebrow">EVOXERA TECHNOLOGY</p>
+          <h1 id="ov-title">EVOLUTION 1<br><span>THE RUNNER</span></h1>
+          <p id="ov-text" class="text">A laboratory fell from the sky and became a temple in the jungle. Run toward it.</p>
+          <p id="ov-stats" class="stats" hidden></p>
+          <button id="ov-btn" class="btn" type="button">START</button>
+          <p id="ov-help" class="help">Tap JUMP or the screen &middot; Space / &uarr; / W on keyboard</p>
+          <p class="rotate">&#8635; Rotate your phone sideways for a bigger view</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="controls">
+      <button id="hook-btn" type="button" aria-label="Hook (hold)">HOOK</button>
+      <button id="jump-btn" type="button" aria-label="Jump">JUMP</button>
+    </div>
+  </div>
+
+  <script src="/games/evolution-1-runner/core.js"></script>
+  <script src="/games/evolution-1-runner/main.js"></script>
+</body>
+</html>
