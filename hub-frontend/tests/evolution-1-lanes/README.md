@@ -1,12 +1,12 @@
-# EVOLUTION 1: THE RUNNER (lanes, portrait) — tests & notes
+# Evolution 1: Lane Runner — tests
 
-Temple Run / Subway Surfers-style version. Lives at `hub-frontend/public/games/evolution-1-lanes/` and is copied untouched into `dist/` by Vite, served at **`/games/evolution-1-lanes/`**.
-The side-scroller at `/games/evolution-1-runner/` is untouched. Isolated: no backend, auth, database, XERA/Pi code; **no navigation links point to it**; the page is `noindex`.
+Game: `public/games/evolution-1-lanes/` (route `/games/evolution-1-lanes/`, not linked from any Hub page).
 
-Tests live here (outside `public/`, never deployed):
-- `node tests/evolution-1-lanes/core.test.js` — headless logic tests (lanes, jump, slide, collisions, both hook physics, generator fairness, lane-aware bot that must survive 2500 m on 40 seeds).
-- `npm run build && python3 tests/evolution-1-lanes/e2e.py` — headless Chromium, emulated Android phone, REAL touch events, under the Hub's CSP, portrait + landscape. `EVO_ROOT=public` tests sources instead.
+- `core.js` pure game logic (3 lanes, jump, slide, swing/pull hooks, coins, one-stumble allowance). Runs in Node and the browser.
+- `render3d.js` Three.js (r169, vendored in `vendor/`, MIT licence in `vendor/three.LICENSE`) 3D renderer. Falls back to the 2D canvas renderer in `main.js` when WebGL is unavailable or on error; force it with `?mode=2d`.
+- Scoring: `points = metres + 10 x coins`. Soft obstacles (rock, log, wall, branch) cost a stumble (slow + 1.4 s invulnerability, wounded for 12 s); a second hit while wounded, or any pit/chasm/ledge failure, ends the run.
 
-Controls: swipe left/right = lane · swipe up = jump · swipe down = slide (fast-fall in the air) · tap anywhere or HOOK button = hook.
-Keyboard: arrows / WASD, Space = jump, X / H / Shift = hook, Esc / P = pause.
-Hook: tap shortly BEFORE a chasm (yellow vine = swing) or a stone ledge (orange ring = pull up). The tap arms the hook for 2 s; it latches at the correct launch point.
+## Run
+- `node tests/evolution-1-lanes/core.test.js` logic, bot on 40 seeds, stumble and coin rules.
+- `python3 tests/evolution-1-lanes/e2e.py` headless Chromium (SwiftShader) with real CDP touch, Hub CSP headers; runs portrait-3D, landscape-3D and 2D fallback. `EVO_ROOT=public|dist`, `EVO_ONLY=<label substring>`, `SHOTS_DIR=<dir>`.
+  Software GL is slow (~12 fps), so timing-critical steps are dispatched from inside the page. Run it with no other heavy processes.

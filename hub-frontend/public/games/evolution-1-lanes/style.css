@@ -12,7 +12,8 @@ html, body {
 }
 
 #app { position: fixed; inset: 0; height: 100vh; height: 100dvh; }
-#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; background: #0b2a1f; }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+#game { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; background: #0b2a1f; }
 
 /* HOOK button: bottom-right, in thumb reach. Swipes/taps elsewhere on the screen control the rest. */
 #hook-btn {

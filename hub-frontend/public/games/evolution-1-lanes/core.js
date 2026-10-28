@@ -10,6 +10,10 @@
  *            turned into swing motion; you are released at the far side with your momentum and fly onto solid ground.
  *   - PULL   (ring above a tall stone ledge that cannot be jumped): a real reel force hauls you up onto the ledge.
  * Tapping HOOK arms the hook for a moment; it latches when the runner reaches the correct launch point.
+ *
+ * Coins: lines in the gaps, arcs over jumpable obstacles, a trail along the swing arc and a line on top of ledges.
+ * Stumble: the first hit on a rock / log / branch / wall is survivable (brief invulnerability + slow-down). A second hit
+ *          while still "wounded" ends the run; WOUND_T seconds without a hit heals you. Falls and ledge hits are always fatal.
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -50,7 +54,16 @@
     SWING_K: 0.55,         // vine height above the hand = SWING_K * chasm length
     CHASM_MIN: 16,
     CHASM_MAX: 30,
-    DEATH_Y: -9
+    DEATH_Y: -9,
+    // ---- stumble / coins ----
+    WOUND_T: 12,           // seconds you stay wounded after a stumble (a 2nd hit in this time ends the run)
+    INVULN_T: 1.4,         // ghosting through obstacles right after a stumble
+    SLOW_MIN: 0.55,        // speed factor right after a stumble ...
+    SLOW_REC: 0.18,        // ... recovering by this much per second
+    COIN_R: 0.35,
+    COIN_VALUE: 10,
+    COIN_STEP: 2.0,
+    TILE: 2.5              // ground tile length (pits / chasms are aligned to it)
   };
 
   function mulberry32(a) {
@@ -86,6 +99,9 @@
     this.hook = null; this.hookArmed = 0;
     this.hooksUsed = 0; this.swings = 0; this.pulls = 0;
     this.reason = null;
+    this.coins = 0; this.coinList = []; this.stumbles = 0;
+    this.wounded = 0; this.invuln = 0; this.slow = 1;
+    this.lastEnd = 6; this.lastKind = 'start';
     while (this.nextZ < CFG.SPAWN_AHEAD) this.spawnRow();
   };
 
@@ -97,7 +113,8 @@
   };
   Game.prototype.pause = function () { if (this.state === 'playing') { this.state = 'paused'; this.emit('pause'); } };
   Game.prototype.resume = function () { if (this.state === 'paused') { this.state = 'playing'; this.emit('resume'); } };
-  Game.prototype.score = function () { return Math.floor(this.pz); };
+  Game.prototype.score = function () { return Math.floor(this.pz); };                       // distance in metres
+  Game.prototype.points = function () { return Math.floor(this.pz) + this.coins * CFG.COIN_VALUE; };
 
   // ------------------------------------------------------------ inputs
   Game.prototype.moveLane = function (dir) {
@@ -136,6 +153,8 @@
     var kind = pool[Math.floor(r() * pool.length)];
     var hookRow = kind === 'chasm' || kind === 'ledge';
     var z = this.nextZ + (hookRow ? v * 0.5 + 6 : 0);
+    // pits and chasms sit on the 2.5-unit ground-tile grid so the 3D floor can have clean edges
+    if (kind === 'pit' || kind === 'chasm') z = Math.ceil(z / CFG.TILE) * CFG.TILE;
     var rowLen = 2.2, gap = v * (0.95 + 0.6 * r());
     var i, lanes, o;
 
@@ -157,11 +176,11 @@
       this.obstacles.push({ type: rock2 ? 'rock' : 'log', z: z, len: 2.0, lanes: r() < 0.5 ? [lanes[1]] : [lanes[1], lanes[2]], h: rock2 ? CFG.ROCK_H : CFG.LOG_H });
       rowLen = 2.0;
     } else if (kind === 'pit') {
-      rowLen = Math.round(v * (0.26 + r() * 0.14) * 10) / 10;
+      rowLen = Math.ceil(v * (0.26 + r() * 0.14) / CFG.TILE) * CFG.TILE;
       this.obstacles.push({ type: 'pit', z: z, len: rowLen, lanes: [-1, 0, 1] });
       gap = v * 1.0;
     } else if (kind === 'chasm') {
-      rowLen = Math.round(clamp(v + 3, CFG.CHASM_MIN, CFG.CHASM_MAX));
+      rowLen = Math.ceil(clamp(v + 3, CFG.CHASM_MIN, CFG.CHASM_MAX) / CFG.TILE) * CFG.TILE;
       o = { type: 'chasm', z: z, len: rowLen, lanes: [-1, 0, 1] };
       o.anchor = { kind: 'swing', z: z + rowLen / 2, y: CFG.HAND_H + CFG.SWING_K * rowLen, farZ: z + rowLen };
       this.obstacles.push(o);
@@ -173,7 +192,50 @@
       this.obstacles.push(o);
       gap = v * 0.9 + 4;
     }
+    this.addCoins(kind, z, rowLen, v);
+    this.lastEnd = z + rowLen; this.lastKind = kind;
     this.nextZ = z + rowLen + gap;
+  };
+
+  Game.prototype.addCoin = function (z, lane, y, tol) {
+    this.coinList.push({ z: z, lane: lane, y: y, tol: tol || 1.0, taken: false });
+  };
+
+  // a straight line of coins on the ground between z0 and z1 (optionally switching lane half way)
+  Game.prototype.coinLine = function (z0, z1, lane, y, zig) {
+    if (z1 - z0 < 4) return;
+    var n = Math.min(9, Math.floor((z1 - z0) / CFG.COIN_STEP) + 1), i, l = lane;
+    for (i = 0; i < n; i++) {
+      if (zig && i === Math.floor(n / 2)) l = clamp(lane + zig, -1, 1);
+      this.addCoin(z0 + i * CFG.COIN_STEP, l, y);
+    }
+  };
+
+  Game.prototype.addCoins = function (kind, z, len, v) {
+    var r = this.rng, os = this.obstacles, last = os[os.length - 1], i, lane, h;
+    // 1) a trail in the free space before this row (after the flight, if the previous row was a chasm)
+    var from = this.lastEnd + (this.lastKind === 'chasm' ? 0.0295 * v * v + 3 : 3), to = z - 3;
+    if (r() < 0.8) this.coinLine(from, to, Math.floor(r() * 3) - 1, 0.9, r() < 0.3 ? (r() < 0.5 ? -1 : 1) : 0);
+    // 2) rewards that sit on the row itself
+    if (kind === 'jump') {                                    // arc over the rock / log: reward for jumping
+      lane = last.lanes[0]; h = [1.3, 2.0, 2.4, 2.0, 1.3];
+      for (i = 0; i < 5; i++) this.addCoin(z + last.len / 2 + (i - 2) * 1.8, lane, h[i]);
+    } else if (kind === 'slide') {                            // low coins under the branch: reward for sliding
+      lane = last.lanes[0];
+      for (i = 0; i < 3; i++) this.addCoin(z + (i - 1) * 1.6 + last.len / 2, lane, 0.5);
+    } else if (kind === 'pit') {                              // arc over the pit
+      h = [1.2, 1.9, 2.3, 1.9, 1.2];
+      for (i = 0; i < 5; i++) this.addCoin(z - 1 + (len + 2) * i / 4, 0, h[i], 1.4);
+    } else if (kind === 'chasm') {                            // trail along the swing arc: guides and rewards the hook
+      var a = last.anchor, D = Math.hypot(len / 2, a.y - CFG.HAND_H), th = Math.asin((len / 2) / D) * 0.85, ph;
+      for (i = 0; i < 7; i++) {
+        ph = -th + (2 * th) * i / 6;
+        this.addCoin(a.z + D * Math.sin(ph), 0, a.y - D * Math.cos(ph) - 0.5, 3.4);
+      }
+    } else if (kind === 'ledge') {                            // line on top of the ledge: reward for pulling up
+      lane = Math.floor(r() * 3) - 1;
+      for (i = 0; i < 7; i++) this.addCoin(z + 4 + i * CFG.COIN_STEP, lane, CFG.LEDGE_H + 0.9);
+    }
   };
 
   // ------------------------------------------------------------ support / collision helpers
@@ -194,6 +256,15 @@
     return false;
   };
 
+  // A hit on a soft obstacle: the first one is a stumble, a second one while still wounded ends the run.
+  Game.prototype.hit = function (reason) {
+    if (this.invuln > 0) return;
+    if (this.wounded > 0) return this.die(reason);
+    this.wounded = CFG.WOUND_T; this.invuln = CFG.INVULN_T; this.slow = CFG.SLOW_MIN; this.stumbles++;
+    this.lastHit = reason;
+    this.emit('stumble');
+  };
+
   Game.prototype.die = function (reason) {
     this.hook = null;
     this.state = 'over';
@@ -207,12 +278,21 @@
       o = this.obstacles[i];
       if (!(this.pz + CFG.PZ > o.z && this.pz - CFG.PZ < o.z + o.len)) continue;
       if (o.type === 'rock' || o.type === 'log' || o.type === 'wall') {
-        if (this.laneHit(o) && this.y < o.h - 0.08) return this.die(o.type);
+        if (this.laneHit(o) && this.y < o.h - 0.08) { this.hit(o.type); if (this.state !== 'playing') return; }
       } else if (o.type === 'branch') {
-        if (this.laneHit(o) && top > o.low && this.y < o.low + CFG.BRANCH_THICK) return this.die('branch');
+        if (this.laneHit(o) && top > o.low && this.y < o.low + CFG.BRANCH_THICK) { this.hit('branch'); if (this.state !== 'playing') return; }
       } else if (o.type === 'ledge') {
         if (this.y < o.h - 0.15) return this.die('ledge');
       }
+    }
+  };
+
+  Game.prototype.collectCoins = function () {
+    var head = this.slideT > 0 ? CFG.SLIDE_H : CFG.HEAD_H, lo = this.y - 0.3, hi = this.y + head + 0.3, i, c;
+    for (i = 0; i < this.coinList.length; i++) {
+      c = this.coinList[i];
+      if (c.taken || Math.abs(c.z - this.pz) > 0.8) continue;
+      if (Math.abs(this.px - c.lane * CFG.LANE_W) < c.tol && c.y >= lo && c.y <= hi) { c.taken = true; this.coins++; this.emit('coin'); }
     }
   };
 
@@ -294,7 +374,7 @@
       this.emit('jump');
     }
 
-    this.pz += (this.airVz != null ? this.airVz : this.speed) * dt;
+    this.pz += (this.airVz != null ? this.airVz : this.speed * this.slow) * dt;
     this.vy -= CFG.GRAV * dt;
     var ny = this.y + this.vy * dt;
 
@@ -329,15 +409,20 @@
     this.px += clamp(d, -m, m);
     this.jumpBuf -= dt; this.slideBuf -= dt; this.hookArmed -= dt;
     if (this.slideT > 0) this.slideT -= dt;
+    if (this.invuln > 0) this.invuln -= dt;
+    if (this.wounded > 0) { this.wounded -= dt; if (this.wounded <= 0) this.emit('recover'); }
+    if (this.slow < 1) this.slow = Math.min(1, this.slow + CFG.SLOW_REC * dt);
 
     if (this.hookArmed > 0 && !this.hook) this.tryLatch();
     if (this.hook) this.stepHook(dt); else this.stepFree(dt);
     if (this.state !== 'playing') return;
     this.collide();
     if (this.state !== 'playing') return;
+    this.collectCoins();
 
     while (this.nextZ < this.pz + CFG.SPAWN_AHEAD) this.spawnRow();
     while (this.obstacles.length && this.obstacles[0].z + this.obstacles[0].len < this.pz - 20) this.obstacles.shift();
+    if (this.coinList.length && this.coinList[0].z < this.pz - 20) { var pz0 = this.pz - 20; this.coinList = this.coinList.filter(function (c) { return c.z >= pz0; }); }
   };
 
   Game.prototype.update = function (dt) {

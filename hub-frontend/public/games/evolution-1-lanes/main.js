@@ -24,7 +24,7 @@
   var game = new Core.Game();
   var W = 0, H = 0, DPR = 1, F = 300, HOR = 300;
   var CAM_H = 5, CAM_D = 6.5, VIEW = 115, SEG = 2.5, PATH_HALF = 3.8;
-  var camX = 0, rz = 0, attract = 0, shake = 0, hintT = 0, overT = 0;
+  var camX = 0, rz = 0, attract = 0, shake = 0, hintT = 0, overT = 0, flash = 0, coinBump = 0, r3 = null;
   var best = 0, overTimer = null, lastT = 0, running = true;
   try { best = parseInt(localStorage.getItem('evo1lanes.best') || '0', 10) || 0; } catch (e) { best = 0; }
 
@@ -46,6 +46,7 @@
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     HOR = H * 0.38;
     F = Math.min(W * 0.9, H * 0.62);
+    if (r3 && r3.resize) r3.resize(W, H, DPR);
   }
 
   // ---------------------------------------------------------------- projection + colour helpers
@@ -174,6 +175,12 @@
 
   function laneSpan(o) { var mn = 9, mx = -9; o.lanes.forEach(function (l) { if (l < mn) mn = l; if (l > mx) mx = l; }); return [mn * CFG.LANE_W - CFG.LANE_W * 0.46, mx * CFG.LANE_W + CFG.LANE_W * 0.46]; }
 
+  function drawCoin(c, t) {
+    var z = c.z - rz; if (z + CAM_D < 0.5) return;
+    var p = proj(c.lane * CFG.LANE_W, c.y, z), r = 0.38 * p.s, w = r * Math.abs(Math.cos(t / 220 + c.z));
+    ctx.fillStyle = mix([196, 140, 20], z); ctx.beginPath(); ctx.ellipse(p.x, p.y, Math.max(1, w), r, 0, 0, 6.3); ctx.fill();
+    ctx.fillStyle = mix([255, 214, 70], z); ctx.beginPath(); ctx.ellipse(p.x, p.y, Math.max(0.6, w * 0.72), r * 0.76, 0, 0, 6.3); ctx.fill();
+  }
   function drawRock(o, lane) {
     var z = o.z - rz, x = lane * CFG.LANE_W, w = 0.95, s;
     var a = proj(x - w, 0, z), b = proj(x + w, 0, z), t1 = proj(x - w * 0.55, o.h, z + o.len * 0.4), t2 = proj(x + w * 0.5, o.h * 1.05, z + o.len * 0.4);
@@ -420,13 +427,28 @@
 
   // ---------------------------------------------------------------- HUD
   function drawHUD(t) {
-    var sc = game.state === 'menu' ? 0 : game.score();
-    ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.font = '800 ' + Math.round(Math.min(W, H) * 0.09) + 'px system-ui, sans-serif';
+    var menu = game.state === 'menu', sc = menu ? 0 : game.score(), pts = menu ? 0 : game.points(), m = Math.min(W, H);
+    ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.font = '800 ' + Math.round(m * 0.09) + 'px system-ui, sans-serif';
     var ty = Math.max(48, H * 0.075);
     ctx.fillText(sc + ' m', W / 2 + 2, ty + 2);
     ctx.fillStyle = '#fff'; ctx.fillText(sc + ' m', W / 2, ty);
-    ctx.font = '700 ' + Math.round(Math.min(W, H) * 0.034) + 'px system-ui, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.8)';
-    ctx.textAlign = 'left'; ctx.fillText('BEST ' + Math.max(best, sc) + ' m', 14, ty - 10);
+    // coin counter
+    if (coinBump > 0) coinBump = Math.max(0, coinBump - 0.08);
+    var cy = ty + m * 0.055, cr = m * 0.026 * (1 + coinBump * 0.35);
+    ctx.font = '800 ' + Math.round(m * 0.048) + 'px system-ui, sans-serif';
+    var ctxt = String(menu ? 0 : game.coins), cw = ctx.measureText(ctxt).width, cx0 = W / 2 - (cw + cr * 2.6) / 2 + cr;
+    ctx.fillStyle = '#c48c14'; ctx.beginPath(); ctx.arc(cx0, cy - cr * 0.35, cr, 0, 6.3); ctx.fill();
+    ctx.fillStyle = '#ffd646'; ctx.beginPath(); ctx.arc(cx0, cy - cr * 0.35, cr * 0.72, 0, 6.3); ctx.fill();
+    ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillText(ctxt, cx0 + cr * 1.6 + 2, cy + 2); ctx.fillStyle = '#ffe9a0'; ctx.fillText(ctxt, cx0 + cr * 1.6, cy);
+    ctx.font = '700 ' + Math.round(m * 0.034) + 'px system-ui, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.8)';
+    ctx.textAlign = 'left'; ctx.fillText('BEST ' + Math.max(best, pts), 14, ty - 10);
+    // health: two pips; one is lost while wounded (a second hit then ends the run)
+    for (var hp = 0; hp < 2; hp++) {
+      var full = hp === 0 || game.wounded <= 0, hx = 22 + hp * m * 0.06, hy = ty + m * 0.018, hr = m * 0.022;
+      var beat = game.wounded > 0 && hp === 1 ? 0.5 + 0.5 * Math.sin(t / 120) : 1;
+      ctx.fillStyle = full ? '#ff5a5a' : 'rgba(255,255,255,.18)'; ctx.globalAlpha = full ? 1 : beat;
+      ctx.beginPath(); ctx.arc(hx - hr * 0.5, hy, hr * 0.62, Math.PI, 0); ctx.arc(hx + hr * 0.5, hy, hr * 0.62, Math.PI, 0); ctx.lineTo(hx, hy + hr * 1.35); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+    }
     ctx.textAlign = 'right'; ctx.fillText('x' + (game.speed / CFG.START_SPEED).toFixed(1), W - 14, ty - 10);
     ctx.textAlign = 'center';
     // contextual hint for the hook
@@ -446,10 +468,31 @@
       ctx.fillText('Swipe to dodge', W / 2, H * 0.2); ctx.globalAlpha = 1;
     }
     hookBtn.classList.toggle('hint', show);
+
+    if (flash > 0) {                                              // red flash + label after a stumble
+      var fg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.7);
+      fg.addColorStop(0, 'rgba(255,40,40,0)'); fg.addColorStop(1, 'rgba(255,40,40,' + (0.55 * flash) + ')');
+      ctx.fillStyle = fg; ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = Math.min(1, flash * 1.5); ctx.font = '900 ' + Math.round(Math.min(W, H) * 0.08) + 'px system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillText('STUMBLE!', W / 2 + 2, H * 0.3 + 2); ctx.fillStyle = '#ffd0d0'; ctx.fillText('STUMBLE!', W / 2, H * 0.3); ctx.globalAlpha = 1;
+    }
   }
 
   // ---------------------------------------------------------------- frame
+  function drawPlayerBlink(t) {            // flicker while invulnerable after a stumble
+    if (game.state === 'playing' && game.invuln > 0 && Math.floor(t / 90) % 2) return;
+    drawPlayer(t);
+  }
+
   function render(t) {
+    if (r3 && !r3.ready) canvas.style.background = '#0b2a1f';     // 3D lost its context: fall back to the 2D scene
+    if (r3 && r3.ready) {                  // real 3D scene underneath; this canvas only carries the HUD
+      canvas.style.background = 'transparent';
+      ctx.clearRect(0, 0, W, H);
+      r3.render(game, t, { attract: attract, shake: shake, flash: flash });
+      drawHUD(t);
+      return;
+    }
     var pulse = 0.5 + 0.5 * Math.sin(t / 180);
     camX += (game.px * 0.6 - camX) * 0.25;
     rz = game.pz + (game.state === 'menu' ? attract : 0);
@@ -482,13 +525,19 @@
         o.lanes.forEach(function (l) { items.push({ z: rel, f: fn, a: [o, l] }); });
       }
     }
+    if (game.state !== 'menu') {
+      for (i = 0; i < game.coinList.length; i++) {
+        var cn = game.coinList[i], cr = cn.z - rz;
+        if (!cn.taken && cr < VIEW * 0.75 && cr > -CAM_D + 0.8) items.push({ z: cr, f: drawCoin, a: [cn, t] });
+      }
+    }
     items.sort(function (a, b) { return b.z - a.z; });
     var drewPlayer = false;
     for (i = 0; i < items.length; i++) {
-      if (!drewPlayer && items[i].z < 0.2) { drawPlayer(t); drewPlayer = true; }
+      if (!drewPlayer && items[i].z < 0.2) { drawPlayerBlink(t); drewPlayer = true; }
       items[i].f.apply(null, items[i].a);
     }
-    if (!drewPlayer) drawPlayer(t);
+    if (!drewPlayer) drawPlayerBlink(t);
 
     // light mist over the far distance
     var mg = ctx.createLinearGradient(0, HOR - 6, 0, HOR + H * 0.16);
@@ -504,8 +553,13 @@
     if (game.state === 'menu') attract += dt * 12;
     game.update(dt);
     if (shake > 0) shake = Math.max(0, shake - dt * 2.2);
+    if (flash > 0) flash = Math.max(0, flash - dt * 1.6);
     if (hintT > 0) hintT -= dt;
-    render(t);
+    try { render(t); }
+    catch (err) {
+      if (r3 && r3.ready) { r3.ready = false; canvas.style.background = '#0b2a1f'; if (window.console) console.warn('3D renderer disabled after an error:', err); }
+      else if (window.console) console.error(err);
+    }
     requestAnimationFrame(frame);
   }
 
@@ -516,10 +570,10 @@
     if (mode === 'menu') { ovTitle.innerHTML = 'EVOLUTION 1<br><span>THE RUNNER</span>'; ovText.textContent = 'A laboratory fell from the sky and became a temple in the jungle. Run toward it.'; ovBtn.textContent = 'START'; }
     else if (mode === 'paused') { ovTitle.innerHTML = 'PAUSED'; ovText.textContent = ''; ovBtn.textContent = 'RESUME'; }
     else {
-      var sc = game.score(), isBest = sc > best;
+      var sc = game.points(), isBest = sc > best;
       if (isBest) { best = sc; try { localStorage.setItem('evo1lanes.best', String(best)); } catch (e) { /* storage unavailable */ } }
       ovTitle.innerHTML = 'RUN OVER'; ovText.textContent = REASON[game.reason] || 'You crashed.';
-      ovStats.hidden = false; ovStats.innerHTML = sc + ' m' + (isBest && sc > 0 ? ' &middot; NEW BEST!' : '<br><small>Best ' + best + ' m</small>');
+      ovStats.hidden = false; ovStats.innerHTML = game.score() + ' m &middot; ' + game.coins + ' coins<br>' + sc + ' pts' + (isBest && sc > 0 ? ' &middot; NEW BEST!' : ' <small>(best ' + best + ')</small>');
       ovBtn.textContent = 'RESTART'; ovHelp.hidden = true;
     }
     setTimeout(function () { try { ovBtn.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 0);
@@ -528,6 +582,8 @@
 
   game.onEvent = function (type) {
     if (type === 'start') { if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; }
+    else if (type === 'stumble') { flash = 1; shake = Math.max(shake, 0.8); }
+    else if (type === 'coin') { coinBump = 1; }
     else if (type === 'crash') { shake = 1; overTimer = setTimeout(function () { overTimer = null; if (game.state === 'over') showOverlay('over'); }, 550); }
   };
 
@@ -544,7 +600,7 @@
   var ptr = null, SWIPE = 24;
   canvas.addEventListener('pointerdown', function (e) {
     if (game.state !== 'playing') return;
-    ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), done: false };
+    ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp, done: false };
     try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
     e.preventDefault();
   });
@@ -559,7 +615,7 @@
   });
   function endPointer(e) {
     if (!ptr || ptr.id !== e.pointerId) return;
-    var tap = !ptr.done && e.type === 'pointerup' && Math.hypot(e.clientX - ptr.x, e.clientY - ptr.y) < 14 && performance.now() - ptr.t < 350;
+    var tap = !ptr.done && e.type === 'pointerup' && Math.hypot(e.clientX - ptr.x, e.clientY - ptr.y) < 14 && e.timeStamp - ptr.t < 900;   // generous: a stuttering phone can stretch a quick tap a long way
     ptr = null;
     if (tap && game.state === 'playing') game.hookPress();
   }
@@ -595,6 +651,15 @@
   resize();
   hookBtn.hidden = true;
   showOverlay('menu');
-  window.__EVO1_LANES__ = { game: game, core: Core, render: render, stop: function () { running = false; } };
+  // The optional real-3D renderer (render3d.js, an ES module) announces itself when three.js has loaded.
+  function attach3D() {
+    var r = window.EvoLanes3D;
+    if (!r || !r.ready || r3 === r) return;
+    r3 = r; canvas.style.background = 'transparent'; r3.resize(W, H, DPR);
+  }
+  window.addEventListener('evo3d-ready', attach3D);
+  window.__EVO1_LANES__ = { game: game, core: Core, render: render, stop: function () { running = false; },
+                            mode: function () { return r3 && r3.ready ? '3d' : '2d'; }, attach3D: attach3D };
+  attach3D();
   requestAnimationFrame(frame);
 })();

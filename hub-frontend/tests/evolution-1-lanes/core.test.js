@@ -11,9 +11,10 @@ const DT = 1 / 60;
 function run(g, secs) { for (let t = 0; t < secs && g.state === 'playing'; t += DT) g.update(DT); }
 
 // An empty, controlled world: no auto-spawning.
-function world(obstacles) {
+function world(obstacles, soft) {
   const g = new Game(1); g.start(1);
-  g.obstacles = obstacles || []; g.nextZ = 1e9;
+  g.obstacles = obstacles || []; g.nextZ = 1e9; g.coinList = [];
+  if (!soft) g.wounded = 1e9;          // already wounded: the first hit is fatal (stumble is tested in its own section)
   return g;
 }
 const rock = (z, lanes) => ({ type: 'rock', z, len: 1.6, lanes, h: CFG.ROCK_H });
@@ -135,6 +136,63 @@ console.log('Hook: pull-up');
   ok('pull counted', g.pulls === 1);
   // runs off the far end and drops to the ground
   run(g, 3); ok('drops back to the ground at the end of the ledge', g.state === 'playing' && g.y === 0 && g.pz > 66, `y=${g.y} z=${g.pz.toFixed(1)}`);
+}
+
+
+console.log('Stumble (one mistake is survivable)');
+{
+  let g = world([rock(30, [0]), rock(46, [0])], true); run(g, 2.5);
+  ok('first hit is a stumble, not game over', g.state === 'playing' && g.stumbles === 1 && g.wounded > 0, `${g.state} stumbles=${g.stumbles}`);
+  ok('stumble slows the runner down', g.slow < 1);
+  ok('invulnerable for a moment after the stumble', g.invuln > 0);
+  g = world([rock(30, [0]), rock(46, [0])], true); run(g, 6);
+  ok('a second hit while still wounded ends the run', g.state === 'over' && g.reason === 'rock', `${g.state} ${g.reason}`);
+  g = world([rock(30, [0]), rock(30 + 14 * 15 + 30, [0])], true); run(g, 30);
+  ok('wounds heal: a second hit after WOUND_T is only another stumble', g.state === 'playing' && g.stumbles === 2, `${g.state} stumbles=${g.stumbles}`);
+  g = world([wall(30, [0]), branch(44, [0])], true); run(g, 6);
+  ok('walls and branches stumble too (then a 2nd hit ends it)', g.state === 'over' && g.stumbles === 1 && g.reason === 'branch', `${g.state} ${g.reason} ${g.stumbles}`);
+  g = world([{ type: 'pit', z: 30, len: 4, lanes: [-1, 0, 1] }], true); run(g, 5);
+  ok('falling into a pit is always fatal (no stumble)', g.state === 'over' && g.stumbles === 0);
+  g = world([ledge(30, 20)], true); run(g, 5);
+  ok('hitting a ledge face is always fatal', g.state === 'over' && g.reason === 'ledge');
+  g = world([rock(30, [0])], true); run(g, 5);
+  ok('stumble lets you keep running through the obstacle', g.state === 'playing' && g.pz > 40);
+  const sp = world([], true); sp.hit('rock'); const s0 = sp.slow; run(sp, 4);
+  ok('speed recovers after a stumble', sp.slow === 1 && s0 < 0.6);
+}
+
+console.log('Coins');
+{
+  const coin = (z, lane, y) => ({ z, lane, y, tol: 1, taken: false });
+  let g = world([]); const c1 = coin(20, 0, 0.9), c2 = coin(30, 1, 0.9), c3 = coin(40, 0, 2.6);
+  g.coinList = [c1, c2, c3]; run(g, 4);
+  ok('running through a coin collects it', c1.taken && g.coins === 1);
+  ok('a coin in another lane is not collected', !c2.taken);
+  ok('a high coin is not collected when running underneath it', !c3.taken);
+  g = world([]); const c4 = coin(20, 0, 2.6); g.coinList = [c4]; run(g, 20 / 14 - 0.45); g.jump(); run(g, 1.5);
+  ok('a jump collects a high coin', c4.taken);
+  g = world([]); const c5 = coin(20, 0, 0.5); g.coinList = [c5]; run(g, 20 / 14 - 0.3); g.slide(); run(g, 1.5);
+  ok('a sliding runner collects low coins', c5.taken);
+  g = world([]); const c6 = coin(20, 0, 0.9); g.coinList = [c6]; run(g, 3);
+  ok('points = distance + 10 per coin', g.points() === g.score() + 10 * g.coins && g.coins === 1);
+  let events = 0; g = world([]); g.coinList = [coin(20, 0, 0.9)]; g.onEvent = t => { if (t === 'coin') events++; }; run(g, 3);
+  ok("'coin' event fires once per coin", events === 1);
+  // generated coins: plenty, never embedded in solid obstacles, restart clears them
+  let total = 0, embedded = 0;
+  for (let seed = 1; seed <= 40; seed++) {
+    const h = new Game(seed); h.start(seed); h.time = (seed % 5) * 20; while (h.nextZ < 3000) h.spawnRow();
+    total += h.coinList.length;
+    for (const c of h.coinList) for (const o of h.obstacles) {
+      const solid = o.type === 'rock' || o.type === 'log' || o.type === 'wall' || o.type === 'branch' || o.type === 'ledge';
+      if (!solid || !(c.z > o.z - 0.2 && c.z < o.z + o.len + 0.2) || !o.lanes.includes(c.lane)) continue;
+      const lo = o.type === 'branch' ? o.low : 0;
+      if (c.y + CFG.COIN_R > lo && c.y - CFG.COIN_R < o.h) embedded++;
+    }
+  }
+  ok('generator places lots of coins', total > 2000, total);
+  ok('no coin is embedded inside a solid obstacle', embedded === 0, embedded);
+  const r = new Game(3); r.start(3); r.coins = 5; r.start(4);
+  ok('restart resets coins', r.coins === 0 && r.stumbles === 0 && r.wounded === 0 && r.slow === 1);
 }
 
 console.log('Generator fairness');

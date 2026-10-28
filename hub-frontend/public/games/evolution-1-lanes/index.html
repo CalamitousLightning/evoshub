@@ -10,6 +10,7 @@
 </head>
 <body>
   <div id="app">
+    <canvas id="gl" aria-hidden="true"></canvas>
     <canvas id="game" aria-label="EVOLUTION 1: THE RUNNER game"></canvas>
 
     <button id="hook-btn" type="button" aria-label="Hook">HOOK</button>
@@ -33,5 +34,7 @@
 
   <script src="/games/evolution-1-lanes/core.js"></script>
   <script src="/games/evolution-1-lanes/main.js"></script>
+  <!-- optional real-3D renderer; does nothing (2D stays) if WebGL is missing or ?mode=2d -->
+  <script type="module" src="/games/evolution-1-lanes/render3d.js"></script>
 </body>
 </html>
