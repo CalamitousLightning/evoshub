@@ -17,7 +17,8 @@ const fmt = (n) => Number(n || 0).toLocaleString('en-US', { maximumFractionDigit
 async function req(path, opts = {}) {
     const r = await fetch(API + path, {
         ...opts,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}`, ...(opts.headers || {}) }
+        // A FormData body (document upload) must NOT get a JSON content type: the browser sets the multipart boundary.
+        headers: { ...(opts.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), Authorization: `Bearer ${token()}`, ...(opts.headers || {}) }
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) {
