@@ -12,3 +12,5 @@ Game: `public/games/evolution-1-lanes/` (route `/games/evolution-1-lanes/`, not 
   Software GL is slow (~12 fps), so timing-critical steps are dispatched from inside the page. Run it with no other heavy processes.
 - The 3D canvas is mirrored once in CSS (`#gl { transform: scaleX(-1) }`) so swipe right = right lane; the coin face texture is pre-flipped to compensate.
 - The runner in 3D is the 2D explorer artwork (drawn by main.js into an off-screen canvas, `drawPlayerSprite`) shown as a billboard, so the character is identical in 2D and 3D.
+- Store: coins are banked into `localStorage['evo1lanes.save']` at game over (device-only, not tamper-proof — do not attach real value to it without a backend). Skins/rope colours are cosmetic; hook reach (levels 0-3) adds +0.3 s arming time, +0.25 m swing latch zone and +1 m pull zone per level.
+- The hook line is drawn on the HUD canvas from projected screen points (`EvoLanes3D.rope`) so it is visible when pointing straight away from the camera.

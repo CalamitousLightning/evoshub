@@ -426,7 +426,7 @@
     if (hookEnd && !sprMode) {
       var hx = X + armRx * s, hy = Y - armRy * s;
       ctx.lineCap = 'round';
-      ctx.strokeStyle = hookEnd.kind === 'swing' ? '#ffe86a' : '#ffa33a'; ctx.lineWidth = Math.max(2, 0.07 * s);
+      ctx.strokeStyle = hookEnd.kind === 'swing' ? ropeColor() : '#ffa33a'; ctx.lineWidth = Math.max(2, 0.07 * s);
       ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hookEnd.x, hookEnd.y); ctx.stroke();
       ctx.fillStyle = METAL; ctx.beginPath(); ctx.arc(hookEnd.x, hookEnd.y, Math.max(2.5, 0.06 * s), 0, 6.3); ctx.fill();
       ctx.lineCap = 'butt';
@@ -493,18 +493,28 @@
   }
 
   // ---------------------------------------------------------------- frame
+  function drawHookLine() {           // the hook line is drawn on the HUD so it stays clearly visible even though it points straight away from the camera
+    var rp = r3 && r3.rope; if (!rp || !game.hook) return;
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(rp.x1, rp.y1); ctx.lineTo(rp.x2, rp.y2); ctx.stroke();
+    ctx.strokeStyle = game.hook.kind === 'pull' ? '#ffa33a' : ropeColor(); ctx.lineWidth = 4.5; ctx.beginPath(); ctx.moveTo(rp.x1, rp.y1); ctx.lineTo(rp.x2, rp.y2); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(rp.x2, rp.y2, 5, 0, 6.3); ctx.fill();
+    ctx.restore();
+  }
   function drawPlayerBlink(t) {            // flicker while invulnerable after a stumble
     if (game.state === 'playing' && game.invuln > 0 && Math.floor(t / 90) % 2) return;
     drawPlayer(t);
   }
 
   function render(t) {
+    if (storeOpen) drawStorePreview(t);
     if (r3 && !r3.ready) canvas.style.background = '#0b2a1f';     // 3D lost its context: fall back to the 2D scene
     if (r3 && r3.ready) {                  // real 3D scene underneath; this canvas only carries the HUD
       canvas.style.background = 'transparent';
       ctx.clearRect(0, 0, W, H);
       drawPlayerSprite(t);
-      r3.render(game, t, { attract: attract, shake: shake, flash: flash, sprite: spr, spriteInfo: SPR });
+      r3.render(game, t, { attract: attract, shake: shake, flash: flash, sprite: spr, spriteInfo: SPR, ropeColor: game.hook && game.hook.kind === 'pull' ? '#ffa33a' : ropeColor() });
+      drawHookLine();
       drawHUD(t);
       return;
     }
@@ -578,6 +588,73 @@
     requestAnimationFrame(frame);
   }
 
+  // ---------------------------------------------------------------- wallet + store (saved on this device)
+  var DEF_PAL = { JACKET: JACKET, JACKET_D: JACKET_D, JACKET_L: JACKET_L, SCARF: SCARF, SCARF_D: SCARF_D };
+  var SKINS = [
+    { id: 'classic', name: 'Explorer', cost: 0, pal: null, sw: '#d9b25f' },
+    { id: 'crimson', name: 'Crimson jacket', cost: 150, pal: ['#c0392b', '#8e2a20', '#e0685a', '#f1f1f1', '#cfcfcf'], sw: '#c0392b' },
+    { id: 'ocean', name: 'Ocean jacket', cost: 250, pal: ['#2f80c8', '#1f5f98', '#5aa4e6', '#ffd84a', '#d3b02a'], sw: '#2f80c8' },
+    { id: 'midnight', name: 'Midnight jacket', cost: 350, pal: ['#3b3b4f', '#26263a', '#5a5a78', '#7cf0cf', '#4fc4a5'], sw: '#3b3b4f' },
+    { id: 'xera', name: 'XERA royal', cost: 500, pal: ['#1f3fa8', '#142a78', '#4a6fe0', '#c9d6e8', '#98a9c2'], sw: '#2a5bff' }
+  ];
+  var ROPES = [
+    { id: 'gold', name: 'Gold rope', cost: 0, col: '#ffe86a' },
+    { id: 'cyan', name: 'Cyan rope', cost: 80, col: '#6ff0ff' },
+    { id: 'pink', name: 'Pink rope', cost: 80, col: '#ff7ad9' },
+    { id: 'blue', name: 'XERA blue rope', cost: 120, col: '#4f8cff' }
+  ];
+  var REACH_COST = [100, 250, 500];
+  var save = { wallet: 0, skin: 'classic', rope: 'gold', owned: { classic: 1, gold: 1 }, reach: 0 }, banked = false, storeOpen = false;
+  try { var sv = JSON.parse(localStorage.getItem('evo1lanes.save') || 'null'); if (sv && typeof sv === 'object') { save.wallet = Math.max(0, sv.wallet | 0); save.skin = sv.skin || 'classic'; save.rope = sv.rope || 'gold'; save.owned = Object.assign({ classic: 1, gold: 1 }, sv.owned || {}); save.reach = Math.min(3, Math.max(0, sv.reach | 0)); } } catch (e) { /* no saved data */ }
+  function persist() { try { localStorage.setItem('evo1lanes.save', JSON.stringify(save)); } catch (e) { /* storage unavailable */ } }
+  function byId(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return list[0]; }
+  function applyLoadout() {
+    var sk = byId(SKINS, save.skin), p = sk.pal;
+    JACKET = p ? p[0] : DEF_PAL.JACKET; JACKET_D = p ? p[1] : DEF_PAL.JACKET_D; JACKET_L = p ? p[2] : DEF_PAL.JACKET_L; SCARF = p ? p[3] : DEF_PAL.SCARF; SCARF_D = p ? p[4] : DEF_PAL.SCARF_D;
+    game.reach = save.reach;
+  }
+  function ropeColor() { return byId(ROPES, save.rope).col; }
+  function bankRun() { if (banked || !game.coins) { banked = true; return 0; } banked = true; save.wallet += game.coins; persist(); return game.coins; }
+  var stList = document.getElementById('st-list'), stCoins = document.getElementById('st-coins'), stPrev = document.getElementById('st-prev'), storeEl = document.getElementById('store'), walletMini = document.getElementById('wallet-mini');
+  var stPrevCtx = stPrev.getContext('2d');
+  function row(kind, it, owned, equipped, cost, label, sub, sw) {
+    var btn = equipped ? '<button class="eq" disabled>EQUIPPED</button>' : owned ? '<button data-a="equip" data-k="' + kind + '" data-i="' + it + '">EQUIP</button>'
+      : '<button data-a="buy" data-k="' + kind + '" data-i="' + it + '"' + (save.wallet < cost ? ' disabled' : '') + '>' + cost + ' &#9679;</button>';
+    return '<div class="it">' + (sw ? '<span class="sw" style="background:' + sw + '"></span>' : '') + '<span class="nm">' + label + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + btn + '</div>';
+  }
+  function renderStore() {
+    var h = '<h3>SKINS</h3>', i;
+    for (i = 0; i < SKINS.length; i++) h += row('skin', SKINS[i].id, !!save.owned[SKINS[i].id], save.skin === SKINS[i].id, SKINS[i].cost, SKINS[i].name, '', SKINS[i].sw);
+    h += '<h3>HOOK ROPE</h3>';
+    for (i = 0; i < ROPES.length; i++) h += row('rope', ROPES[i].id, !!save.owned[ROPES[i].id], save.rope === ROPES[i].id, ROPES[i].cost, ROPES[i].name, '', ROPES[i].col);
+    h += '<h3>HOOK UPGRADE</h3>';
+    var lv = save.reach, desc = 'Level ' + lv + '/3 &middot; longer arming time + wider latch zones';
+    h += lv >= 3 ? '<div class="it"><span class="nm">Hook reach<small>' + desc + '</small></span><button class="eq" disabled>MAX</button></div>'
+      : '<div class="it"><span class="nm">Hook reach<small>' + desc + '</small></span><button data-a="buy" data-k="reach" data-i="1"' + (save.wallet < REACH_COST[lv] ? ' disabled' : '') + '>' + REACH_COST[lv] + ' &#9679;</button></div>';
+    stList.innerHTML = h; stCoins.textContent = save.wallet; walletMini.textContent = save.wallet ? '\u25CF ' + save.wallet : '';
+  }
+  stList.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-a]') : null; if (!b || b.disabled) return;
+    var k = b.getAttribute('data-k'), id = b.getAttribute('data-i'), a = b.getAttribute('data-a');
+    if (k === 'reach') { var c = REACH_COST[save.reach]; if (c != null && save.wallet >= c) { save.wallet -= c; save.reach++; } }
+    else {
+      var item = byId(k === 'skin' ? SKINS : ROPES, id);
+      if (a === 'buy' && !save.owned[id] && save.wallet >= item.cost) { save.wallet -= item.cost; save.owned[id] = 1; a = 'equip'; }
+      if (a === 'equip' && save.owned[id]) save[k] = id;
+    }
+    persist(); applyLoadout(); renderStore();
+  });
+  function openStore() { storeOpen = true; renderStore(); overlay.hidden = true; storeEl.hidden = false; }
+  function closeStore() { storeOpen = false; storeEl.hidden = true; if (overlay && !overlay.hidden) showOverlay(game.state === 'over' ? 'over' : game.state === 'paused' ? 'paused' : 'menu'); }
+  document.getElementById('store-open').addEventListener('click', openStore);
+  document.getElementById('store-close').addEventListener('click', closeStore);
+  function drawStorePreview(t) {            // the same explorer artwork, running on the spot, with the equipped skin
+    var real = game; game = { px: 0, y: 0, vy: 0, pz: 0, lane: 0, state: 'menu', onGround: true, hook: null, slideT: 0, reason: null, speed: 0, wounded: 0, invuln: 0 };
+    try { drawPlayerSprite(t); } finally { game = real; }
+    stPrevCtx.clearRect(0, 0, 150, 190); stPrevCtx.drawImage(spr, 40, 70, 304, 380, 0, 0, 150, 190);
+  }
+  applyLoadout(); renderStore();
+
   // ---------------------------------------------------------------- overlay / state
   function showOverlay(mode) {
     overlay.hidden = false; hookBtn.hidden = true;
@@ -588,15 +665,18 @@
       var sc = game.points(), isBest = sc > best;
       if (isBest) { best = sc; try { localStorage.setItem('evo1lanes.best', String(best)); } catch (e) { /* storage unavailable */ } }
       ovTitle.innerHTML = 'RUN OVER'; ovText.textContent = REASON[game.reason] || 'You crashed.';
-      ovStats.hidden = false; ovStats.innerHTML = game.score() + ' m &middot; ' + game.coins + ' coins<br>' + sc + ' pts' + (isBest && sc > 0 ? ' &middot; NEW BEST!' : ' <small>(best ' + best + ')</small>');
+      var got = bankRun();
+      ovStats.hidden = false; ovStats.innerHTML = game.score() + ' m &middot; ' + game.coins + ' coins' + (got ? ' (saved)' : '') + '<br>' + sc + ' pts' + (isBest && sc > 0 ? ' &middot; NEW BEST!' : ' <small>(best ' + best + ')</small>');
       ovBtn.textContent = 'RESTART'; ovHelp.hidden = true;
     }
+    walletMini.textContent = save.wallet ? '\u25CF ' + save.wallet : '';
+    document.getElementById('store-open').hidden = (mode === 'paused');
     setTimeout(function () { try { ovBtn.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 0);
   }
   function hideOverlay() { overlay.hidden = true; hookBtn.hidden = false; ovBtn.blur(); }
 
   game.onEvent = function (type) {
-    if (type === 'start') { if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; }
+    if (type === 'start') { banked = false; applyLoadout(); if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; }
     else if (type === 'stumble') { flash = 1; shake = Math.max(shake, 0.8); }
     else if (type === 'coin') { coinBump = 1; }
     else if (type === 'crash') { shake = 1; overTimer = setTimeout(function () { overTimer = null; if (game.state === 'over') showOverlay('over'); }, 550); }

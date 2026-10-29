@@ -260,7 +260,7 @@ import * as THREE from './vendor/three.module.min.js';
   var NC = 110, coinTex = new THREE.TextureLoader().load('/games/evolution-1-lanes/xera-coin.png');
   coinTex.colorSpace = THREE.SRGBColorSpace; coinTex.anisotropy = 4;
   // round XERA token: silver rim + the token art on both faces (the PNG is already circular with transparent corners)
-  var coinTexF = coinTex.clone(); coinTexF.wrapS = THREE.RepeatWrapping; coinTexF.repeat.x = -1; coinTexF.offset.x = 1; coinTexF.needsUpdate = true;   // the canvas is mirrored by CSS, so the face that looks at the camera is pre-flipped
+  var coinTexF = new THREE.TextureLoader().load('/games/evolution-1-lanes/xera-coin.png'); coinTexF.colorSpace = THREE.SRGBColorSpace; coinTexF.anisotropy = 4; coinTexF.wrapS = THREE.RepeatWrapping; coinTexF.repeat.x = -1; coinTexF.offset.x = 1;   // the canvas is mirrored by CSS, so the face that looks at the camera is pre-flipped
   var faceMatF = new THREE.MeshStandardMaterial({ map: coinTexF, emissiveMap: coinTexF, emissive: 0xffffff, emissiveIntensity: 0.55, metalness: 0.2, roughness: 0.45, transparent: true, alphaTest: 0.4 });
   var faceMat = new THREE.MeshStandardMaterial({ map: coinTex, emissiveMap: coinTex, emissive: 0xffffff, emissiveIntensity: 0.55, metalness: 0.2, roughness: 0.45, transparent: true, alphaTest: 0.4 });
   var rimMat = new THREE.MeshStandardMaterial({ color: 0xc9d6e8, emissive: 0x1a3c8c, emissiveIntensity: 0.8, metalness: 0.8, roughness: 0.25 });
@@ -363,6 +363,7 @@ import * as THREE from './vendor/three.module.min.js';
   shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
   var rope = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1, 6), new THREE.MeshBasicMaterial({ color: 0xffe86a, fog: false })); rope.visible = false; scene.add(rope);
 
+  var ropeCol = '#ffe86a', ropeA = new THREE.Vector3(), ropeB = new THREE.Vector3(), _v = new THREE.Vector3();
   var lastPx = 0, lean = 0, crashAt = 0, _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quaternion(), DOWN = new THREE.Vector3(0, -1, 0);
   function aimRope(a, b) {
     var d = _b.copy(b).sub(a), len = d.length() || 0.001;
@@ -419,9 +420,9 @@ import * as THREE from './vendor/three.module.min.js';
       var loc = hip.worldToLocal(rapeAnchor.clone()), sh = P.armR.sh.position, dir = loc.sub(sh).normalize();
       P.armR.sh.quaternion.setFromUnitVectors(DOWN, dir); P.armR.el.rotation.x = 0;
       player.updateMatrixWorld(true);
-      P.armR.tip.getWorldPosition(_b); aimRope(_b, rapeAnchor); rope.visible = true;
-      rope.material.color.set(game.hook.kind === 'swing' ? 0xffe86a : 0xffa33a);
-    } else rope.visible = false;
+      P.armR.tip.getWorldPosition(ropeA); _b.copy(ropeA); aimRope(_b, rapeAnchor); rope.visible = true;
+      rope.material.color.set(ropeCol); ropeB.copy(rapeAnchor);
+    } else { rope.visible = false; api.rope = null; }
 
     // blob shadow on whatever is below
     var floor = (game.y >= CFG.LEDGE_H - 0.2) ? CFG.LEDGE_H : 0, hgt = Math.max(0, game.y - floor), over0 = game.y > -0.3;
@@ -451,7 +452,7 @@ import * as THREE from './vendor/three.module.min.js';
 
     updateGround(vz, game, menu); updateScenery(vz); syncObstacles(vz, game, menu); updateCoins(vz, game, t, dt, menu);
     poseExplorer(game, t, vz, dt);
-    ensureSprite(opts);
+    ensureSprite(opts); ropeCol = opts.ropeColor || '#ffe86a';
     if (sprMesh) {
       sprTex.needsUpdate = true; player.visible = false;
       sprMesh.visible = !(game.state === 'playing' && game.invuln > 0 && Math.floor(t / 90) % 2);
@@ -487,6 +488,12 @@ import * as THREE from './vendor/three.module.min.js';
     camera.position.set(camXs + (Math.random() - 0.5) * sk, camY + (Math.random() - 0.5) * sk, vz - 8.4 - (game.hook ? 1.5 : 0));
     camera.lookAt(camXs * 0.4, 1.5 + Math.max(0, py) * 0.5, vz + 8);
 
+    if (rope.visible) {            // screen-space ends of the hook line for the HUD (x is mirrored like the canvas)
+      camera.updateMatrixWorld(true);
+      _v.copy(ropeA).project(camera); var x1 = (1 - (_v.x * 0.5 + 0.5)) * W, y1 = (1 - (_v.y * 0.5 + 0.5)) * H;
+      _v.copy(ropeB).project(camera); var x2 = (1 - (_v.x * 0.5 + 0.5)) * W, y2 = (1 - (_v.y * 0.5 + 0.5)) * H;
+      api.rope = { x1: x1, y1: y1, x2: x2, y2: y2 };
+    }
     renderer.render(scene, camera);
 
     // adaptive resolution: if the device cannot keep up, lower the pixel ratio a little

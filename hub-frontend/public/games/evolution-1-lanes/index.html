@@ -22,12 +22,24 @@
         <p id="ov-text" class="text">A laboratory fell from the sky and became a temple in the jungle. Run toward it.</p>
         <p id="ov-stats" class="stats" hidden></p>
         <button id="ov-btn" class="btn" type="button">START</button>
+        <button id="store-open" class="btn2" type="button">STORE <span id="wallet-mini"></span></button>
         <ul id="ov-help" class="help">
           <li><b>Swipe &larr; &rarr;</b> change lane</li>
           <li><b>Swipe &uarr;</b> jump &nbsp; <b>Swipe &darr;</b> slide</li>
           <li><b>Tap / HOOK</b> swing over chasms &amp; pull up ledges</li>
           <li class="kbd">Keyboard: arrows / WASD, Space = jump, X = hook</li>
         </ul>
+      </div>
+    </div>
+
+    <div id="store" class="overlay" role="dialog" aria-label="Store" hidden>
+      <div class="panel store-panel">
+        <p class="eyebrow">EVOLUTION 1 &middot; STORE</p>
+        <div class="st-top"><canvas id="st-prev" width="150" height="190" aria-hidden="true"></canvas>
+          <div><div class="st-wallet"><img src="/games/evolution-1-lanes/xera-coin.png" alt="" width="26" height="26"> <b id="st-coins">0</b></div>
+          <p class="st-note">Earn coins on runs. Coins are saved on this device.</p></div></div>
+        <div id="st-list"></div>
+        <button id="store-close" class="btn" type="button">BACK</button>
       </div>
     </div>
   </div>

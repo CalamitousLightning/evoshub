@@ -79,6 +79,7 @@
   function Game(seed) {
     this.seed = seed == null ? (Date.now() & 0x7fffffff) : seed;
     this.onEvent = null;
+    this.reach = 0;               // hook upgrade level 0-3 (kept across runs): longer arm time, wider latch zones
     this.reset();
     this.state = 'menu';
   }
@@ -131,7 +132,7 @@
   Game.prototype.hookPress = function () {
     if (this.state !== 'playing') return;
     if (this.hook) { if (this.hook.kind === 'swing') this.releaseHook(); return; }
-    this.hookArmed = CFG.ARM_TIME;
+    this.hookArmed = CFG.ARM_TIME + 0.3 * this.reach;
     this.emit('arm');
   };
 
@@ -303,7 +304,7 @@
       o = this.obstacles[i];
       if (!o.anchor || o.used) continue;
       a = o.anchor;
-      if (o.type === 'chasm' && this.pz >= o.z - 1.2 && this.pz <= o.z + 0.4 && this.y > -0.6) {
+      if (o.type === 'chasm' && this.pz >= o.z - 1.2 - 0.25 * this.reach && this.pz <= o.z + 0.4 && this.y > -0.6) {
         hx = this.pz; hy = this.y + CFG.HAND_H;
         rz = hx - a.z; ry = hy - a.y; R = Math.hypot(rz, ry);
         sp = Math.max(this.speed, this.airVz || 0);
@@ -312,7 +313,7 @@
         o.used = true; this.hookArmed = 0; this.onGround = false; this.emit('latch');
         return true;
       }
-      if (o.type === 'ledge' && this.pz >= o.z - CFG.PULL_FROM && this.pz <= o.z - CFG.PULL_TO) {
+      if (o.type === 'ledge' && this.pz >= o.z - CFG.PULL_FROM - this.reach && this.pz <= o.z - CFG.PULL_TO) {
         this.hook = { kind: 'pull', o: o, anchor: a, t: 0 };
         o.used = true; this.hookArmed = 0; this.onGround = false; this.emit('latch');
         return true;

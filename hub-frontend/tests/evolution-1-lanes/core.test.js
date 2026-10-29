@@ -272,5 +272,17 @@ console.log('Restart');
   ok('restart: world regenerated', g.obstacles.length > 0);
 }
 
+console.log('Hook upgrade (store)');
+{
+  const base = world([]); base.hookPress();
+  const up = world([]); up.reach = 3; up.hookPress();
+  ok('reach 0 keeps the default arming time', Math.abs(base.hookArmed - CFG.ARM_TIME) < 1e-9, base.hookArmed);
+  ok('reach 3 arms longer (+0.9 s) - capped, not unlimited', Math.abs(up.hookArmed - (CFG.ARM_TIME + 0.9)) < 1e-9, up.hookArmed);
+  ok('reach is kept when a new run starts', (() => { const g = new Game(3); g.reach = 2; g.start(4); return g.reach === 2; })());
+  // a swing latch that is 1.4 m too early works only with the upgrade
+  const mk = (lv) => { const g = world([{ type: 'chasm', z: 40, len: 20, lanes: [-1, 0, 1], anchor: { kind: 'swing', z: 50, y: CFG.HAND_H + CFG.SWING_K * 20, farZ: 60 } }]); g.reach = lv; g.pz = 40 - 1.4; g.hookPress(); g.tryLatch(); return !!g.hook; };
+  ok('swing latch zone is wider with reach', mk(0) === false && mk(2) === true);
+}
+
 console.log(failed ? `\n${failed} FAILED` : '\nall passed');
 process.exit(failed ? 1 : 0);
