@@ -50,7 +50,20 @@
   }
 
   // ---------------------------------------------------------------- projection + colour helpers
+  // Sprite mode: the explorer is drawn into an off-screen canvas (same artwork as the 2D game) that the 3D scene shows as a billboard.
+  var SPR = { w: 384, h: 480, s: 150, feetY: 405 }, spr = document.createElement('canvas'), sprCtx = spr.getContext('2d'), sprCalls = 0, sprMode = false;
+  spr.width = SPR.w; spr.height = SPR.h;
+  function drawPlayerSprite(t) {
+    var main = ctx; ctx = sprCtx; sprMode = true; sprCalls = 0;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, SPR.w, SPR.h);
+    try { drawPlayer(t); } finally { ctx = main; sprMode = false; }
+  }
   function proj(x, y, z) {            // z is relative to the player
+    if (sprMode) {
+      sprCalls++;
+      if (z === 0) return sprCalls === 1 ? { x: SPR.w / 2, y: SPR.feetY, s: SPR.s } : { x: SPR.w / 2, y: -9999, s: SPR.s };   // 1st call = the runner, 2nd = ground shadow (the 3D scene has its own)
+      return { x: SPR.w / 2 + 0.2 * SPR.s, y: SPR.feetY - (y - game.y) * SPR.s, s: SPR.s };                                       // hook anchor: aim the arm up and slightly right
+    }
     var zc = z + CAM_D; if (zc < 0.35) zc = 0.35;
     var s = F / zc;
     return { x: W / 2 + (x - camX) * s, y: HOR + (CAM_H - y) * s, s: s };
@@ -410,7 +423,7 @@
     ctx.restore();
 
     // hook rope from the gauntlet to the anchor (screen space)
-    if (hookEnd) {
+    if (hookEnd && !sprMode) {
       var hx = X + armRx * s, hy = Y - armRy * s;
       ctx.lineCap = 'round';
       ctx.strokeStyle = hookEnd.kind === 'swing' ? '#ffe86a' : '#ffa33a'; ctx.lineWidth = Math.max(2, 0.07 * s);
@@ -490,7 +503,8 @@
     if (r3 && r3.ready) {                  // real 3D scene underneath; this canvas only carries the HUD
       canvas.style.background = 'transparent';
       ctx.clearRect(0, 0, W, H);
-      r3.render(game, t, { attract: attract, shake: shake, flash: flash });
+      drawPlayerSprite(t);
+      r3.render(game, t, { attract: attract, shake: shake, flash: flash, sprite: spr, spriteInfo: SPR });
       drawHUD(t);
       return;
     }

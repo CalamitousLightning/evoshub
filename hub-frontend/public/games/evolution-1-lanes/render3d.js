@@ -260,9 +260,11 @@ import * as THREE from './vendor/three.module.min.js';
   var NC = 110, coinTex = new THREE.TextureLoader().load('/games/evolution-1-lanes/xera-coin.png');
   coinTex.colorSpace = THREE.SRGBColorSpace; coinTex.anisotropy = 4;
   // round XERA token: silver rim + the token art on both faces (the PNG is already circular with transparent corners)
+  var coinTexF = coinTex.clone(); coinTexF.wrapS = THREE.RepeatWrapping; coinTexF.repeat.x = -1; coinTexF.offset.x = 1; coinTexF.needsUpdate = true;   // the canvas is mirrored by CSS, so the face that looks at the camera is pre-flipped
+  var faceMatF = new THREE.MeshStandardMaterial({ map: coinTexF, emissiveMap: coinTexF, emissive: 0xffffff, emissiveIntensity: 0.55, metalness: 0.2, roughness: 0.45, transparent: true, alphaTest: 0.4 });
   var faceMat = new THREE.MeshStandardMaterial({ map: coinTex, emissiveMap: coinTex, emissive: 0xffffff, emissiveIntensity: 0.55, metalness: 0.2, roughness: 0.45, transparent: true, alphaTest: 0.4 });
   var rimMat = new THREE.MeshStandardMaterial({ color: 0xc9d6e8, emissive: 0x1a3c8c, emissiveIntensity: 0.8, metalness: 0.8, roughness: 0.25 });
-  var coinMat = [rimMat, faceMat, faceMat];
+  var coinMat = [rimMat, faceMat, faceMatF];
   var coinGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.1, 40); coinGeo.rotateX(Math.PI / 2);
   var coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, NC); coinMesh.frustumCulled = false; coinMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(coinMesh);
   var sparks = [], sparkMat = new THREE.SpriteMaterial({ map: radialTex, color: 0x7ab8ff, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -303,22 +305,22 @@ import * as THREE from './vendor/three.module.min.js';
   (function () {
     hip.position.y = 0.95; player.add(hip);
     function leg(side) {
-      var th = new THREE.Group(); th.position.set(side * 0.15, 0, 0);
-      var up = caps(0.115, 0.26, M.pants); up.position.y = -0.24; th.add(up);
+      var th = new THREE.Group(); th.position.set(side * 0.12, 0, 0);
+      var up = caps(0.085, 0.28, M.pants); up.position.y = -0.24; th.add(up);
       var sh = new THREE.Group(); sh.position.y = -0.46; th.add(sh);
-      var lo = caps(0.1, 0.26, M.pants); lo.position.y = -0.22; sh.add(lo);
+      var lo = caps(0.075, 0.28, M.pants); lo.position.y = -0.22; sh.add(lo);
       var boot = box(0.22, 0.17, 0.34, M.boot, 0, -0.43, 0.04); sh.add(boot);
       var cuff = box(0.2, 0.05, 0.2, M.strap, 0, -0.34, 0); sh.add(cuff);
       hip.add(th); return { th: th, sh: sh };
     }
     P.legL = leg(-1); P.legR = leg(1);
-    var torso = caps(0.26, 0.34, M.jacket); torso.position.y = 0.42; torso.scale.set(1.05, 1, 0.78); hip.add(torso);
-    hip.add(box(0.56, 0.07, 0.4, M.strap, 0, 0.14, 0));
+    var torso = caps(0.21, 0.36, M.jacket); torso.position.y = 0.42; torso.scale.set(1.0, 1, 0.72); hip.add(torso);
+    hip.add(box(0.44, 0.06, 0.32, M.strap, 0, 0.14, 0));
     hip.add(box(0.07, 0.08, 0.02, M.metal, 0, 0.14, -0.21));
     // backpack (faces the camera) with the glowing EVO light
-    var pack = box(0.5, 0.52, 0.26, M.pack, 0, 0.5, -0.32); hip.add(pack);
-    hip.add(box(0.12, 0.34, 0.08, M.packD, -0.3, 0.44, -0.3), box(0.12, 0.34, 0.08, M.packD, 0.3, 0.44, -0.3));
-    hip.add(box(0.07, 0.24, 0.02, M.mint, 0, 0.5, -0.46));
+    var pack = box(0.4, 0.46, 0.22, M.pack, 0, 0.48, -0.27); hip.add(pack);
+    hip.add(box(0.08, 0.26, 0.08, M.packD, -0.24, 0.42, -0.27), box(0.08, 0.26, 0.08, M.packD, 0.24, 0.42, -0.27));
+    hip.add(box(0.06, 0.22, 0.02, M.mint, 0, 0.5, -0.39));
     var roll = new THREE.Mesh(cylGeo, M.bedroll); roll.scale.set(0.12, 0.62, 0.12); roll.rotation.z = Math.PI / 2; roll.position.set(0, 0.8, -0.32); hip.add(roll);
     // rope coil on the left hip
     var coil = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.03, 6, 12), lambert(0xd8c79a)); coil.position.set(-0.3, 0.16, -0.05); coil.rotation.y = Math.PI / 2; hip.add(coil);
@@ -332,15 +334,15 @@ import * as THREE from './vendor/three.module.min.js';
     // scarf: wrap + two tails that flutter
     hip.add(box(0.46, 0.1, 0.38, M.scarf, 0, 0.74, 0));
     P.tailL = box(0.12, 0.34, 0.03, M.scarf, 0, 0, 0); P.tailR = box(0.12, 0.3, 0.03, M.scarfD, 0, 0, 0);
-    P.tailLg = new THREE.Group(); P.tailLg.position.set(-0.14, 0.72, -0.2); P.tailL.position.y = -0.17; P.tailLg.add(P.tailL); hip.add(P.tailLg);
-    P.tailRg = new THREE.Group(); P.tailRg.position.set(0.14, 0.72, -0.2); P.tailR.position.y = -0.15; P.tailRg.add(P.tailR); hip.add(P.tailRg);
+    P.tailLg = new THREE.Group(); P.tailLg.position.set(-0.13, 0.72, -0.4); P.tailL.position.y = -0.17; P.tailLg.add(P.tailL); hip.add(P.tailLg);
+    P.tailRg = new THREE.Group(); P.tailRg.position.set(0.13, 0.72, -0.4); P.tailR.position.y = -0.15; P.tailRg.add(P.tailR); hip.add(P.tailRg);
     // arms
     function arm(side, gaunt) {
-      var sh = new THREE.Group(); sh.position.set(side * 0.34, 0.66, 0);
-      var up = caps(0.085, 0.2, M.jacketD); up.position.y = -0.17; sh.add(up);
+      var sh = new THREE.Group(); sh.position.set(side * 0.29, 0.66, 0);
+      var up = caps(0.06, 0.22, M.jacketD); up.position.y = -0.17; sh.add(up);
       var el = new THREE.Group(); el.position.y = -0.34; sh.add(el);
-      var lo = caps(0.075, 0.2, M.jacket); lo.position.y = -0.17; el.add(lo);
-      var hand = new THREE.Mesh(sphGeo, M.skin); hand.scale.setScalar(0.08); hand.position.y = -0.36; el.add(hand);
+      var lo = caps(0.055, 0.22, M.jacket); lo.position.y = -0.17; el.add(lo);
+      var hand = new THREE.Mesh(sphGeo, M.skin); hand.scale.setScalar(0.065); hand.position.y = -0.36; el.add(hand);
       var tip = new THREE.Object3D(); tip.position.y = -0.38; el.add(tip);
       if (gaunt) { el.add(box(0.14, 0.3, 0.14, M.metal, 0, -0.18, 0)); el.add(box(0.05, 0.1, 0.152, M.mint, 0, -0.14, 0)); }
       hip.add(sh); return { sh: sh, el: el, tip: tip };
@@ -348,6 +350,15 @@ import * as THREE from './vendor/three.module.min.js';
     P.armL = arm(-1, false); P.armR = arm(1, true);
   })();
   scene.add(player);
+  // The runner itself is the 2D explorer artwork (drawn by main.js into a canvas) shown as a camera-facing billboard.
+  var sprTex = null, sprMesh = null;
+  function ensureSprite(o) {
+    if (sprMesh || !o.sprite) return;
+    sprTex = new THREE.CanvasTexture(o.sprite); sprTex.colorSpace = THREE.SRGBColorSpace; sprTex.minFilter = THREE.LinearFilter; sprTex.generateMipmaps = false;
+    var I = o.spriteInfo;
+    sprMesh = new THREE.Mesh(new THREE.PlaneGeometry(I.w / I.s, I.h / I.s), new THREE.MeshBasicMaterial({ map: sprTex, transparent: true, alphaTest: 0.04, side: THREE.DoubleSide, fog: false, toneMapped: false }));
+    sprMesh.userData.dy = (I.feetY - I.h / 2) / I.s; scene.add(sprMesh);
+  }
   var shadow = new THREE.Mesh(new THREE.CircleGeometry(0.75, 20), new THREE.MeshBasicMaterial({ map: radialTex, color: 0x000000, transparent: true, opacity: 0.55, depthWrite: false, fog: false }));
   shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
   var rope = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1, 6), new THREE.MeshBasicMaterial({ color: 0xffe86a, fog: false })); rope.visible = false; scene.add(rope);
@@ -440,6 +451,12 @@ import * as THREE from './vendor/three.module.min.js';
 
     updateGround(vz, game, menu); updateScenery(vz); syncObstacles(vz, game, menu); updateCoins(vz, game, t, dt, menu);
     poseExplorer(game, t, vz, dt);
+    ensureSprite(opts);
+    if (sprMesh) {
+      sprTex.needsUpdate = true; player.visible = false;
+      sprMesh.visible = !(game.state === 'playing' && game.invuln > 0 && Math.floor(t / 90) % 2);
+      sprMesh.position.set(game.px, game.y + sprMesh.userData.dy, vz);
+    }
 
     // temple on the horizon: slowly closer as you run
     temple.position.set(0, 0, vz + Math.max(150, 280 - game.pz * 0.03)); temple.scale.setScalar(1);

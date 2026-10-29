@@ -43,7 +43,7 @@ def wait(page, expr, timeout=8000):
     try: _wait(page, expr, timeout)
     except Exception:
         print("   (wait timed out: %s) state=%s pz=%s" % (expr, page.evaluate("window.__EVO1_LANES__.game.state"), page.evaluate("window.__EVO1_LANES__.game.pz")))
-        print("   debug:", page.evaluate("(() => { const g = window.__EVO1_LANES__.game; return JSON.stringify({armed: g.hookArmed, hook: !!g.hook, obs: g.obstacles.map(o => [o.type, o.z, o.used]), y: g.y, lane: g.lane, slow: g.slow}); })()"))
+        print("   debug:", page.evaluate("(() => { const g = window.__EVO1_LANES__.game; return JSON.stringify({armed: g.hookArmed, hook: !!g.hook, obs: g.obstacles.map(o => [o.type, o.z, o.used]), y: g.y, lane: g.lane, slow: g.slow, px: g.px, slideT: g.slideT, cl: g.coinList.map(c=>[c.z,c.taken]), pz: g.pz}); })()"))
         raise
 def _wait(page, expr, timeout=8000):
     page.wait_for_function(f"() => {{ const g = window.__EVO1_LANES__.game; const C = window.__EVO1_LANES__.core.CFG; return {expr}; }}", timeout=timeout)
