@@ -175,11 +175,12 @@
 
   function laneSpan(o) { var mn = 9, mx = -9; o.lanes.forEach(function (l) { if (l < mn) mn = l; if (l > mx) mx = l; }); return [mn * CFG.LANE_W - CFG.LANE_W * 0.46, mx * CFG.LANE_W + CFG.LANE_W * 0.46]; }
 
+  var coinImg = new Image(); coinImg.src = '/games/evolution-1-lanes/xera-coin.png';
   function drawCoin(c, t) {
     var z = c.z - rz; if (z + CAM_D < 0.5) return;
-    var p = proj(c.lane * CFG.LANE_W, c.y, z), r = 0.38 * p.s, w = r * Math.abs(Math.cos(t / 220 + c.z));
-    ctx.fillStyle = mix([196, 140, 20], z); ctx.beginPath(); ctx.ellipse(p.x, p.y, Math.max(1, w), r, 0, 0, 6.3); ctx.fill();
-    ctx.fillStyle = mix([255, 214, 70], z); ctx.beginPath(); ctx.ellipse(p.x, p.y, Math.max(0.6, w * 0.72), r * 0.76, 0, 0, 6.3); ctx.fill();
+    var p = proj(c.lane * CFG.LANE_W, c.y, z), r = 0.42 * p.s, w = Math.max(1.5, r * Math.abs(Math.cos(t / 220 + c.z)));
+    if (coinImg.complete && coinImg.naturalWidth) { ctx.drawImage(coinImg, p.x - w, p.y - r, w * 2, r * 2); return; }
+    ctx.fillStyle = '#2a64d8'; ctx.beginPath(); ctx.ellipse(p.x, p.y, w, r, 0, 0, 6.3); ctx.fill();
   }
   function drawRock(o, lane) {
     var z = o.z - rz, x = lane * CFG.LANE_W, w = 0.95, s;
@@ -437,8 +438,8 @@
     var cy = ty + m * 0.055, cr = m * 0.026 * (1 + coinBump * 0.35);
     ctx.font = '800 ' + Math.round(m * 0.048) + 'px system-ui, sans-serif';
     var ctxt = String(menu ? 0 : game.coins), cw = ctx.measureText(ctxt).width, cx0 = W / 2 - (cw + cr * 2.6) / 2 + cr;
-    ctx.fillStyle = '#c48c14'; ctx.beginPath(); ctx.arc(cx0, cy - cr * 0.35, cr, 0, 6.3); ctx.fill();
-    ctx.fillStyle = '#ffd646'; ctx.beginPath(); ctx.arc(cx0, cy - cr * 0.35, cr * 0.72, 0, 6.3); ctx.fill();
+    if (coinImg.complete && coinImg.naturalWidth) ctx.drawImage(coinImg, cx0 - cr * 1.1, cy - cr * 0.35 - cr * 1.1, cr * 2.2, cr * 2.2);
+    else { ctx.fillStyle = '#2a64d8'; ctx.beginPath(); ctx.arc(cx0, cy - cr * 0.35, cr, 0, 6.3); ctx.fill(); }
     ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillText(ctxt, cx0 + cr * 1.6 + 2, cy + 2); ctx.fillStyle = '#ffe9a0'; ctx.fillText(ctxt, cx0 + cr * 1.6, cy);
     ctx.font = '700 ' + Math.round(m * 0.034) + 'px system-ui, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.8)';
     ctx.textAlign = 'left'; ctx.fillText('BEST ' + Math.max(best, pts), 14, ty - 10);

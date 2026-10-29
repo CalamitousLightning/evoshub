@@ -257,10 +257,15 @@ import * as THREE from './vendor/three.module.min.js';
   }
 
   // ------------------------------------------------------------------ coins + sparkles
-  var NC = 110, coinMat = new THREE.MeshStandardMaterial({ color: 0xffc93a, emissive: 0x6a4300, emissiveIntensity: 0.9, metalness: 0.5, roughness: 0.3 });
-  var coinGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.1, 18); coinGeo.rotateX(Math.PI / 2);
+  var NC = 110, coinTex = new THREE.TextureLoader().load('/games/evolution-1-lanes/xera-coin.png');
+  coinTex.colorSpace = THREE.SRGBColorSpace; coinTex.anisotropy = 4;
+  // round XERA token: silver rim + the token art on both faces (the PNG is already circular with transparent corners)
+  var faceMat = new THREE.MeshStandardMaterial({ map: coinTex, emissiveMap: coinTex, emissive: 0xffffff, emissiveIntensity: 0.55, metalness: 0.2, roughness: 0.45, transparent: true, alphaTest: 0.4 });
+  var rimMat = new THREE.MeshStandardMaterial({ color: 0xc9d6e8, emissive: 0x1a3c8c, emissiveIntensity: 0.8, metalness: 0.8, roughness: 0.25 });
+  var coinMat = [rimMat, faceMat, faceMat];
+  var coinGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.1, 40); coinGeo.rotateX(Math.PI / 2);
   var coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, NC); coinMesh.frustumCulled = false; coinMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(coinMesh);
-  var sparks = [], sparkMat = new THREE.SpriteMaterial({ map: radialTex, color: 0xffe27a, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+  var sparks = [], sparkMat = new THREE.SpriteMaterial({ map: radialTex, color: 0x7ab8ff, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
   for (var sp = 0; sp < 14; sp++) { var s = new THREE.Sprite(sparkMat.clone()); s.visible = false; s.userData.life = 0; scene.add(s); sparks.push(s); }
   function spark(x, y, z) {
     for (var i = 0; i < sparks.length; i++) if (sparks[i].userData.life <= 0) { var s = sparks[i]; s.position.set(x, y, z); s.userData.life = 1; s.visible = true; s.scale.set(0.6, 0.6, 1); return; }
