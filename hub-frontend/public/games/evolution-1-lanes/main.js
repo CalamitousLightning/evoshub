@@ -583,6 +583,8 @@
     if (hintT > 0) hintT -= dt;
     if (game.state === 'playing' && game.score() >= nextMs) { nextMs += 100; say('far'); }
     if (voiceHideAt && performance.now() > voiceHideAt) silenceVoice();
+    if (riddleOpen) { riddleT -= dt; rdBar.style.width = Math.max(0, riddleT / RIDDLE_TIME * 100) + '%'; if (riddleT <= 0) closeRiddle(null); }
+    else if (game.state === 'playing' && game.score() >= riddleNext && game.onGround && !game.hook && !(game.hookArmed > 0) && !(game.wounded > 0)) openRiddle();
     try { render(t); }
     catch (err) {
       if (r3 && r3.ready) { r3.ready = false; canvas.style.background = '#0b2a1f'; if (window.console) console.warn('3D renderer disabled after an error:', err); }
@@ -698,8 +700,48 @@
   }
   function silenceVoice() { voiceEl.className = ''; voiceHideAt = 0; }
 
+  // ---------------------------------------------------------------- RIDDLES: the run freezes on a safe moment, 8 s to answer, correct = +10 coins, no penalty otherwise
+  var RIDDLES = [
+    ['I speak without a mouth and answer in the mountains. What am I?', 'An echo', 'The wind'],
+    ['The more you take, the more you leave behind. What am I?', 'Footsteps', 'Coins'],
+    ['I have cities but no houses, and rivers but no water. What am I?', 'A map', 'A dream'],
+    ['What gets wetter the more it dries?', 'A towel', 'A river'],
+    ['What has hands but cannot clap?', 'A clock', 'A statue'],
+    ['I follow you in the sun and vanish in the dark. What am I?', 'Your shadow', 'Your echo'],
+    ['What runs but never walks, and has a mouth but never talks?', 'A river', 'A runner'],
+    ['The more of me there is, the less you see. What am I?', 'Darkness', 'Light'],
+    ['What has a spine but no bones?', 'A book', 'A fish'],
+    ['What goes up but never comes back down?', 'Your age', 'A leaf']
+  ];
+  var RIDDLE_TIME = 8, RIDDLE_EVERY = 250, RIDDLE_FIRST = 150, RIDDLE_BONUS = 10;
+  VOICE.riddleOk = ['Correct. Do not let it go to your head.', 'Hm. You listen.', 'Lucky. Or clever. I will decide later.'];
+  VOICE.riddleNo = ['Wrong. Of course.', 'The jungle laughs.', 'Not even close.'];
+  VOICE.riddleLate = ['Too slow.', 'Silence is also an answer. A wrong one.'];
+  var riddleEl = document.createElement('div'); riddleEl.id = 'riddle'; riddleEl.hidden = true;
+  riddleEl.innerHTML = '<div class="rd-card"><p class="rd-eyebrow">THE VOICE ASKS</p><p class="rd-q" id="rd-q"></p><div class="rd-bar"><i id="rd-bar"></i></div><div class="rd-opts"><button type="button" id="rd-a" data-i="0"></button><button type="button" id="rd-b" data-i="1"></button></div><p class="rd-note">+' + RIDDLE_BONUS + ' coins if you are right</p></div>';
+  document.getElementById('app').appendChild(riddleEl);
+  var rdQ = document.getElementById('rd-q'), rdBar = document.getElementById('rd-bar'), rdBtn = [document.getElementById('rd-a'), document.getElementById('rd-b')];
+  var riddleOpen = false, riddleT = 0, riddleRight = 0, riddleNext = RIDDLE_FIRST, riddleLastIdx = -1;
+  function openRiddle() {
+    var idx; do { idx = Math.floor(Math.random() * RIDDLES.length); } while (idx === riddleLastIdx && RIDDLES.length > 1); riddleLastIdx = idx;
+    var rd = RIDDLES[idx]; riddleRight = Math.random() < 0.5 ? 0 : 1;
+    rdQ.textContent = rd[0]; rdBtn[riddleRight].textContent = rd[1]; rdBtn[1 - riddleRight].textContent = rd[2];
+    riddleOpen = true; riddleT = RIDDLE_TIME; rdBar.style.width = '100%'; silenceVoice(); clearTouch();
+    game.pause(); hookBtn.hidden = true; pauseBtn.hidden = true; riddleEl.hidden = false;
+  }
+  function closeRiddle(choice) {
+    if (!riddleOpen) return; riddleOpen = false; riddleEl.hidden = true; riddleNext = game.score() + RIDDLE_EVERY;
+    var ok = choice === riddleRight;
+    if (ok) { game.coins += RIDDLE_BONUS; coinBump = 1; }
+    if (game.state === 'paused') { lastT = 0; resumedAt = Date.now(); game.resume(); game.invuln = Math.max(game.invuln || 0, 1.2); hookBtn.hidden = false; pauseBtn.hidden = false; }
+    say(ok ? 'riddleOk' : choice == null ? 'riddleLate' : 'riddleNo', true);
+  }
+  riddleEl.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+  rdBtn.forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); closeRiddle(+b.getAttribute('data-i')); }); });
+  document.addEventListener('keydown', function (e) { if (riddleOpen && (e.key === '1' || e.key === '2')) closeRiddle(+e.key - 1); });
+
   game.onEvent = function (type) {
-    if (type === 'start') { banked = false; applyLoadout(); if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; nextMs = 100; voiceNextOk = 0; setTimeout(function () { if (game.state === 'playing') say('start', true); }, 900); }
+    if (type === 'start') { banked = false; applyLoadout(); if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; nextMs = 100; voiceNextOk = 0; riddleNext = RIDDLE_FIRST; if (riddleOpen) { riddleOpen = false; riddleEl.hidden = true; } setTimeout(function () { if (game.state === 'playing') say('start', true); }, 900); }
     else if (type === 'stumble') { flash = 1; shake = Math.max(shake, 0.8); say('stumble'); }
     else if (type === 'release') { say('hook'); }
     else if (type === 'coin') { coinBump = 1; if (game.coins > 0 && game.coins % 15 === 0) say('coins'); }
@@ -709,7 +751,7 @@
   var ptr = null, resumedAt = 0;
   function clearTouch() { ptr = null; hookBtn.classList.remove('down'); }
   function resumeGame() {
-    if (game.state !== 'paused') return;
+    if (game.state !== 'paused' || riddleOpen) return;
     clearTouch(); lastT = 0; resumedAt = Date.now();      // fresh clock: no time jump after the pause
     game.resume(); hideOverlay();
   }
