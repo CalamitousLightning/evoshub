@@ -84,3 +84,11 @@ h1 span { color: #ffd84a; }
 }
 #pause-btn:active { transform: translateY(2px); background: rgba(10,50,34,.8); }
 #pause-btn[hidden] { display: none; }
+
+/* THE VOICE: grumpy mysterious narrator bubble (text only) */
+#voice { position: absolute; left: 50%; top: 25%; z-index: 2; max-width: 78%; padding: 6px 14px 8px; border-radius: 14px; text-align: center; pointer-events: none;
+  background: rgba(8,18,14,.68); border: 1px solid rgba(120,255,214,.35); color: #c8fbe9; font: italic 600 15px/1.25 Georgia, "Times New Roman", serif;
+  opacity: 0; transform: translateX(-50%) translateY(6px); transition: opacity .3s ease, transform .3s ease; }
+#voice.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#voice::before { content: "THE VOICE"; display: block; margin-bottom: 2px; font: 700 9px/1 system-ui, sans-serif; letter-spacing: .22em; font-style: normal; color: #6fe8c0; opacity: .85; }
+.voice-line { display: inline-block; margin-top: 6px; color: #8ff0cc; font-style: italic; }

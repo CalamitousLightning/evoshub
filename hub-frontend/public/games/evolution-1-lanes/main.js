@@ -581,6 +581,8 @@
     if (shake > 0) shake = Math.max(0, shake - dt * 2.2);
     if (flash > 0) flash = Math.max(0, flash - dt * 1.6);
     if (hintT > 0) hintT -= dt;
+    if (game.state === 'playing' && game.score() >= nextMs) { nextMs += 100; say('far'); }
+    if (voiceHideAt && performance.now() > voiceHideAt) silenceVoice();
     try { render(t); }
     catch (err) {
       if (r3 && r3.ready) { r3.ready = false; canvas.style.background = '#0b2a1f'; if (window.console) console.warn('3D renderer disabled after an error:', err); }
@@ -657,7 +659,7 @@
 
   // ---------------------------------------------------------------- overlay / state
   function showOverlay(mode) {
-    overlay.hidden = false; hookBtn.hidden = true; pauseBtn.hidden = true;
+    overlay.hidden = false; hookBtn.hidden = true; pauseBtn.hidden = true; silenceVoice();
     ovStats.hidden = true; ovHelp.hidden = false;
     if (mode === 'menu') { ovTitle.innerHTML = 'EVOLUTION 1<br><span>THE RUNNER</span>'; ovText.textContent = 'A laboratory fell from the sky and became a temple in the jungle. Run toward it.'; ovBtn.textContent = 'START'; }
     else if (mode === 'paused') { ovTitle.innerHTML = 'PAUSED'; ovText.textContent = ''; ovBtn.textContent = 'RESUME'; }
@@ -665,6 +667,8 @@
       var sc = game.points(), isBest = sc > best;
       if (isBest) { best = sc; try { localStorage.setItem('evo1lanes.best', String(best)); } catch (e) { /* storage unavailable */ } }
       ovTitle.innerHTML = 'RUN OVER'; ovText.textContent = REASON[game.reason] || 'You crashed.';
+      var vl = document.createElement('em'); vl.className = 'voice-line'; vl.textContent = '\u201C' + pickVoice(game.score() >= 150 ? VOICE.overFar : VOICE.over) + '\u201D';
+      ovText.appendChild(document.createElement('br')); ovText.appendChild(vl);
       var got = bankRun();
       ovStats.hidden = false; ovStats.innerHTML = game.score() + ' m &middot; ' + game.coins + ' coins' + (got ? ' (saved)' : '') + '<br>' + sc + ' pts' + (isBest && sc > 0 ? ' &middot; NEW BEST!' : ' <small>(best ' + best + ')</small>');
       ovBtn.textContent = 'RESTART'; ovHelp.hidden = true;
@@ -675,11 +679,31 @@
   }
   function hideOverlay() { overlay.hidden = true; hookBtn.hidden = false; pauseBtn.hidden = false; ovBtn.blur(); }
 
+  // ---------------------------------------------------------------- THE VOICE: a grumpy, mysterious narrator (text only, never blocks touches)
+  var voiceEl = document.createElement('div'); voiceEl.id = 'voice'; voiceEl.setAttribute('aria-hidden', 'true'); document.getElementById('app').appendChild(voiceEl);
+  var VOICE = {
+    start: ['So. Another runner.', 'Run. It is watching.', 'The jungle remembers every step.', 'Do try not to die immediately.'],
+    stumble: ['Clumsy.', 'Tch. Watch your feet.', 'Again? Truly?', 'The ground was right there.'],
+    far: ['Still alive? Hm.', 'Do not get proud.', 'The temple is not impressed.', 'Keep going. I am merely curious.'],
+    hook: ['Hm. Not terrible.', 'A lucky swing.', 'The vine tolerates you.'],
+    coins: ['Shiny things. Typical.', 'Collect away. I will keep judging.', 'Greedy. I approve.'],
+    over: ['That was it?', 'Predictable.', 'The jungle sighs.', 'Again. Perhaps with eyes open.'],
+    overFar: ['...Fine. Not bad.', 'You almost deserved that.', 'Again. I am not impressed. Yet.']
+  };
+  var voiceHideAt = 0, voiceLast = '', voiceNextOk = 0, nextMs = 100;
+  function pickVoice(pool) { var l, n = 0; do { l = pool[Math.floor(Math.random() * pool.length)]; } while (l === voiceLast && pool.length > 1 && ++n < 6); voiceLast = l; return l; }
+  function say(pool, force) {
+    var now = performance.now(); if (!force && now < voiceNextOk) return;
+    voiceEl.textContent = pickVoice(VOICE[pool]); voiceEl.className = 'show'; voiceHideAt = now + 2800; voiceNextOk = now + 7000;
+  }
+  function silenceVoice() { voiceEl.className = ''; voiceHideAt = 0; }
+
   game.onEvent = function (type) {
-    if (type === 'start') { banked = false; applyLoadout(); if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; }
-    else if (type === 'stumble') { flash = 1; shake = Math.max(shake, 0.8); }
-    else if (type === 'coin') { coinBump = 1; }
-    else if (type === 'crash') { shake = 1; overTimer = setTimeout(function () { overTimer = null; if (game.state === 'over') showOverlay('over'); }, 550); }
+    if (type === 'start') { banked = false; applyLoadout(); if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; nextMs = 100; voiceNextOk = 0; setTimeout(function () { if (game.state === 'playing') say('start', true); }, 900); }
+    else if (type === 'stumble') { flash = 1; shake = Math.max(shake, 0.8); say('stumble'); }
+    else if (type === 'release') { say('hook'); }
+    else if (type === 'coin') { coinBump = 1; if (game.coins > 0 && game.coins % 15 === 0) say('coins'); }
+    else if (type === 'crash') { shake = 1; silenceVoice(); overTimer = setTimeout(function () { overTimer = null; if (game.state === 'over') showOverlay('over'); }, 550); }
   };
 
   var ptr = null, resumedAt = 0;
