@@ -584,7 +584,7 @@
     if (game.state === 'playing' && game.score() >= nextMs) { nextMs += 100; say('far'); }
     if (voiceHideAt && performance.now() > voiceHideAt) silenceVoice();
     if (riddleOpen) { riddleT -= dt; rdBar.style.width = Math.max(0, riddleT / RIDDLE_TIME * 100) + '%'; if (riddleT <= 0) closeRiddle(null); }
-    else if (game.state === 'playing' && game.score() >= riddleNext && game.onGround && !game.hook && !(game.hookArmed > 0) && !(game.wounded > 0)) openRiddle();
+    else if (game.state === 'playing' && game.score() >= riddleNext && riddleSafeMoment()) openRiddle();
     try { render(t); }
     catch (err) {
       if (r3 && r3.ready) { r3.ready = false; canvas.style.background = '#0b2a1f'; if (window.console) console.warn('3D renderer disabled after an error:', err); }
@@ -721,6 +721,22 @@
   riddleEl.innerHTML = '<div class="rd-card"><p class="rd-eyebrow">THE VOICE ASKS</p><p class="rd-q" id="rd-q"></p><div class="rd-bar"><i id="rd-bar"></i></div><div class="rd-opts"><button type="button" id="rd-a" data-i="0"></button><button type="button" id="rd-b" data-i="1"></button></div><p class="rd-note">+' + RIDDLE_BONUS + ' coins if you are right</p></div>';
   document.getElementById('app').appendChild(riddleEl);
   var rdQ = document.getElementById('rd-q'), rdBar = document.getElementById('rd-bar'), rdBtn = [document.getElementById('rd-a'), document.getElementById('rd-b')];
+  // The riddle comes shortly BEFORE a pit, chasm or ledge (30-70 m ahead), so the answer happens right before a big moment.
+  // If no such hazard shows up for a long stretch, it falls back to any quiet moment (nothing within 14 m, no hazard closer than 30 m).
+  var HAZARD = { pit: 1, chasm: 1, ledge: 1 }, RD_NEAR = 30, RD_FAR = 70, RD_FALLBACK = 120;
+  function riddleSafeMoment() {
+    if (!game.onGround || game.hook || game.hookArmed > 0 || game.wounded > 0) return false;
+    var os = game.obstacles, pz = game.pz, i, o, dz, hazard = -1, any = Infinity;
+    for (i = 0; i < os.length; i++) {
+      o = os[i]; dz = o.z - pz;
+      if (o.z + (o.len || 0) < pz) continue;                       // already behind us
+      if (dz < any) any = dz;
+      if (HAZARD[o.type] && dz > 0 && (hazard < 0 || dz < hazard)) hazard = dz;
+    }
+    if (any < 14) return false;                                    // something right in front, or under us: never now
+    if (hazard >= RD_NEAR && hazard <= RD_FAR) return true;        // the sweet spot
+    return game.score() >= riddleNext + RD_FALLBACK && (hazard < 0 || hazard >= RD_NEAR);
+  }
   var riddleOpen = false, riddleT = 0, riddleRight = 0, riddleNext = RIDDLE_FIRST, riddleLastIdx = -1;
   function openRiddle() {
     var idx; do { idx = Math.floor(Math.random() * RIDDLES.length); } while (idx === riddleLastIdx && RIDDLES.length > 1); riddleLastIdx = idx;
