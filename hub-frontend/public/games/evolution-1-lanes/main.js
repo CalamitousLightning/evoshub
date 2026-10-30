@@ -19,7 +19,7 @@
   var ovStats = document.getElementById('ov-stats');
   var ovBtn = document.getElementById('ov-btn');
   var ovHelp = document.getElementById('ov-help');
-  var hookBtn = document.getElementById('hook-btn');
+  var hookBtn = document.getElementById('hook-btn'), pauseBtn = document.getElementById('pause-btn');
 
   var game = new Core.Game();
   var W = 0, H = 0, DPR = 1, F = 300, HOR = 300;
@@ -574,9 +574,10 @@
 
   function frame(t) {
     if (!running) return;
+    requestAnimationFrame(frame);            // schedule first: an error below can never stop the loop (that looked like a freeze)
     var dt = lastT ? Math.min((t - lastT) / 1000, 0.1) : 0; lastT = t;
     if (game.state === 'menu') attract += dt * 12;
-    game.update(dt);
+    try { game.update(dt); } catch (err) { if (window.console) console.error(err); }
     if (shake > 0) shake = Math.max(0, shake - dt * 2.2);
     if (flash > 0) flash = Math.max(0, flash - dt * 1.6);
     if (hintT > 0) hintT -= dt;
@@ -585,7 +586,6 @@
       if (r3 && r3.ready) { r3.ready = false; canvas.style.background = '#0b2a1f'; if (window.console) console.warn('3D renderer disabled after an error:', err); }
       else if (window.console) console.error(err);
     }
-    requestAnimationFrame(frame);
   }
 
   // ---------------------------------------------------------------- wallet + store (saved on this device)
@@ -657,7 +657,7 @@
 
   // ---------------------------------------------------------------- overlay / state
   function showOverlay(mode) {
-    overlay.hidden = false; hookBtn.hidden = true;
+    overlay.hidden = false; hookBtn.hidden = true; pauseBtn.hidden = true;
     ovStats.hidden = true; ovHelp.hidden = false;
     if (mode === 'menu') { ovTitle.innerHTML = 'EVOLUTION 1<br><span>THE RUNNER</span>'; ovText.textContent = 'A laboratory fell from the sky and became a temple in the jungle. Run toward it.'; ovBtn.textContent = 'START'; }
     else if (mode === 'paused') { ovTitle.innerHTML = 'PAUSED'; ovText.textContent = ''; ovBtn.textContent = 'RESUME'; }
@@ -673,7 +673,7 @@
     document.getElementById('store-open').hidden = (mode === 'paused');
     setTimeout(function () { try { ovBtn.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 0);
   }
-  function hideOverlay() { overlay.hidden = true; hookBtn.hidden = false; ovBtn.blur(); }
+  function hideOverlay() { overlay.hidden = true; hookBtn.hidden = false; pauseBtn.hidden = false; ovBtn.blur(); }
 
   game.onEvent = function (type) {
     if (type === 'start') { banked = false; applyLoadout(); if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; }
@@ -682,17 +682,30 @@
     else if (type === 'crash') { shake = 1; overTimer = setTimeout(function () { overTimer = null; if (game.state === 'over') showOverlay('over'); }, 550); }
   };
 
+  var ptr = null, resumedAt = 0;
+  function clearTouch() { ptr = null; hookBtn.classList.remove('down'); }
+  function resumeGame() {
+    if (game.state !== 'paused') return;
+    clearTouch(); lastT = 0; resumedAt = Date.now();      // fresh clock: no time jump after the pause
+    game.resume(); hideOverlay();
+  }
+  function pauseIfPlaying() {
+    if (game.state !== 'playing') return;
+    if (Date.now() - resumedAt < 600) return;            // some phones fire a stray blur right after a tap: don't re-pause at once
+    clearTouch(); game.pause(); showOverlay('paused');
+  }
   ovBtn.addEventListener('click', function () {
-    if (game.state === 'paused') { game.resume(); hideOverlay(); lastT = 0; }
+    if (game.state === 'paused') resumeGame();
     else if (game.state === 'menu' || game.state === 'over') game.start();
   });
-
-  function pauseIfPlaying() { if (game.state === 'playing') { game.pause(); showOverlay('paused'); } }
+  pauseBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); });
+  pauseBtn.addEventListener('pointerup', function (e) { e.preventDefault(); e.stopPropagation(); resumedAt = 0; pauseIfPlaying(); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) pauseIfPlaying(); });
   window.addEventListener('blur', pauseIfPlaying);
+  window.addEventListener('pagehide', pauseIfPlaying);
 
   // ---------------------------------------------------------------- input
-  var ptr = null, SWIPE = 24;
+  var SWIPE = 24;
   canvas.addEventListener('pointerdown', function (e) {
     if (game.state !== 'playing') return;
     ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp, done: false };
@@ -725,14 +738,14 @@
   window.addEventListener('keydown', function (e) {
     if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
     var k = e.key, used = true;
-    if (game.state === 'paused' && (k === 'Escape' || k === 'p' || k === 'P')) { game.resume(); hideOverlay(); lastT = 0; e.preventDefault(); return; }
+    if (game.state === 'paused' && (k === 'Escape' || k === 'p' || k === 'P')) { resumeGame(); e.preventDefault(); return; }
     if (game.state !== 'playing') return;
     if (k === 'ArrowLeft' || k === 'a' || k === 'A') game.moveLane(-1);
     else if (k === 'ArrowRight' || k === 'd' || k === 'D') game.moveLane(1);
     else if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === ' ') game.jump();
     else if (k === 'ArrowDown' || k === 's' || k === 'S') game.slide();
     else if (k === 'x' || k === 'X' || k === 'h' || k === 'H' || k === 'k' || k === 'K' || k === 'Shift') game.hookPress();
-    else if (k === 'Escape' || k === 'p' || k === 'P') pauseIfPlaying();
+    else if (k === 'Escape' || k === 'p' || k === 'P') { resumedAt = 0; pauseIfPlaying(); }
     else used = false;
     if (used) e.preventDefault();
   });

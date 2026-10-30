@@ -73,3 +73,14 @@ h1 span { color: #ffd84a; }
 .it button { min-width: 84px; padding: 8px 10px; border: 0; border-radius: 9px; font: 800 13px/1 system-ui, sans-serif; cursor: pointer; color: #06160f; background: linear-gradient(#ffe36e, #ffb92e); }
 .it button[disabled] { background: #2c5a44; color: #9fd1b3; cursor: default; }
 .it button.eq { background: #6fe3a0; }
+
+/* PAUSE button: bottom-left, thumb reach, clear of the coin counter (top) and the HOOK button (bottom-right) */
+#pause-btn {
+  position: absolute; z-index: 3;
+  left: calc(16px + env(safe-area-inset-left)); bottom: calc(18px + env(safe-area-inset-bottom));
+  width: 64px; height: 64px; border: 2px solid rgba(255,255,255,.55); border-radius: 50%; cursor: pointer;
+  font: 800 22px/1 system-ui, sans-serif; letter-spacing: -.1em; color: #e8fff3;
+  background: rgba(6,22,15,.62); box-shadow: 0 4px 14px rgba(0,0,0,.45); touch-action: none;
+}
+#pause-btn:active { transform: translateY(2px); background: rgba(10,50,34,.8); }
+#pause-btn[hidden] { display: none; }
