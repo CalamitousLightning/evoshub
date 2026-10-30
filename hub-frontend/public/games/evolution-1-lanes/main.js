@@ -645,7 +645,7 @@
     persist(); applyLoadout(); renderStore();
   });
   function openStore() { storeOpen = true; renderStore(); overlay.hidden = true; storeEl.hidden = false; }
-  function closeStore() { storeOpen = false; storeEl.hidden = true; if (overlay && !overlay.hidden) showOverlay(game.state === 'over' ? 'over' : game.state === 'paused' ? 'paused' : 'menu'); }
+  function closeStore() { storeOpen = false; storeEl.hidden = true; showOverlay(game.state === 'over' ? 'over' : game.state === 'paused' ? 'paused' : 'menu'); }   // always bring the previous screen back (it was hidden when the store opened)
   document.getElementById('store-open').addEventListener('click', openStore);
   document.getElementById('store-close').addEventListener('click', closeStore);
   function drawStorePreview(t) {            // the same explorer artwork, running on the spot, with the equipped skin
@@ -670,7 +670,7 @@
       ovBtn.textContent = 'RESTART'; ovHelp.hidden = true;
     }
     walletMini.textContent = save.wallet ? '\u25CF ' + save.wallet : '';
-    document.getElementById('store-open').hidden = (mode === 'paused');
+    document.getElementById('store-open').hidden = false;
     setTimeout(function () { try { ovBtn.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 0);
   }
   function hideOverlay() { overlay.hidden = true; hookBtn.hidden = false; pauseBtn.hidden = false; ovBtn.blur(); }
