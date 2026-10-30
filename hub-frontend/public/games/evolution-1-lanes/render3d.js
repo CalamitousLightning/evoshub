@@ -117,6 +117,39 @@ import * as THREE from './vendor/three.module.min.js';
   [trunks, canopyA, canopyB, bushes, ferns].forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); });
   var dummy = new THREE.Object3D(), zeroM = new THREE.Matrix4().makeScale(0, 0, 0);
 
+  // --- forest extras: slim palms, glowing flowers, falling leaves, light rays (all cheap; the soft effects switch off on slow phones)
+  var NP = 40;
+  var palmTrunks = new THREE.InstancedMesh(trunkGeo, lambert(0x84603a), NP);
+  var palmCrowns = new THREE.InstancedMesh(canopyGeo, lambert(0x3fbf5a, { flatShading: true }), NP * 2);
+  var FL_N = 24, flowerGeo = new THREE.IcosahedronGeometry(0.2, 0);
+  var flowerSets = [0x5ff5ff, 0xff7ad9, 0xffc45a].map(function (c) { return new THREE.InstancedMesh(flowerGeo, new THREE.MeshBasicMaterial({ color: c }), FL_N); });
+  [palmTrunks, palmCrowns].concat(flowerSets).forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); });
+
+  var leafTex = canvasTex(32, 32, function (g, w, h) {
+    g.translate(w / 2, h / 2); g.rotate(-0.6); g.fillStyle = '#ffffff';
+    g.beginPath(); g.moveTo(-12, 0); g.quadraticCurveTo(0, -11, 12, 0); g.quadraticCurveTo(0, 11, -12, 0); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(-11, 0); g.lineTo(11, 0); g.stroke();
+  });
+  var NLF = 70, leafBase = new Float32Array(NLF * 3), leafPos = new Float32Array(NLF * 3), leafCol = new Float32Array(NLF * 3), leafPal = [col(0x7dd65a), col(0xc7e35a), col(0xf0b43c), col(0x4fb868)];
+  for (var li = 0; li < NLF; li++) {
+    leafBase[li * 3] = (hash(li * 2.3) - 0.5) * 22; leafBase[li * 3 + 1] = hash(li * 4.1) * 14; leafBase[li * 3 + 2] = hash(li * 6.7) * 60;
+    var lc = leafPal[li % 4]; leafCol[li * 3] = lc.r; leafCol[li * 3 + 1] = lc.g; leafCol[li * 3 + 2] = lc.b;
+  }
+  var leafGeo = new THREE.BufferGeometry(); leafGeo.setAttribute('position', new THREE.BufferAttribute(leafPos, 3)); leafGeo.setAttribute('color', new THREE.BufferAttribute(leafCol, 3));
+  var leaves = new THREE.Points(leafGeo, new THREE.PointsMaterial({ map: leafTex, vertexColors: true, size: 0.55, transparent: true, opacity: 0.9, alphaTest: 0.05, depthWrite: false, sizeAttenuation: true }));
+  leaves.frustumCulled = false; scene.add(leaves);
+
+  var rayTex = canvasTex(32, 128, function (g, w, h) {
+    var gv = g.createLinearGradient(0, 0, 0, h); gv.addColorStop(0, 'rgba(255,255,255,.9)'); gv.addColorStop(0.6, 'rgba(255,255,255,.35)'); gv.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gv; g.fillRect(0, 0, w, h);
+    g.globalCompositeOperation = 'destination-in'; var gh = g.createLinearGradient(0, 0, w, 0); gh.addColorStop(0, 'rgba(0,0,0,0)'); gh.addColorStop(0.5, 'rgba(0,0,0,1)'); gh.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gh; g.fillRect(0, 0, w, h);
+  });
+  var NRAY = 6, rays = [];
+  for (var ri = 0; ri < NRAY; ri++) {
+    var rm = new THREE.Mesh(new THREE.PlaneGeometry(2.4 + hash(ri) * 2, 24), new THREE.MeshBasicMaterial({ map: rayTex, color: 0xfff0b0, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }));
+    rm.frustumCulled = false; rm.userData.i = ri; scene.add(rm); rays.push(rm);
+  }
+
   // spores floating in the air (mysterious jungle)
   var NS = 140, sporeBase = new Float32Array(NS * 3), sporePos = new Float32Array(NS * 3);
   for (var si = 0; si < NS; si++) { sporeBase[si * 3] = (hash(si * 3.1) - 0.5) * 30; sporeBase[si * 3 + 1] = 0.5 + hash(si * 5.7) * 9; sporeBase[si * 3 + 2] = hash(si * 7.3) * 120; }
@@ -125,7 +158,7 @@ import * as THREE from './vendor/three.module.min.js';
   spores.frustumCulled = false; scene.add(spores);
 
   function updateScenery(vz) {
-    var k0 = Math.floor((vz - 14) / 4.5), k, sd, ti = 0, bi = 0, fi = 0, ci = 0;
+    var k0 = Math.floor((vz - 14) / 4.5), k, sd, ti = 0, bi = 0, fi = 0, ci = 0, pi = 0, pc = 0, fc = [0, 0, 0];
     for (k = k0; k * 4.5 - vz < 135 && ti < NT; k++) {
       var z = k * 4.5 + 0.9;
       for (sd = -1; sd <= 1; sd += 2) {
@@ -138,6 +171,19 @@ import * as THREE from './vendor/three.module.min.js';
         dummy.scale.set(rr * 0.7, rr * 0.6, rr * 0.7); dummy.position.set(x + sd * 1.6, th - 0.8, zz - 0.8); dummy.updateMatrix(); canopyA.setMatrixAt(ci, dummy.matrix);
         dummy.scale.set(rr * 0.5, rr * 0.45, rr * 0.5); dummy.position.set(x + sd * 0.9, th + rr * 0.9, zz - 0.3); dummy.updateMatrix(); canopyB.setMatrixAt(ci, dummy.matrix); ci++;
         ti++;
+      }
+      var hp = hash(k * 3.7 + 11);
+      if (hp > 0.55 && pi < NP) {
+        var ps = hp > 0.78 ? 1 : -1, ph = 11 + hp * 7, px0 = ps * (6.4 + hash(k * 1.9) * 8), pz0 = z + 2.2;
+        dummy.rotation.set(0, hp * 8, ps * 0.07); dummy.scale.set(0.3, ph, 0.3); dummy.position.set(px0, 0, pz0); dummy.updateMatrix(); palmTrunks.setMatrixAt(pi, dummy.matrix);
+        dummy.rotation.set(0, hp * 5, ps * 0.12); dummy.scale.set(3.1, 0.5, 3.1); dummy.position.set(px0 - ps * 0.5, ph + 0.2, pz0); dummy.updateMatrix(); palmCrowns.setMatrixAt(pc++, dummy.matrix);
+        dummy.rotation.set(0, hp * 5 + 0.8, -ps * 0.1); dummy.scale.set(2.6, 0.42, 2.6); dummy.position.set(px0 - ps * 0.3, ph + 0.7, pz0); dummy.updateMatrix(); palmCrowns.setMatrixAt(pc++, dummy.matrix);
+        pi++;
+      }
+      var hfl = hash(k * 6.1 + 5);
+      if (hfl > 0.35) {
+        var fg = Math.floor(hash(k * 8.3) * 3), fsd = hfl > 0.68 ? 1 : -1;
+        if (fc[fg] < FL_N) { dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.position.set(fsd * (4.15 + hash(k * 2.7) * 1.4), 0.3 + hash(k) * 0.15, z + 1); dummy.updateMatrix(); flowerSets[fg].setMatrixAt(fc[fg]++, dummy.matrix); }
       }
       var hb = hash(k * 5.3);
       if (hb > 0.3 && bi < NB) {
@@ -154,6 +200,10 @@ import * as THREE from './vendor/three.module.min.js';
     for (q = ci; q < NT * 2; q++) { canopyA.setMatrixAt(q, zeroM); canopyB.setMatrixAt(q, zeroM); }
     for (q = bi; q < NB; q++) bushes.setMatrixAt(q, zeroM);
     for (q = fi; q < NF; q++) ferns.setMatrixAt(q, zeroM);
+    for (q = pi; q < NP; q++) palmTrunks.setMatrixAt(q, zeroM);
+    for (q = pc; q < NP * 2; q++) palmCrowns.setMatrixAt(q, zeroM);
+    palmTrunks.instanceMatrix.needsUpdate = palmCrowns.instanceMatrix.needsUpdate = true;
+    for (var fq = 0; fq < 3; fq++) { for (q = fc[fq]; q < FL_N; q++) flowerSets[fq].setMatrixAt(q, zeroM); flowerSets[fq].instanceMatrix.needsUpdate = true; }
     trunks.instanceMatrix.needsUpdate = canopyA.instanceMatrix.needsUpdate = canopyB.instanceMatrix.needsUpdate = bushes.instanceMatrix.needsUpdate = ferns.instanceMatrix.needsUpdate = true;
   }
 
@@ -475,6 +525,22 @@ import * as THREE from './vendor/three.module.min.js';
       pa[i * 3] = sporeBase[i * 3] + Math.sin(t / 1400 + i) * 0.6; pa[i * 3 + 1] = sporeBase[i * 3 + 1] + Math.sin(t / 1100 + i * 2) * 0.4; pa[i * 3 + 2] = vz - 10 + zz;
     }
     sporeGeo.attributes.position.needsUpdate = true;
+
+    // falling leaves + light rays (soft effects: off when the phone is struggling)
+    var fxOn = quality > 1.4; leaves.visible = fxOn; for (i = 0; i < NRAY; i++) rays[i].visible = fxOn; for (i = 0; i < 3; i++) flowerSets[i].visible = fxOn;
+    if (fxOn) {
+      var lp = leafPos, ts = t / 1000;
+      for (i = 0; i < NLF; i++) {
+        var lz = (((leafBase[i * 3 + 2] - vz * 0.8) % 60) + 60) % 60, ly = ((leafBase[i * 3 + 1] - ts * (0.7 + (i % 5) * 0.12)) % 14 + 14) % 14 + 0.3;
+        lp[i * 3] = leafBase[i * 3] + Math.sin(ts * 1.3 + i) * 1.1; lp[i * 3 + 1] = ly; lp[i * 3 + 2] = vz - 6 + lz;
+      }
+      leafGeo.attributes.position.needsUpdate = true;
+      for (i = 0; i < NRAY; i++) {
+        var rm2 = rays[i], rs = i % 2 ? 1 : -1, rz = (((i * 17 - vz * 0.5) % 100) + 100) % 100;
+        rm2.position.set(rs * (7 + (i % 3) * 3.2), 12, vz + 14 + rz); rm2.rotation.z = rs * 0.32;
+        rm2.material.opacity = 0.11 + 0.07 * Math.sin(ts * 0.7 + i * 1.9);
+      }
+    }
 
     // lights follow the runner (no shadow maps: cheap)
     sun.position.set(vz * 0 - 8, 16, vz - 6); sun.target.position.set(0, 0, vz + 4); sun.target.updateMatrixWorld();
