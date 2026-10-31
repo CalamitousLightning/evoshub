@@ -153,6 +153,57 @@
     }
   }
 
+  // ---------------------------------------------------------------- forks (2D fallback): three separate pathways, coloured by THEME only (never by kind: the Voice's riddle tells which is safe)
+  var FK2 = {
+    vine: { lint: [63, 122, 44], glow: [141, 255, 106], floor: [63, 122, 53] },
+    temple: { lint: [201, 165, 110], glow: [255, 196, 90], floor: [201, 165, 110] },
+    river: { lint: [74, 143, 176], glow: [127, 232, 255], floor: [47, 120, 168] }
+  };
+  function lighter(c, k) { return [Math.min(255, c[0] * k), Math.min(255, c[1] * k), Math.min(255, c[2] * k)]; }
+  function drawForkFloors() {
+    var fs = game.forks || [], zn = -CAM_D + 0.6, i, j, f, z0, z1, r, x, w = CFG.LANE_W * 0.4;
+    for (i = 0; i < fs.length; i++) {
+      f = fs[i]; if (!f.routes) continue;
+      z0 = Math.max(f.z - rz, zn); z1 = Math.min(f.end - rz, VIEW); if (z1 <= z0) continue;
+      for (j = 0; j < f.routes.length; j++) {
+        r = f.routes[j]; x = r.lane * CFG.LANE_W;
+        poly([proj(x - w, 0, z0), proj(x + w, 0, z0), proj(x + w, 0, z1), proj(x - w, 0, z1)], mix(FK2[r.id].floor, (z0 + z1) / 2));
+      }
+    }
+  }
+  function drawForkWall(x, za, zb) { box(x - 0.21, x + 0.21, 0, 1.1, za, zb, [78, 90, 68], [98, 112, 84], [62, 72, 54], za); }
+  function drawForkRib(f, z, h, gate) {
+    var LW = CFG.LANE_W, j, r, lx, tc, a, b, s, w, hh, sx, bxs = [-1.5 * LW, -0.5 * LW, 0.5 * LW, 1.5 * LW];
+    for (j = 0; j < 4; j++) box(bxs[j] - 0.25, bxs[j] + 0.25, 0, h, z, z + 0.5, [106, 100, 80], [130, 124, 100], [88, 82, 66], z);
+    for (j = 0; j < f.routes.length; j++) {
+      r = f.routes[j]; lx = r.lane * LW; tc = FK2[r.id];
+      box(lx - LW / 2 + 0.25, lx + LW / 2 - 0.25, h, h + (gate ? 0.55 : 0.4), z, z + 0.8, tc.lint, lighter(tc.lint, 1.15), lighter(tc.lint, 0.8), z);
+      poly([proj(lx - LW * 0.4, h - 0.04, z), proj(lx + LW * 0.4, h - 0.04, z), proj(lx + LW * 0.4, h - 0.2, z), proj(lx - LW * 0.4, h - 0.2, z)], mix(tc.glow, z, 1));
+      if (gate) {
+        a = proj(lx, h + 1.3, z); s = a.s; w = LW * 0.95 * s; hh = 0.5 * s;
+        if (hh > 9) {
+          ctx.fillStyle = 'rgba(8,16,12,.88)'; ctx.fillRect(a.x - w / 2, a.y - hh / 2, w, hh);
+          ctx.strokeStyle = mix(tc.glow, z); ctx.lineWidth = 2; ctx.strokeRect(a.x - w / 2, a.y - hh / 2, w, hh);
+          var fs2 = Math.max(7, Math.round(hh * 0.5)); ctx.font = '800 ' + fs2 + 'px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          while (fs2 > 6 && ctx.measureText(r.name).width > w - 6) { fs2--; ctx.font = '800 ' + fs2 + 'px system-ui, sans-serif'; }
+          ctx.fillStyle = '#fff'; ctx.fillText(r.name, a.x, a.y + 1); ctx.textBaseline = 'alphabetic';
+        }
+      }
+    }
+  }
+  function pushForkItems(items) {
+    var fs = game.forks || [], LW = CFG.LANE_W, bx = [-1.5 * LW, -0.5 * LW, 0.5 * LW, 1.5 * LW], i, j, f, zs, a, b, zf, rel;
+    for (i = 0; i < fs.length; i++) {
+      f = fs[i]; if (!f.routes || f.end - rz < -CAM_D + 0.5 || f.z - rz > VIEW) continue;
+      for (zs = f.z - 3; zs < f.end + 3; zs += 6) {
+        a = Math.max(zs - rz, -CAM_D + 0.6); b = zs + 6 - rz; if (b < -CAM_D + 0.7 || a > VIEW) continue;
+        for (j = 0; j < 4; j++) items.push({ z: a, f: drawForkWall, a: [bx[j], a, b] });
+      }
+      rel = f.z - rz; if (rel > -CAM_D + 0.6 && rel < VIEW) items.push({ z: rel, f: drawForkRib, a: [f, rel, 4.4, true] });
+      for (zf = f.z + 13; zf < f.end; zf += 13) { rel = zf - rz; if (rel > -CAM_D + 0.6 && rel < VIEW) items.push({ z: rel, f: drawForkRib, a: [f, rel, 3.5, false] }); }
+    }
+  }
+
   function drawVoid(o) {                // pits & chasms: no floor, you look into darkness
     var z0 = o.z - rz, z1 = o.z + o.len - rz;
     if (z1 < -CAM_D + 0.5 || z0 > VIEW) return;
@@ -568,6 +619,7 @@
     if (shake > 0) ctx.translate((Math.random() - 0.5) * shake * 18, (Math.random() - 0.5) * shake * 18);
     drawSky();
     drawGround();
+    if (game.state !== 'menu') drawForkFloors();
 
     var items = [], i, o, k, sd;
     var k0 = Math.floor((rz - CAM_D) / 4.5);
@@ -598,6 +650,7 @@
         if (!cn.taken && cr < VIEW * 0.75 && cr > -CAM_D + 0.8) items.push({ z: cr, f: drawCoin, a: [cn, t] });
       }
     }
+    if (game.state !== 'menu') pushForkItems(items);
     items.sort(function (a, b) { return b.z - a.z; });
     var drewPlayer = false;
     for (i = 0; i < items.length; i++) {

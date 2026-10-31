@@ -261,6 +261,92 @@ import * as THREE from './vendor/three.module.min.js';
     sideMat.color.setScalar(bright); tileMats[2].color.setScalar(bright);
   }
 
+  // ------------------------------------------------------------------ FORKS: the track splits into three separate pathways (one per lane), each with its own look.
+  // The look shows the path's THEME (vine / temple / river), never its kind: which one is safe is for the Voice's riddle to tell.
+  var FK = { vine: { lint: col(0x3f7a2c), glow: col(0x8dff6a) }, temple: { lint: col(0xc9a56e), glow: col(0xffc45a) }, river: { lint: col(0x4a8fb0), glow: col(0x7fe8ff) } };
+  var FK_POST_N = 90, FK_LINT_N = 70, FK_GLOW_N = 70, FK_VINE_N = 180, FK_WALL_N = 10, FK_FLOOR_N = 6, FK_SIGN_N = 6;
+  function topGeo(g, y) { g.translate(0, y, 0); return g; }
+  var fkPosts = new THREE.InstancedMesh(topGeo(new THREE.BoxGeometry(0.5, 1, 0.5), 0.5), lambert(0x6a6450, { flatShading: true }), FK_POST_N);
+  var fkLint = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert(0xffffff, { flatShading: true }), FK_LINT_N);
+  var fkGlow = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff }), FK_GLOW_N);
+  var fkVines = new THREE.InstancedMesh(topGeo(new THREE.CylinderGeometry(0.04, 0.04, 1, 5), -0.5), lambert(0x4fae48), FK_VINE_N);
+  var fkWalls = new THREE.InstancedMesh(topGeo(new THREE.BoxGeometry(1, 1, 1), 0.5), lambert(0x4e5a44, { flatShading: true }), FK_WALL_N);
+  var floorTex = {
+    vine: canvasTex(64, 64, function (g, w, h) {
+      g.fillStyle = '#3f7a35'; g.fillRect(0, 0, w, h);
+      for (var i = 0; i < 90; i++) { g.fillStyle = 'rgba(' + (30 + (i * 13) % 40) + ',' + (110 + (i * 29) % 70) + ',' + (40 + (i * 7) % 30) + ',.55)'; g.fillRect((i * 47) % w, (i * 31) % h, 2 + i % 4, 3 + i % 3); }
+      g.strokeStyle = 'rgba(20,60,20,.5)'; g.lineWidth = 2; g.beginPath(); g.moveTo(w * 0.25, 0); g.quadraticCurveTo(w * 0.4, h / 2, w * 0.2, h); g.moveTo(w * 0.75, 0); g.quadraticCurveTo(w * 0.6, h / 2, w * 0.8, h); g.stroke();
+    }),
+    temple: canvasTex(64, 64, function (g, w, h) {
+      g.fillStyle = '#c9a56e'; g.fillRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(90,64,30,.7)'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2); g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
+      g.fillStyle = 'rgba(255,200,90,.55)'; g.fillRect(w / 2 - 2, 4, 4, h - 8);
+    }),
+    river: canvasTex(64, 64, function (g, w, h) {
+      g.fillStyle = '#2f78a8'; g.fillRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(190,240,255,.6)'; g.lineWidth = 2;
+      for (var r = 0; r < 4; r++) { g.beginPath(); g.moveTo(0, r * 16 + 6); g.quadraticCurveTo(w * 0.25, r * 16, w * 0.5, r * 16 + 6); g.quadraticCurveTo(w * 0.75, r * 16 + 12, w, r * 16 + 6); g.stroke(); }
+    })
+  };
+  var fkFloors = {};
+  ['vine', 'temple', 'river'].forEach(function (id) {
+    var t = floorTex[id]; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 26);
+    var pg = new THREE.PlaneGeometry(1, 1); pg.rotateX(-Math.PI / 2);
+    fkFloors[id] = new THREE.InstancedMesh(pg, new THREE.MeshLambertMaterial({ map: t, emissive: id === 'river' ? 0x103a58 : 0x18200f }), FK_FLOOR_N);
+  });
+  var fkAll = [fkPosts, fkLint, fkGlow, fkVines, fkWalls, fkFloors.vine, fkFloors.temple, fkFloors.river];
+  fkAll.forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.visible = false; scene.add(m); });
+  var signMats = {}, fkSigns = [];
+  function signMat(name, id) {
+    if (!signMats[name]) {
+      var tx = canvasTex(256, 64, function (g, w, h) {
+        g.fillStyle = 'rgba(8,16,12,.88)'; g.fillRect(0, 0, w, h); g.strokeStyle = '#' + FK[id].glow.getHexString(); g.lineWidth = 4; g.strokeRect(3, 3, w - 6, h - 6);
+        g.fillStyle = '#ffffff'; g.font = '800 26px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(name, w / 2, h / 2 + 1);
+      });
+      signMats[name] = new THREE.MeshBasicMaterial({ map: tx, transparent: true });
+    }
+    return signMats[name];
+  }
+  for (var si = 0; si < FK_SIGN_N; si++) { var sm = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 0.52), signMats.x || (signMats.x = new THREE.MeshBasicMaterial({ color: 0x000000 }))); sm.rotation.y = Math.PI; sm.visible = false; sm.frustumCulled = false; scene.add(sm); fkSigns.push(sm); }
+
+  function updateForks(game, vz) {
+    var LW = CFG.LANE_W, bx = [-1.5 * LW, -0.5 * LW, 0.5 * LW, 1.5 * LW], i, j, q, f, r, th, n = { po: 0, li: 0, gl: 0, vi: 0, wa: 0, fl: { vine: 0, temple: 0, river: 0 }, sg: 0 };
+    var fs = game.forks || [], len, zf, lx, hh;
+    for (i = 0; i < fs.length; i++) {
+      f = fs[i];
+      if (f.end < vz - 25 || f.z > vz + 135 || !f.routes) continue;
+      len = f.end - f.z;
+      // gate: four posts, a lintel and a glow bar over every lane, and the name sign
+      for (j = 0; j < 4 && n.po < FK_POST_N; j++) { dummy.rotation.set(0, 0, 0); dummy.scale.set(1.2, 4.4, 1.2); dummy.position.set(bx[j], 0, f.z); dummy.updateMatrix(); fkPosts.setMatrixAt(n.po++, dummy.matrix); }
+      for (j = 0; j < f.routes.length; j++) {
+        r = f.routes[j]; th = FK[r.id]; lx = r.lane * LW;
+        if (n.li < FK_LINT_N) { dummy.rotation.set(0, 0, 0); dummy.scale.set(LW, 0.55, 0.8); dummy.position.set(lx, 4.4 + 0.27, f.z); dummy.updateMatrix(); fkLint.setMatrixAt(n.li, dummy.matrix); fkLint.setColorAt(n.li++, th.lint); }
+        if (n.gl < FK_GLOW_N) { dummy.scale.set(LW * 0.82, 0.16, 0.14); dummy.position.set(lx, 4.2, f.z); dummy.updateMatrix(); fkGlow.setMatrixAt(n.gl, dummy.matrix); fkGlow.setColorAt(n.gl++, th.glow); }
+        if (n.fl[r.id] < FK_FLOOR_N) { dummy.rotation.set(0, 0, 0); dummy.scale.set(LW * 0.8, 1, len); dummy.position.set(lx, 0.025, f.z + len / 2); dummy.updateMatrix(); fkFloors[r.id].setMatrixAt(n.fl[r.id]++, dummy.matrix); }
+        if (n.sg < FK_SIGN_N) { var sg = fkSigns[n.sg++]; sg.material = signMat(r.name, r.id); sg.position.set(lx, 5.45, f.z); sg.visible = true; }
+        // rib arches along the path, 13 m apart; vine paths also get hanging vines
+        for (zf = f.z + 13; zf < f.end; zf += 13) {
+          if (n.li < FK_LINT_N) { dummy.rotation.set(0, 0, 0); dummy.scale.set(LW, 0.4, 0.5); dummy.position.set(lx, 3.5 + 0.2, zf); dummy.updateMatrix(); fkLint.setMatrixAt(n.li, dummy.matrix); fkLint.setColorAt(n.li++, th.lint); }
+          if (n.gl < FK_GLOW_N) { dummy.scale.set(LW * 0.8, 0.1, 0.1); dummy.position.set(lx, 3.4, zf); dummy.updateMatrix(); fkGlow.setMatrixAt(n.gl, dummy.matrix); fkGlow.setColorAt(n.gl++, th.glow); }
+          if (r.id === 'vine') for (q = -1; q <= 1 && n.vi < FK_VINE_N; q++) { hh = 1.0 + hash(zf * 1.3 + q + lx) * 1.5; dummy.rotation.set(0, 0, 0); dummy.scale.set(1, hh, 1); dummy.position.set(lx + q * 0.6, 3.5, zf + 0.1); dummy.updateMatrix(); fkVines.setMatrixAt(n.vi++, dummy.matrix); }
+        }
+      }
+      for (zf = f.z + 13; zf < f.end; zf += 13) for (j = 0; j < 4 && n.po < FK_POST_N; j++) { dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 3.5, 1); dummy.position.set(bx[j], 0, zf); dummy.updateMatrix(); fkPosts.setMatrixAt(n.po++, dummy.matrix); }
+      // dividers that keep the three lanes apart, from just before the gate to just past the end
+      for (j = 0; j < 4 && n.wa < FK_WALL_N; j++) { dummy.rotation.set(0, 0, 0); dummy.scale.set(0.42, 1.1, len + 6); dummy.position.set(bx[j], 0, f.z - 3 + (len + 6) / 2); dummy.updateMatrix(); fkWalls.setMatrixAt(n.wa++, dummy.matrix); }
+    }
+    for (q = n.po; q < FK_POST_N; q++) fkPosts.setMatrixAt(q, zeroM);
+    for (q = n.li; q < FK_LINT_N; q++) fkLint.setMatrixAt(q, zeroM);
+    for (q = n.gl; q < FK_GLOW_N; q++) fkGlow.setMatrixAt(q, zeroM);
+    for (q = n.vi; q < FK_VINE_N; q++) fkVines.setMatrixAt(q, zeroM);
+    for (q = n.wa; q < FK_WALL_N; q++) fkWalls.setMatrixAt(q, zeroM);
+    ['vine', 'temple', 'river'].forEach(function (id) { for (var z2 = n.fl[id]; z2 < FK_FLOOR_N; z2++) fkFloors[id].setMatrixAt(z2, zeroM); fkFloors[id].visible = n.fl[id] > 0; fkFloors[id].instanceMatrix.needsUpdate = true; });
+    for (q = n.sg; q < FK_SIGN_N; q++) fkSigns[q].visible = false;
+    fkPosts.visible = n.po > 0; fkLint.visible = n.li > 0; fkGlow.visible = n.gl > 0; fkVines.visible = n.vi > 0; fkWalls.visible = n.wa > 0;
+    [fkPosts, fkLint, fkGlow, fkVines, fkWalls].forEach(function (m) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; });
+    floorTex.river.offset.y = -((sceneTime * 0.7) % 1);
+  }
+
   function updateScenery(vz) {
     var k0 = Math.floor((vz - 14) / 4.5), k, sd, ti = 0, bi = 0, fi = 0, ci = 0, pi = 0, pc = 0, fc = [0, 0, 0], pl = 0, pcap = 0, ru = 0, br = 0, tu = 0, pn = 0;
     for (k = k0; k * 4.5 - vz < 135 && ti < NT; k++) {
@@ -641,7 +727,7 @@ import * as THREE from './vendor/three.module.min.js';
     var menu = game.state === 'menu', vz = game.pz + (menu ? (opts.attract || 0) : 0);
 
     sceneTime = t / 1000; applyTheme(vz);
-    updateGround(vz, game, menu); updateScenery(vz); syncObstacles(vz, game, menu); updateCoins(vz, game, t, dt, menu);
+    updateGround(vz, game, menu); updateScenery(vz); updateForks(game, vz); syncObstacles(vz, game, menu); updateCoins(vz, game, t, dt, menu);
     poseExplorer(game, t, vz, dt);
     ensureSprite(opts); ropeCol = opts.ropeColor || '#ffe86a';
     if (sprMesh) {
