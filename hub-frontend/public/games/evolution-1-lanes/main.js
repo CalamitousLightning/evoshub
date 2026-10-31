@@ -440,6 +440,41 @@
   }
 
   // ---------------------------------------------------------------- HUD
+  // ---- route choice HUD (the three chips line up with the three lanes: swipe towards the one you want)
+  function chipPath(x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r); ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r); ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r); ctx.closePath();
+  }
+  function drawRouteChoice(fi, W, H) {
+    var m = Math.min(W, H), cw = Math.min(W * 0.3, 132), chh = Math.max(46, m * 0.12), gap = Math.min(W * 0.02, 10), y = H * 0.41, i, r, x, cur = game.lane;      // below the Voice's bubble
+    var secs = Math.max(0, Math.ceil(fi.t - 0.001));
+    ctx.save(); ctx.textAlign = 'center';
+    ctx.font = '900 ' + Math.round(m * 0.05) + 'px system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillText('CHOOSE YOUR PATH  ' + secs, W / 2 + 2, y - 10 + 2);
+    ctx.fillStyle = '#fff'; ctx.fillText('CHOOSE YOUR PATH  ' + secs, W / 2, y - 10);
+    for (i = 0; i < fi.fork.routes.length; i++) {
+      r = fi.fork.routes[i]; x = W / 2 + r.lane * (cw + gap) - cw / 2;
+      var on = r.lane === cur;
+      chipPath(x, y, cw, chh, 12);
+      ctx.fillStyle = on ? 'rgba(14,52,36,.92)' : 'rgba(6,18,13,.72)'; ctx.fill();
+      ctx.lineWidth = on ? 4 : 2; ctx.strokeStyle = on ? '#ffe86a' : 'rgba(255,255,255,.35)'; ctx.stroke();
+      ctx.fillStyle = on ? '#fff' : 'rgba(255,255,255,.82)';
+      var fs = Math.round(Math.min(cw * 0.125, m * 0.034)); ctx.font = '800 ' + fs + 'px system-ui, sans-serif';
+      while (fs > 8 && ctx.measureText(r.name).width > cw - 14) { fs--; ctx.font = '800 ' + fs + 'px system-ui, sans-serif'; }          // always fits its chip
+      ctx.fillText(r.name, x + cw / 2, y + chh * 0.6);        // only the name: which path is safe is for the Voice's riddle to tell
+    }
+    var bw = cw * 3 + gap * 2, bx = W / 2 - bw / 2, by = y + chh + 8;                // time bar under the chips
+    ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(bx, by, bw, 5);
+    ctx.fillStyle = fi.t < 2 ? '#ff7a6a' : '#6fe8c0'; ctx.fillRect(bx, by, bw * Math.min(1, fi.t / Core.CFG.ROUTE_TIME), 5);
+    ctx.restore();
+  }
+  function drawRouteTag(fi, W, H) {
+    var r = game.routeAt(fi.fork, fi.pick), m = Math.min(W, H), txt = r.name + ' \u00B7 ' + Math.max(0, Math.ceil(fi.left)) + ' m';
+    ctx.save(); ctx.textAlign = 'center'; ctx.font = '800 ' + Math.round(m * 0.036) + 'px system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillText(txt, W / 2 + 1, H * 0.135 + 1); ctx.fillStyle = '#ffe9a0'; ctx.fillText(txt, W / 2, H * 0.135);
+    ctx.restore();
+  }
+
   function drawHUD(t) {
     var menu = game.state === 'menu', sc = menu ? 0 : game.score(), pts = menu ? 0 : game.points(), m = Math.min(W, H);
     ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.font = '800 ' + Math.round(m * 0.09) + 'px system-ui, sans-serif';
@@ -482,6 +517,13 @@
       ctx.fillText('Swipe to dodge', W / 2, H * 0.2); ctx.globalAlpha = 1;
     }
     hookBtn.classList.toggle('hint', show);
+
+    // route choice: 5 s warning with the three paths, then a small tag while running the chosen one
+    if (game.state === 'playing') {
+      var fi = game.forkInfo();
+      if (fi && fi.state === 'approach' && fi.shown) drawRouteChoice(fi, W, H);
+      else if (fi && fi.state === 'route') drawRouteTag(fi, W, H);
+    }
 
     if (flash > 0) {                                              // red flash + label after a stumble
       var fg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.7);
@@ -584,12 +626,8 @@
     if (game.state === 'playing' && game.score() >= nextMs) { nextMs += 100; say('far'); }
     if (voiceHideAt && performance.now() > voiceHideAt) silenceVoice();
     if (riddleOpen) { riddleT -= dt; rdBar.style.width = Math.max(0, riddleT / RIDDLE_TIME * 100) + '%'; if (riddleT <= 0) closeRiddle(null); }
-    else if (routeOpen) { routeT -= dt; rtBar.style.width = Math.max(0, routeT / ROUTE_TIME * 100) + '%'; if (routeT <= 0) closeRoute(null); }
     else if (game.state === 'playing' && game.score() >= riddleNext && game.score() >= quietUntil && riddleSafeMoment()) openRiddle();
-    else if (game.state === 'playing' && game.score() >= routeNext && game.score() >= quietUntil && routeSafeMoment()) openRoute();
-    if (routePicked && game.routeObstacle && game.state === 'playing' && game.pz > game.routeObstacle.z + game.routeObstacle.len + 1) {
-      game.coins += routePicked.bonus; coinBump = 1; routePicked = null; game.routeObstacle = null; say('routeWin', true);
-    }
+    if (game.state === 'playing') pathClue();
     try { render(t); }
     catch (err) {
       if (r3 && r3.ready) { r3.ready = false; canvas.style.background = '#0b2a1f'; if (window.console) console.warn('3D renderer disabled after an error:', err); }
@@ -731,6 +769,8 @@
   var HAZARD = { pit: 1, chasm: 1, ledge: 1 }, RD_NEAR = 30, RD_FAR = 70, RD_FALLBACK = 120;
   function riddleSafeMoment() {
     if (!game.onGround || game.hook || game.hookArmed > 0 || game.wounded > 0) return false;
+    var fk = game.forkInfo();                                      // never during a path, nor in the 14 s before a fork (the Voice's clue and the 5 s choice stay clear)
+    if (fk && (fk.state === 'route' || fk.t < Core.CFG.ROUTE_TIME + 9)) return false;
     var os = game.obstacles, pz = game.pz, i, o, dz, hazard = -1, any = Infinity;
     for (i = 0; i < os.length; i++) {
       o = os[i]; dz = o.z - pz;
@@ -761,50 +801,44 @@
   rdBtn.forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); closeRiddle(+b.getAttribute('data-i')); }); });
   document.addEventListener('keydown', function (e) { if (riddleOpen && (e.key === '1' || e.key === '2')) closeRiddle(+e.key - 1); });
 
-  // ---------------------------------------------------------------- ROUTE CHOICE: 5 s to pick the next hazard (harder = more bonus coins when you clear it)
-  var ROUTES = [
-    { kind: 'pit', name: 'STONE PITS', how: 'Jump', level: 'EASY', bonus: 10 },
-    { kind: 'chasm', name: 'VINE CHASM', how: 'Swing the vine', level: 'MEDIUM', bonus: 20 },
-    { kind: 'ledge', name: 'TEMPLE LEDGE', how: 'Pull yourself up', level: 'HARD', bonus: 30 }
-  ];
-  var ROUTE_TIME = 5, ROUTE_FIRST = 300, ROUTE_EVERY = 400, QUIET_GAP = 80;
-  VOICE.routePick = ['Bold choice.', 'Hm. That one.', 'The jungle noted your choice.'];
-  VOICE.routeLate = ['Indecision. I will choose for you.', 'Too slow. The pits it is.'];
+  // ---------------------------------------------------------------- ROUTE CHOICE: the track forks into 3 paths (core.js). The Voice gives a riddle about the right one.
+  var quietUntil = 0;
+  // Riddle clues, one per path flavour. The safe path (the "life door") is always the one the Voice points at.
+  var CLUES = {
+    vine: ['What never falls, only climbs? Walk where it grows.', 'I cling, I climb, I never let go. Follow the green.'],
+    temple: ['Old stone keeps every secret. Walk where the roof still holds.', 'Where footsteps echo and nothing falls, go there.'],
+    river: ['It runs but never walks. Cross the water.', 'It has a bed but never sleeps. That is your road.']
+  };
+  VOICE.routeFollow = ['Good. You listen.', 'Hm. Wise. Do not get used to it.', 'Sensible. How unlike you.'];
+  VOICE.routeDefy = ['Oh really? That is what you chose? I thought you were smarter.', 'I told you. You did the opposite. Naturally.', 'Ignoring me. How original.', 'Bold. Wrong, probably, but bold.'];
+  VOICE.routeDeath = ['That door has killed better runners.', 'The death door. Of course you picked the death door.'];
+  VOICE.routeLife = ['Rested. Your wounds close.', 'The vine tolerates you. Wounds mended.'];
+  VOICE.routeDone = ['Out the other side. Hm.', 'You survived the path.'];
   VOICE.routeWin = ['You chose well. This time.', 'Hm. Not afraid, then.', 'Brave. Or lucky.'];
-  var routeEl = document.createElement('div'); routeEl.id = 'route'; routeEl.hidden = true;
-  routeEl.innerHTML = '<div class="rd-card"><p class="rd-eyebrow">CHOOSE YOUR ROUTE</p><div class="rd-bar"><i id="rt-bar"></i></div><div class="rt-opts">' +
-    ROUTES.map(function (r, i) { return '<button type="button" data-i="' + i + '"><b>' + r.name + '</b><span>' + r.how + ' \u00B7 ' + r.level + '</span><em>+' + r.bonus + '</em></button>'; }).join('') +
-    '</div><p class="rd-note">Clear it to win the bonus coins</p></div>';
-  document.getElementById('app').appendChild(routeEl);
-  var rtBar = document.getElementById('rt-bar');
-  var routeOpen = false, routeT = 0, routeNext = ROUTE_FIRST, quietUntil = 0, routePicked = null;
-  function routeSafeMoment() {
-    if (!game.onGround || game.hook || game.hookArmed > 0 || game.wounded > 0) return false;
-    var os = game.obstacles, i, o, dz;
-    for (i = 0; i < os.length; i++) { o = os[i]; if (o.z + (o.len || 0) < game.pz) continue; dz = o.z - game.pz; if (dz < 14) return false; }
-    return true;
+  function sayText(txt, ms) { voiceEl.textContent = txt; voiceEl.className = 'show'; voiceHideAt = performance.now() + (ms || 4500); voiceNextOk = performance.now() + (ms || 4500) + 1500; }
+  // the Voice's riddle: once per fork, about 12 s before its gate (a long-lived line, text only, never blocks touches)
+  function pathClue() {
+    var fi = game.forkInfo();
+    if (!fi || fi.state !== 'approach' || fi.fork.hinted || fi.t > 12) return;
+    var ok = game.routeAt(fi.fork, fi.fork.correct); if (!ok) return;
+    fi.fork.hinted = true;
+    var pool = CLUES[ok.id] || CLUES.vine; sayText(pool[Math.floor(Math.random() * pool.length)], 6000);
   }
-  function openRoute() {
-    routeOpen = true; routeT = ROUTE_TIME; rtBar.style.width = '100%'; silenceVoice(); clearTouch();
-    game.pause(); hookBtn.hidden = true; pauseBtn.hidden = true; routeEl.hidden = false;
-  }
-  function closeRoute(idx) {
-    if (!routeOpen) return; routeOpen = false; routeEl.hidden = true;
-    var r = idx == null ? ROUTES[0] : ROUTES[idx];
-    game.setRoute(r.kind); routePicked = r;
-    routeNext = game.score() + ROUTE_EVERY; quietUntil = game.score() + QUIET_GAP;
-    if (game.state === 'paused') { lastT = 0; resumedAt = Date.now(); game.resume(); game.invuln = Math.max(game.invuln || 0, 1.2); hookBtn.hidden = false; pauseBtn.hidden = false; }
-    say(idx == null ? 'routeLate' : 'routePick', true);
-  }
-  routeEl.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
-  [].forEach.call(routeEl.querySelectorAll('.rt-opts button'), function (b) { b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); closeRoute(+b.getAttribute('data-i')); }); });
-  document.addEventListener('keydown', function (e) { if (routeOpen && (e.key === '1' || e.key === '2' || e.key === '3')) closeRoute(+e.key - 1); });
 
   game.onEvent = function (type) {
     if (type === 'start') { banked = false; applyLoadout(); if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; nextMs = 100; voiceNextOk = 0; riddleNext = RIDDLE_FIRST; if (riddleOpen) { riddleOpen = false; riddleEl.hidden = true; }
-    routeNext = ROUTE_FIRST; quietUntil = 0; routePicked = null; if (routeOpen) { routeOpen = false; routeEl.hidden = true; } setTimeout(function () { if (game.state === 'playing') say('start', true); }, 900); }
+    quietUntil = 0; setTimeout(function () { if (game.state === 'playing') say('start', true); }, 900); }
     else if (type === 'stumble') { flash = 1; shake = Math.max(shake, 0.8); say('stumble'); }
     else if (type === 'release') { say('hook'); }
+    else if (type === 'route') {                                // the gate arrived: sarcasm if you ignored the Voice
+      var f = game.route, rp = f && game.routeAt(f, f.pick); if (!rp) return;
+      if (f.pick === f.correct) say('routeFollow', true);
+      else say(rp.kind === 'death' ? 'routeDeath' : 'routeDefy', true);
+    }
+    else if (type === 'routeEnd') {                             // cleared the path: bonus coins were added by the core
+      var lr = game.lastRoute; coinBump = 1; quietUntil = game.score() + 60;
+      if (lr) say(lr.kind === 'death' ? 'routeWin' : lr.kind === 'life' ? 'routeLife' : 'routeDone', true);
+    }
     else if (type === 'coin') { coinBump = 1; if (game.coins > 0 && game.coins % 15 === 0) say('coins'); }
     else if (type === 'crash') { shake = 1; silenceVoice(); overTimer = setTimeout(function () { overTimer = null; if (game.state === 'over') showOverlay('over'); }, 550); }
   };
@@ -812,7 +846,7 @@
   var ptr = null, resumedAt = 0;
   function clearTouch() { ptr = null; hookBtn.classList.remove('down'); }
   function resumeGame() {
-    if (game.state !== 'paused' || riddleOpen || routeOpen) return;
+    if (game.state !== 'paused' || riddleOpen) return;
     clearTouch(); lastT = 0; resumedAt = Date.now();      // fresh clock: no time jump after the pause
     game.resume(); hideOverlay();
   }

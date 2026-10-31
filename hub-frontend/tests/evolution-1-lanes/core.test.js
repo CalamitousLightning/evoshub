@@ -263,6 +263,83 @@ function bot(g, st) {
   ok('an idle player eventually crashes (obstacles matter)', idle.state === 'over', idle.reason);
 }
 
+console.log('Route choice (the track forks into 3 paths)');
+// a game whose first fork exists; the runner is placed `before` metres ahead of its gate (clear ground, nothing in between)
+function forkWorld(seed, before, lane) {
+  const g = new Game(seed); g.start(seed);
+  while (!g.forks.length) g.spawnRow();
+  const f = g.forks[0]; g.pz = f.z - before; g.invuln = 1e9;
+  if (lane != null) { g.lane = lane; g.px = lane * CFG.LANE_W; }
+  return { g, f };
+}
+const kindOf = (f, lane) => f.routes.find(r => r.lane === lane).kind;
+{
+  const g0 = new Game(11); g0.start(11);
+  ok('no fork in the first stretch', g0.forks.length === 0 || g0.forks[0].z >= CFG.ROUTE_FIRST);
+  const { g, f } = forkWorld(11, CFG.ROUTE_TIME * CFG.START_SPEED - 0.2);
+  g.update(0.001);
+  const fi = g.forkInfo();
+  ok('a fork is announced with about 5 s to go', fi && fi.state === 'approach' && fi.shown && fi.t <= CFG.ROUTE_TIME + 0.06 && fi.t > CFG.ROUTE_TIME - 0.4, fi && fi.t.toFixed(2));
+  const far = forkWorld(11, CFG.ROUTE_TIME * CFG.START_SPEED + 40); far.g.update(0.001);
+  ok('it is not shown earlier than 5 s', far.g.forkInfo() && !far.g.forkInfo().shown);
+  ok('three paths, one per lane, with all three kinds', f.routes.length === 3 && [-1, 0, 1].every(l => f.routes.some(r => r.lane === l)) && ['life', 'mid', 'death'].every(k => f.routes.some(r => r.kind === k)));
+  ok('the Voice\'s correct path is the life door', kindOf(f, f.correct) === 'life');
+  const inFork = g.obstacles.filter(o => o.z >= f.z && o.z <= f.end);
+  ok('path obstacles are ordinary types, one lane each', inFork.length > 0 && inFork.every(o => ['rock', 'log', 'branch'].includes(o.type) && o.lanes.length === 1));
+  const lane = k => f.routes.find(r => r.kind === k).lane;
+  const perLane = l => inFork.filter(o => o.lanes[0] === l).length, coinsIn = l => g.coinList.filter(c => c.z > f.z + 1 && c.z < f.end && c.lane === l).length;
+  ok('hazards: life 2, mid 3, death 5', perLane(lane('life')) === 2 && perLane(lane('mid')) === 3 && perLane(lane('death')) === 5, [perLane(lane('life')), perLane(lane('mid')), perLane(lane('death'))].join('/'));
+  ok('coins on the path: life 8, mid 11, death 23', coinsIn(lane('life')) === 8 && coinsIn(lane('mid')) === 11 && coinsIn(lane('death')) === 23, [coinsIn(lane('life')), coinsIn(lane('mid')), coinsIn(lane('death'))].join('/'));
+  ok('end bonus grows with the risk (10 / 20 / 40)', f.routes.find(r => r.kind === 'life').bonus === 10 && f.routes.find(r => r.kind === 'mid').bonus === 20 && f.routes.find(r => r.kind === 'death').bonus === 40);
+}
+{
+  // the order of lanes / kinds is shuffled, so the safe path is not always the same one
+  const seen = new Set(), themes = new Set();
+  for (let seed = 1; seed <= 40; seed++) { const { f } = forkWorld(seed, 12); seen.add(f.correct); f.routes.forEach(r => themes.add(r.kind + ':' + r.id)); }
+  ok('the safe path appears in every lane across forks', seen.size === 3, [...seen].join(','));
+  ok('path names are mixed across kinds', themes.size >= 6, themes.size);
+}
+{
+  // choosing: the lane you are in when the gate arrives is locked until the end; no swipe = default (current lane)
+  [-1, 0, 1].forEach(l => {
+    const { g, f } = forkWorld(11, 6, l); run(g, 0.7);
+    ok(`lane ${l}: path committed at the gate`, g.route === f && f.pick === l && g.routesTaken === 1);
+    g.moveLane(1); g.moveLane(-1); run(g, 0.3);
+    ok(`lane ${l}: swipes are ignored during the path`, g.lane === l);
+  });
+  const { g, f } = forkWorld(11, 6, 0); run(g, 0.7);
+  g.pz = f.end - 1; run(g, 0.5);
+  ok('the path ends and the lane is free again', g.route === null && g.pz > f.end - 1);
+  g.moveLane(1); ok('swiping works again after the path', g.lane === 1);
+}
+{
+  // finishing a path alive pays its bonus; the life door also mends a stumble; events fire once each
+  const done = kind => {
+    const w = forkWorld(11, 6, null); const f = w.f, g = w.g, l = f.routes.find(r => r.kind === kind).lane;
+    g.lane = l; g.px = l * CFG.LANE_W; g.wounded = 9; const ev = []; g.onEvent = t => ev.push(t);
+    run(g, 0.7); const c0 = g.coins; g.pz = f.end - 0.5; run(g, 0.5);
+    return { g, gain: g.coins - c0, ev };
+  };
+  const life = done('life'), mid = done('mid'), death = done('death');
+  ok('life door: +10 coins and the wound is mended', life.gain === 10 && life.g.wounded === 0, life.gain);
+  ok('mid door: +20 coins, wound stays', mid.gain === 20 && mid.g.wounded > 0, mid.gain);
+  ok('death door: +40 coins', death.gain === 40, death.gain);
+  ok('route and routeEnd events fire once each', death.ev.filter(e => e === 'route').length === 1 && death.ev.filter(e => e === 'routeEnd').length === 1, death.ev.join(','));
+  const dead = forkWorld(11, 6, null); const dl = dead.f.routes.find(r => r.kind === 'death').lane; dead.g.lane = dl; dead.g.px = dl * CFG.LANE_W; dead.g.invuln = 0; dead.g.wounded = 1e9;
+  run(dead.g, 3);
+  ok('dying inside a path pays nothing', dead.g.state === 'over' && dead.g.lastRoute === null);
+}
+{
+  // every path is fair for the lane-aware bot at all speeds, and there are many forks over a long run
+  let forks = 0, deaths = 0, by = { life: 0, mid: 0, death: 0 };
+  for (const lanePref of [-1, 0, 1]) for (let seed = 1; seed <= 12; seed++) {
+    const g = new Game(seed); g.start(seed); g.time = (seed % 6) * 18; const st = { cool: 0 };
+    for (let i = 0; i < 60 * 300 && g.state === 'playing' && g.pz < 2500; i++) { bot(g, st); g.update(DT); }
+    forks += g.routesTaken; if (g.state !== 'playing') deaths++;
+  }
+  ok('bot clears the paths at every speed', deaths === 0 && forks > 30, `${forks} paths, ${deaths} deaths`);
+}
+
 console.log('Restart');
 {
   const g = new Game(9); g.start(9); run(g, 60);

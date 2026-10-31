@@ -63,8 +63,23 @@
     COIN_R: 0.35,
     COIN_VALUE: 10,
     COIN_STEP: 2.0,
-    TILE: 2.5              // ground tile length (pits / chasms are aligned to it)
+    TILE: 2.5,             // ground tile length (pits / chasms are aligned to it)
+    // ---- route choice: a fork on the track itself, three paths (one per lane) ----
+    ROUTE_FIRST: 230,      // first fork after this many metres
+    ROUTE_EVERY: 260,      // then 260-380 m after the end of the previous fork
+    ROUTE_TIME: 5          // seconds of warning: the lane you are in when the gate arrives is your path
   };
+
+  // Path flavours (names only; the Voice's riddle points at one of them) and path kinds (what the path really is).
+  // life  = the safe door: few obstacles, a blessing at the end (small bonus + wounds mended)
+  // mid   = slide, jump, slide: a fair test, medium bonus
+  // death = the extreme door: five hazards in a row, the biggest coin prize and bonus
+  var THEMES = [
+    { id: 'vine',   name: 'VINE PATH' },
+    { id: 'temple', name: 'TEMPLE TUNNEL' },
+    { id: 'river',  name: 'RIVER CROSSING' }
+  ];
+  var KINDS = { life: { bonus: 10, heal: true }, mid: { bonus: 20, heal: false }, death: { bonus: 40, heal: false } };
 
   function mulberry32(a) {
     return function () {
@@ -104,6 +119,7 @@
     this.wounded = 0; this.invuln = 0; this.slow = 1;
     this.lastEnd = 6; this.lastKind = 'start';
     this.forcedKind = null; this.routeObstacle = null;
+    this.forks = []; this.route = null; this.nextFork = CFG.ROUTE_FIRST; this.routesTaken = 0; this.lastRoute = null;
     while (this.nextZ < CFG.SPAWN_AHEAD) this.spawnRow();
   };
 
@@ -121,6 +137,7 @@
   // ------------------------------------------------------------ inputs
   Game.prototype.moveLane = function (dir) {
     if (this.state !== 'playing') return;
+    if (this.route) return;                                   // committed to a path: the lane is fixed until its end
     var n = clamp(this.lane + (dir < 0 ? -1 : 1), -1, 1);
     if (n !== this.lane) { this.lane = n; this.emit('lane'); }
   };
@@ -144,7 +161,77 @@
     return out;
   };
 
+  // ------------------------------------------------------------ route choice (the track forks into three paths)
+  // Nothing new is added to the obstacle types: each path is made of ordinary rocks / logs / branches that sit only in its own lane.
+  // Lanes and kinds are shuffled per fork, so which path is the safe one changes every time; the Voice's riddle tells you.
+  Game.prototype.shuffle = function (a) { var r = this.rng, i, j, t; a = a.slice(); for (i = a.length - 1; i > 0; i--) { j = Math.floor(r() * (i + 1)); t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+
+  Game.prototype.spawnFork = function () {
+    var r = this.rng, v = Math.min(CFG.MAX_SPEED, Math.max(this.speed, CFG.START_SPEED) + 3);
+    var z0 = this.nextZ, s = z0 + 14, g = v * 1.0, end = s + 4 * g + 8, os = this.obstacles, self = this, i;
+    var lanes = this.shuffle([-1, 0, 1]), kinds = this.shuffle(['life', 'mid', 'death']), themes = this.shuffle(THEMES);
+    function arc(zc, lane) { var h = [1.3, 2.0, 2.4, 2.0, 1.3]; for (var k = 0; k < 5; k++) self.addCoin(zc + (k - 2) * 1.8, lane, h[k]); }
+    function low(zc, lane) { for (var k = 0; k < 3; k++) self.addCoin(zc + (k - 1) * 1.6, lane, 0.5); }
+    function rockAt(z, lane, coins) { os.push({ type: 'rock', z: z, len: 1.6, lanes: [lane], h: CFG.ROCK_H }); if (coins !== false) arc(z + 0.8, lane); }
+    function logAt(z, lane, coins) { os.push({ type: 'log', z: z, len: 2.2, lanes: [lane], h: CFG.LOG_H }); if (coins !== false) arc(z + 1.1, lane); }
+    function branchAt(z, lane) { os.push({ type: 'branch', z: z, len: 1.2, lanes: [lane], low: CFG.BRANCH_LOW, h: CFG.BRANCH_LOW + CFG.BRANCH_THICK }); low(z + 0.6, lane); }
+
+    for (i = -1; i <= 1; i++) this.addCoin(z0, i, 0.9, 1.0);                 // gate marker: a coin in every lane
+    var routes = [], correct = null;
+    for (i = 0; i < 3; i++) {
+      var lane = lanes[i], kind = kinds[i];
+      routes.push({ lane: lane, kind: kind, id: themes[i].id, name: themes[i].name, bonus: KINDS[kind].bonus, heal: KINDS[kind].heal });
+      if (kind === 'life') {                                                    // two logs far apart, a few coins between
+        correct = lane; logAt(s, lane); logAt(s + 2 * g, lane, false);
+        for (var k = 0; k < 3; k++) this.addCoin(s + g + (k - 1) * CFG.COIN_STEP, lane, 0.9);
+      } else if (kind === 'mid') {                                              // slide, jump, slide
+        branchAt(s, lane); rockAt(s + g, lane); branchAt(s + 2 * g, lane);
+      } else {                                                                  // death door: jump, jump, slide, jump, jump, one second apart
+        rockAt(s, lane); logAt(s + g, lane); branchAt(s + 2 * g, lane); rockAt(s + 3 * g, lane); logAt(s + 4 * g, lane);
+      }
+    }
+    routes.sort(function (a, b) { return a.lane - b.lane; });
+    this.forks.push({ z: z0, end: end, chosen: false, pick: null, routes: routes, correct: correct });
+    this.lastEnd = end; this.lastKind = 'fork';
+    this.nextZ = end + v * 1.0 + 4;
+    this.nextFork = end + CFG.ROUTE_EVERY + Math.floor(r() * 120);
+  };
+
+  Game.prototype.routeAt = function (f, lane) { for (var i = 0; i < f.routes.length; i++) if (f.routes[i].lane === lane) return f.routes[i]; return null; };
+
+  // What the HUD needs: the next fork's warning (seconds to the gate) or the path currently being run.
+  Game.prototype.forkInfo = function () {
+    var i, f;
+    if (this.route) return { state: 'route', fork: this.route, pick: this.route.pick, left: this.route.end - this.pz };
+    for (i = 0; i < this.forks.length; i++) {
+      f = this.forks[i];
+      if (!f.chosen && f.z > this.pz) {
+        var t = (f.z - this.pz) / Math.max(1, this.speed * this.slow);
+        return { state: 'approach', fork: f, t: t, shown: t <= CFG.ROUTE_TIME + 0.05 };
+      }
+    }
+    return null;
+  };
+
+  Game.prototype.updateRoute = function () {
+    var i, f, r;
+    for (i = 0; i < this.forks.length; i++) {
+      f = this.forks[i];
+      if (!f.chosen && this.pz >= f.z) {
+        f.chosen = true; f.pick = this.lane; this.route = f; this.routesTaken++;
+        this.emit('route');
+      }
+    }
+    if (this.route && this.pz > this.route.end) {                               // cleared the path alive: bonus (+ mended wounds on the life door)
+      r = this.routeAt(this.route, this.route.pick); this.lastRoute = r; this.route = null;
+      this.coins += r.bonus; if (r.heal && this.wounded > 0) { this.wounded = 0; this.emit('recover'); }
+      this.emit('routeEnd');
+    }
+    while (this.forks.length && this.forks[0].end < this.pz - 20 && this.forks[0] !== this.route) this.forks.shift();
+  };
+
   Game.prototype.spawnRow = function () {
+    if (this.nextZ >= this.nextFork) return this.spawnFork();
     var r = this.rng, v = Math.min(CFG.MAX_SPEED, Math.max(this.speed, CFG.START_SPEED) + 3), m = this.nextZ;
     var pool = ['jump', 'jump', 'lane'];
     if (m >= 40) pool.push('pit');
@@ -446,8 +533,11 @@
     this.collide();
     if (this.state !== 'playing') return;
     this.collectCoins();
+    this.updateRoute();
 
-    while (this.nextZ < this.pz + CFG.SPAWN_AHEAD) this.spawnRow();
+    // look far enough ahead that a fork is announced a full ROUTE_TIME seconds before its gate, even at top speed
+    var look = Math.max(CFG.SPAWN_AHEAD, this.speed * (CFG.ROUTE_TIME + 0.4) + 10);
+    while (this.nextZ < this.pz + look) this.spawnRow();
     while (this.obstacles.length && this.obstacles[0].z + this.obstacles[0].len < this.pz - 20) this.obstacles.shift();
     if (this.coinList.length && this.coinList[0].z < this.pz - 20) { var pz0 = this.pz - 20; this.coinList = this.coinList.filter(function (c) { return c.z >= pz0; }); }
   };
@@ -459,5 +549,5 @@
     for (var i = 0; i < n && this.state === 'playing'; i++) this.step(h);
   };
 
-  return { Game: Game, CFG: CFG, mulberry32: mulberry32 };
+  return { Game: Game, CFG: CFG, THEMES: THEMES, KINDS: KINDS, mulberry32: mulberry32 };
 });
