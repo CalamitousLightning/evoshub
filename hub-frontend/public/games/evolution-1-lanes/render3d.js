@@ -30,6 +30,31 @@ import * as THREE from './vendor/three.module.min.js';
   function col(hex) { return new THREE.Color(hex); }
   var HORIZON = col(0x8fcaa9);
 
+  // ------------------------------------------------------------------ STAGES: jungle -> temple ruins (600 m) -> falling laboratory (1200 m), blended over 90 m
+  var STAGE_T = 600, STAGE_L = 1200, STAGE_BLEND = 90;
+  function stageW(z, o) {
+    var t = clamp((z - (STAGE_T - STAGE_BLEND / 2)) / STAGE_BLEND, 0, 1), l = clamp((z - (STAGE_L - STAGE_BLEND / 2)) / STAGE_BLEND, 0, 1);
+    o.j = 1 - t; o.t = t - l; o.l = l; return o;
+  }
+  var curW = { j: 1, t: 0, l: 0 }, tmpW = { j: 1, t: 0, l: 0 }, swO = { j: 1, t: 0, l: 0 }, sceneTime = 0;
+  var THEMES = {
+    j: { hor: col(0x8fcaa9), top: col(0x08222f), mid: col(0x1f6670), hs: col(0xdff5e6), hg: col(0x4a5a3a), sun: col(0xfff0cc), tA: col(0xffffff), tB: col(0xd9c8aa), ray: col(0xfff0b0), fogN: 38, fogF: 138, hi: 1.15, si: 1.6 },
+    t: { hor: col(0xf0b07a), top: col(0x2a1b3d), mid: col(0xb8605a), hs: col(0xffe1b8), hg: col(0x6a4a30), sun: col(0xffc27a), tA: col(0xf3e0c2), tB: col(0xd2b48c), ray: col(0xffd08a), fogN: 34, fogF: 124, hi: 1.1, si: 1.7 },
+    l: { hor: col(0xa6d8ee), top: col(0x050b18), mid: col(0x1b4f80), hs: col(0xbfe6ff), hg: col(0x2a3a4a), sun: col(0xcfe8ff), tA: col(0xd4e4f0), tB: col(0x9db4c8), ray: col(0x9fe8ff), fogN: 30, fogF: 108, hi: 1.2, si: 1.5 }
+  };
+  var theme = { hor: col(0), top: col(0), mid: col(0), hs: col(0), hg: col(0), sun: col(0), tA: col(0), tB: col(0), ray: col(0), fogN: 38, fogF: 138, hi: 1.15, si: 1.6 };
+  var CK = ['hor', 'top', 'mid', 'hs', 'hg', 'sun', 'tA', 'tB', 'ray'], NK = ['fogN', 'fogF', 'hi', 'si'], tmpC = col(0);
+  function blendTheme(out, w) {
+    var i, k, a = THEMES.j, b = THEMES.t, c = THEMES.l;
+    for (i = 0; i < CK.length; i++) { k = CK[i]; out[k].setRGB(a[k].r * w.j + b[k].r * w.t + c[k].r * w.l, a[k].g * w.j + b[k].g * w.t + c[k].g * w.l, a[k].b * w.j + b[k].b * w.t + c[k].b * w.l); }
+    for (i = 0; i < NK.length; i++) { k = NK[i]; out[k] = a[k] * w.j + b[k] * w.t + c[k] * w.l; }
+  }
+  blendTheme(theme, curW);
+  function tileColor(out, zc, odd) {
+    var w = stageW(zc, tmpW), k = odd ? 'tB' : 'tA', a = THEMES.j[k], b = THEMES.t[k], c = THEMES.l[k];
+    out.setRGB(a.r * w.j + b.r * w.t + c.r * w.l, a.g * w.j + b.g * w.t + c.g * w.l, a.b * w.j + b.b * w.t + c.b * w.l);
+  }
+
   var scene = new THREE.Scene();
   scene.fog = new THREE.Fog(HORIZON.getHex(), 38, 138);
   var camera = new THREE.PerspectiveCamera(62, 1, 0.1, 400);
@@ -64,13 +89,40 @@ import * as THREE from './vendor/three.module.min.js';
     for (var i = 0; i < 90; i++) { g.fillStyle = 'rgba(' + (30 + (i * 29) % 40) + ',' + (90 + (i * 43) % 60) + ',' + (50 + (i * 17) % 30) + ',.35)'; g.fillRect((i * 53) % w, (i * 31) % h, 3, 5); }
   });
   grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping; grassTex.repeat.set(SIDE_W / 4, 18);
+  var sandTex = canvasTex(64, 64, function (g, w, h) {              // temple stage: sun-baked sand and chips of stone
+    g.fillStyle = '#c9a56e'; g.fillRect(0, 0, w, h);
+    for (var i = 0; i < 110; i++) { g.fillStyle = 'rgba(' + (120 + (i * 29) % 70) + ',' + (90 + (i * 41) % 50) + ',' + (50 + (i * 17) % 30) + ',.35)'; g.fillRect((i * 53) % w, (i * 31) % h, 2 + i % 3, 2 + i % 2); }
+  });
+  var metalTex = canvasTex(64, 64, function (g, w, h) {             // lab stage: dark plating with seams and rivets
+    g.fillStyle = '#31465a'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(10,20,30,.7)'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2); g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.stroke();
+    g.fillStyle = 'rgba(160,220,255,.45)'; for (var i = 0; i < 8; i++) g.fillRect(6 + (i % 4) * 16, 6 + Math.floor(i / 4) * 40, 2, 2);
+  });
+  sandTex.wrapS = sandTex.wrapT = metalTex.wrapS = metalTex.wrapT = THREE.RepeatWrapping; sandTex.repeat.set(SIDE_W / 4, 18); metalTex.repeat.set(SIDE_W / 4, 18);
+  var flagTex = canvasTex(128, 128, function (g, w, h) {            // temple stage path: worn flagstones
+    g.fillStyle = '#b79b72'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(80,60,36,.75)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3); g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.moveTo(w * 0.33, 0); g.lineTo(w * 0.33, h / 2); g.moveTo(w * 0.7, h / 2); g.lineTo(w * 0.7, h); g.stroke();
+    for (var i = 0; i < 90; i++) { g.fillStyle = 'rgba(90,64,36,' + (0.05 + (i % 4) * 0.03) + ')'; g.fillRect((i * 97) % w, (i * 61) % h, 2 + i % 4, 2 + i % 3); }
+    g.fillStyle = 'rgba(70,46,22,.55)'; var a1 = w * (0.5 - (CFG.LANE_W / 2) / PATH_W), a2 = w * (0.5 + (CFG.LANE_W / 2) / PATH_W);
+    g.fillRect(a1 - 1.5, h * 0.12, 3, h * 0.62); g.fillRect(a2 - 1.5, h * 0.12, 3, h * 0.62);
+  });
+  var plateTex = canvasTex(128, 128, function (g, w, h) {           // lab stage path: metal plates with glowing lane lines
+    g.fillStyle = '#42607a'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(12,24,36,.85)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3); g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
+    g.fillStyle = 'rgba(190,235,255,.5)'; [[8, 8], [w - 10, 8], [8, h - 10], [w - 10, h - 10], [8, h / 2 + 6], [w - 10, h / 2 + 6]].forEach(function (p) { g.fillRect(p[0], p[1], 3, 3); });
+    g.fillStyle = 'rgba(120,240,255,.85)'; var b1 = w * (0.5 - (CFG.LANE_W / 2) / PATH_W), b2 = w * (0.5 + (CFG.LANE_W / 2) / PATH_W);
+    g.fillRect(b1 - 1.5, h * 0.12, 3, h * 0.62); g.fillRect(b2 - 1.5, h * 0.12, 3, h * 0.62);
+  });
+  flagTex.anisotropy = plateTex.anisotropy = 4;
 
   // ------------------------------------------------------------------ sky + distant temple
   var skyTex = new THREE.CanvasTexture(document.createElement('canvas'));
+  var skyHf = 0.4;
   function paintSky(horizonFrac) {
+    skyHf = horizonFrac;
     var c = skyTex.image; c.width = 4; c.height = 256; var g = c.getContext('2d');
-    var gr = g.createLinearGradient(0, 0, 0, 256);
-    gr.addColorStop(0, '#08222f'); gr.addColorStop(Math.max(0.05, horizonFrac * 0.6), '#1f6670'); gr.addColorStop(Math.min(0.95, horizonFrac), '#8fcaa9'); gr.addColorStop(1, '#8fcaa9');
+    var gr = g.createLinearGradient(0, 0, 0, 256), hh = '#' + theme.hor.getHexString();
+    gr.addColorStop(0, '#' + theme.top.getHexString()); gr.addColorStop(Math.max(0.05, horizonFrac * 0.6), '#' + theme.mid.getHexString()); gr.addColorStop(Math.min(0.95, horizonFrac), hh); gr.addColorStop(1, hh);
     g.fillStyle = gr; g.fillRect(0, 0, 4, 256); skyTex.colorSpace = THREE.SRGBColorSpace; skyTex.needsUpdate = true;
   }
   scene.background = skyTex;
@@ -94,7 +146,7 @@ import * as THREE from './vendor/three.module.min.js';
   var TILES = 64;
   var tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(PATH_W, DEPTH, TILE), tileMats, TILES);
   tiles.frustumCulled = false; tiles.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(tiles);
-  var tileA = col(0xffffff), tileB = col(0xd9c8aa);
+  var tileA = col(0xffffff), tileB = col(0xd9c8aa), sideTexs = [grassTex, sandTex, metalTex], pathTexs = [pathTex, flagTex, plateTex], texIdx = 0, themeKey = -1;
   for (var ti = 0; ti < TILES; ti++) { tiles.setColorAt(ti, tileA); }
 
   var sideMat = lambert(0xffffff, { map: grassTex });
@@ -157,13 +209,65 @@ import * as THREE from './vendor/three.module.min.js';
   var spores = new THREE.Points(sporeGeo, new THREE.PointsMaterial({ map: radialTex, color: 0xbfffe6, size: 0.55, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true }));
   spores.frustumCulled = false; scene.add(spores);
 
+  // --- temple stage (600 m+): broken pillars, rubble, braziers. lab stage (1200 m+): glowing tubes and tilted floating panels
+  var NPIL = 30, NRU = 40, NBR = 14, NTU = 30, NPN = 36;
+  var pillarGeo = new THREE.CylinderGeometry(0.75, 0.9, 1, 8); pillarGeo.translate(0, 0.5, 0);
+  var postGeo = new THREE.CylinderGeometry(0.16, 0.24, 1, 6); postGeo.translate(0, 0.5, 0);
+  var tubeGeo = new THREE.CylinderGeometry(0.3, 0.3, 1, 8); tubeGeo.translate(0, 0.5, 0);
+  var pillars = new THREE.InstancedMesh(pillarGeo, lambert(0xc9b28a, { flatShading: true }), NPIL);
+  var pillarCaps = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert(0xb59c72, { flatShading: true }), NPIL);
+  var rubble = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert(0xb09a74, { flatShading: true }), NRU);
+  var brazierPosts = new THREE.InstancedMesh(postGeo, lambert(0x6a5a48), NBR);
+  var brazierFires = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: 0xff9a2a }), NBR);
+  var labTubes = new THREE.InstancedMesh(tubeGeo, new THREE.MeshBasicMaterial({ color: 0x6fe8ff }), NTU);
+  var labPanels = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert(0x6b8398, { flatShading: true }), NPN);
+  var stageSets = [pillars, pillarCaps, rubble, brazierPosts, brazierFires, labTubes, labPanels];
+  stageSets.forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.visible = false; scene.add(m); });
+
+  // drifting particles: warm embers rising (temple), cyan-grey debris falling (lab)
+  function makeDrift(n, size, colors, tex, additive, seed) {
+    var base = new Float32Array(n * 3), pos = new Float32Array(n * 3), cl = new Float32Array(n * 3), i, c, geo = new THREE.BufferGeometry();
+    for (i = 0; i < n; i++) {
+      base[i * 3] = (hash(i * 2.9 + seed) - 0.5) * 22; base[i * 3 + 1] = hash(i * 4.7 + seed) * 14; base[i * 3 + 2] = hash(i * 6.1 + seed) * 60;
+      c = colors[i % colors.length]; cl[i * 3] = c.r; cl[i * 3 + 1] = c.g; cl[i * 3 + 2] = c.b;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(cl, 3));
+    var pts = new THREE.Points(geo, new THREE.PointsMaterial({ map: tex || null, vertexColors: true, size: size, transparent: true, opacity: 0, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }));
+    pts.frustumCulled = false; pts.visible = false; scene.add(pts);
+    return { pts: pts, geo: geo, base: base, pos: pos, n: n };
+  }
+  var embers = makeDrift(60, 0.28, [col(0xffb04a), col(0xff8a2a), col(0xffd27a)], radialTex, true, 5.5);
+  var debris = makeDrift(70, 0.3, [col(0x9fe8ff), col(0x7a94a8), col(0xd4e4f0), col(0x5a7088)], null, false, 9.1);
+  function driftUpdate(d, vz, ts, speed, sway) {
+    var i, p = d.pos, b = d.base, n = d.n;
+    for (i = 0; i < n; i++) {
+      p[i * 3] = b[i * 3] + Math.sin(ts * 1.1 + i) * sway;
+      p[i * 3 + 1] = (((b[i * 3 + 1] - ts * speed * (0.7 + (i % 5) * 0.12)) % 14) + 14) % 14 + 0.3;
+      p[i * 3 + 2] = vz - 6 + (((b[i * 3 + 2] - vz * 0.8) % 60) + 60) % 60;
+    }
+    d.geo.attributes.position.needsUpdate = true;
+  }
+
+  // blends sky, fog, light, ground textures and tint by distance (called every frame; the sky is only repainted while a blend is moving)
+  function applyTheme(vz) {
+    var w = stageW(vz + 30, curW);
+    blendTheme(theme, w);
+    scene.fog.color.copy(theme.hor); scene.fog.near = theme.fogN; scene.fog.far = theme.fogF;
+    hemi.color.copy(theme.hs); hemi.groundColor.copy(theme.hg); hemi.intensity = theme.hi; sun.color.copy(theme.sun); sun.intensity = theme.si;
+    var key = Math.round(w.t * 24) * 100 + Math.round(w.l * 24) + (w.j < 1 ? 7 : 0);
+    if (key !== themeKey) { themeKey = key; paintSky(skyHf); }
+    var p = (1 - w.j) + w.l, idx = Math.round(p), dist = Math.abs(p - idx), bright = 1 - 0.6 * (dist * 2);     // darkest at the middle of a blend, where the ground texture swaps (reads as passing through a gate)
+    if (idx !== texIdx) { texIdx = idx; sideMat.map = sideTexs[idx]; tileMats[2].map = pathTexs[idx]; sideMat.needsUpdate = true; tileMats[2].needsUpdate = true; }
+    sideMat.color.setScalar(bright); tileMats[2].color.setScalar(bright);
+  }
+
   function updateScenery(vz) {
-    var k0 = Math.floor((vz - 14) / 4.5), k, sd, ti = 0, bi = 0, fi = 0, ci = 0, pi = 0, pc = 0, fc = [0, 0, 0];
+    var k0 = Math.floor((vz - 14) / 4.5), k, sd, ti = 0, bi = 0, fi = 0, ci = 0, pi = 0, pc = 0, fc = [0, 0, 0], pl = 0, pcap = 0, ru = 0, br = 0, tu = 0, pn = 0;
     for (k = k0; k * 4.5 - vz < 135 && ti < NT; k++) {
-      var z = k * 4.5 + 0.9;
+      var z = k * 4.5 + 0.9; stageW(z, swO);
       for (sd = -1; sd <= 1; sd += 2) {
         var hs = hash(k * 2 + (sd > 0 ? 1 : 0));
-        if (hs < 0.2 || ti >= NT) continue;
+        if (hs < 0.2 || ti >= NT || hash(k * 1.3 + sd * 3.1) > swO.j) continue;
         var th = 8 + hs * 9, x = sd * (5.6 + hs * 11), rr = 3.2 + hs * 2.4, zz = z + hs * 2, h2 = hash(k + sd * 7.7);
         dummy.rotation.set(0, h2 * 6, 0); dummy.scale.set(0.5 + hs * 0.4, th, 0.5 + hs * 0.4); dummy.position.set(x, 0, zz); dummy.updateMatrix(); trunks.setMatrixAt(ti, dummy.matrix);
         dummy.rotation.set(h2, h2 * 5, 0); dummy.scale.set(rr, rr * 0.85, rr); dummy.position.set(x, th + 0.5, zz); dummy.updateMatrix(); canopyA.setMatrixAt(ci, dummy.matrix);
@@ -173,7 +277,7 @@ import * as THREE from './vendor/three.module.min.js';
         ti++;
       }
       var hp = hash(k * 3.7 + 11);
-      if (hp > 0.55 && pi < NP) {
+      if (hp > 0.55 && pi < NP && hash(k * 2.1 + 4) <= swO.j) {
         var ps = hp > 0.78 ? 1 : -1, ph = 11 + hp * 7, px0 = ps * (6.4 + hash(k * 1.9) * 8), pz0 = z + 2.2;
         dummy.rotation.set(0, hp * 8, ps * 0.07); dummy.scale.set(0.3, ph, 0.3); dummy.position.set(px0, 0, pz0); dummy.updateMatrix(); palmTrunks.setMatrixAt(pi, dummy.matrix);
         dummy.rotation.set(0, hp * 5, ps * 0.12); dummy.scale.set(3.1, 0.5, 3.1); dummy.position.set(px0 - ps * 0.5, ph + 0.2, pz0); dummy.updateMatrix(); palmCrowns.setMatrixAt(pc++, dummy.matrix);
@@ -181,22 +285,58 @@ import * as THREE from './vendor/three.module.min.js';
         pi++;
       }
       var hfl = hash(k * 6.1 + 5);
-      if (hfl > 0.35) {
+      if (hfl > 0.35 && hash(k * 3.3 + 1) <= swO.j) {
         var fg = Math.floor(hash(k * 8.3) * 3), fsd = hfl > 0.68 ? 1 : -1;
         if (fc[fg] < FL_N) { dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.position.set(fsd * (4.15 + hash(k * 2.7) * 1.4), 0.3 + hash(k) * 0.15, z + 1); dummy.updateMatrix(); flowerSets[fg].setMatrixAt(fc[fg]++, dummy.matrix); }
       }
       var hb = hash(k * 5.3);
-      if (hb > 0.3 && bi < NB) {
+      if (hb > 0.3 && bi < NB && hash(k * 4.9 + 2) <= swO.j) {
         var bs = (hb > 0.7 ? 1 : -1), bw = 0.9 + hb * 1.2;
         dummy.rotation.set(0, hb * 9, 0); dummy.scale.set(bw, bw * 0.6, bw); dummy.position.set(bs * (4.5 + hb * 3), bw * 0.25, z + 1.4); dummy.updateMatrix(); bushes.setMatrixAt(bi++, dummy.matrix);
       }
       var hf = hash(k * 9.1 + 2);
-      if (hf > 0.25 && fi < NF) {
+      if (hf > 0.25 && fi < NF && hash(k * 5.9 + 3) <= swO.j) {
         var fs = (hf > 0.62 ? 1 : -1);
         dummy.rotation.set(0, hf * 7, 0); dummy.scale.set(1, 0.8 + hf, 1); dummy.position.set(fs * (4.3 + hf * 2.5), 0.5, z + 3); dummy.updateMatrix(); ferns.setMatrixAt(fi++, dummy.matrix);
       }
+      if (swO.t > 0.02) {                                           // temple ruins
+        var h1 = hash(k * 7.9 + 21), h2b = hash(k * 3.1 + 8), sdT = h1 > 0.5 ? 1 : -1;
+        if (h1 > 0.3 && hash(k * 5.5 + 2) <= swO.t && pl < NPIL) {
+          var phh = 3.5 + h2b * 6, broken = h2b > 0.72, px = sdT * (5.4 + hash(k * 1.7) * 6.5), pzz = z + 1.5;
+          if (broken) phh *= 0.45;
+          dummy.rotation.set(0, h1 * 6, broken ? (h2b - 0.8) * 0.4 : 0); dummy.scale.set(1, phh, 1); dummy.position.set(px, 0, pzz); dummy.updateMatrix(); pillars.setMatrixAt(pl++, dummy.matrix);
+          if (!broken) { dummy.rotation.set(0, h1 * 6, 0); dummy.scale.set(2.1, 0.42, 2.1); dummy.position.set(px, phh + 0.2, pzz); dummy.updateMatrix(); pillarCaps.setMatrixAt(pcap++, dummy.matrix); }
+        }
+        if (hash(k * 2.7 + 13) > 0.45 && hash(k * 6.3) <= swO.t && ru < NRU) {
+          var rs2 = hash(k * 9.7) > 0.5 ? 1 : -1, ra = 0.8 + hash(k * 1.1) * 1.0, rb = 0.4 + hash(k * 2.3) * 0.6;
+          dummy.rotation.set(hash(k) * 0.4, hash(k * 3) * 6, hash(k * 5) * 0.3); dummy.scale.set(ra, rb, ra * 0.8); dummy.position.set(rs2 * (4.4 + hash(k * 4.1) * 3.5), rb * 0.4, z + 0.5); dummy.updateMatrix(); rubble.setMatrixAt(ru++, dummy.matrix);
+        }
+        if (k % 6 === 0 && hash(k * 1.9) <= swO.t && br < NBR) {
+          var bx = (k % 12 === 0 ? 1 : -1) * 4.0;
+          dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1.1, 1); dummy.position.set(bx, 0, z); dummy.updateMatrix(); brazierPosts.setMatrixAt(br, dummy.matrix);
+          dummy.scale.set(0.3, 0.34 + 0.08 * Math.sin(sceneTime * 9 + k), 0.3); dummy.position.set(bx, 1.35, z); dummy.updateMatrix(); brazierFires.setMatrixAt(br++, dummy.matrix);
+        }
+      }
+      if (swO.l > 0.02) {                                           // falling laboratory
+        var l1 = hash(k * 8.3 + 31), l2 = hash(k * 2.9 + 17), sdL = l1 > 0.5 ? 1 : -1;
+        if (l1 > 0.28 && hash(k * 5.1 + 6) <= swO.l && tu < NTU) {
+          dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 6 + l2 * 11, 1); dummy.position.set(sdL * (5.2 + hash(k * 2.2) * 7), 0, z + 1); dummy.updateMatrix(); labTubes.setMatrixAt(tu++, dummy.matrix);
+        }
+        if (l2 > 0.3 && hash(k * 7.3 + 3) <= swO.l && pn < NPN) {
+          dummy.rotation.set(Math.sin(sceneTime * 0.6 + k) * 0.35 + l1, l2 * 6, Math.cos(sceneTime * 0.5 + k * 1.7) * 0.4);
+          dummy.scale.set(2 + l1 * 1.6, 0.18, 1.5 + l2 * 1.2); dummy.position.set(sdL * (6 + hash(k * 3.9) * 8), 3.5 + hash(k * 6.1) * 8 + Math.sin(sceneTime * 0.7 + k) * 0.5, z + 2); dummy.updateMatrix(); labPanels.setMatrixAt(pn++, dummy.matrix);
+        }
+      }
     }
-    for (var q = ti; q < NT; q++) trunks.setMatrixAt(q, zeroM);
+    for (var q = ru; q < NRU; q++) rubble.setMatrixAt(q, zeroM);
+    for (q = pl; q < NPIL; q++) pillars.setMatrixAt(q, zeroM);
+    for (q = pcap; q < NPIL; q++) pillarCaps.setMatrixAt(q, zeroM);
+    for (q = br; q < NBR; q++) { brazierPosts.setMatrixAt(q, zeroM); brazierFires.setMatrixAt(q, zeroM); }
+    for (q = tu; q < NTU; q++) labTubes.setMatrixAt(q, zeroM);
+    for (q = pn; q < NPN; q++) labPanels.setMatrixAt(q, zeroM);
+    pillars.visible = pillarCaps.visible = pl > 0; rubble.visible = ru > 0; brazierPosts.visible = brazierFires.visible = br > 0; labTubes.visible = tu > 0; labPanels.visible = pn > 0;
+    stageSets.forEach(function (m) { m.instanceMatrix.needsUpdate = true; });
+    for (var q0 = ti; q0 < NT; q0++) trunks.setMatrixAt(q0, zeroM);
     for (q = ci; q < NT * 2; q++) { canopyA.setMatrixAt(q, zeroM); canopyB.setMatrixAt(q, zeroM); }
     for (q = bi; q < NB; q++) bushes.setMatrixAt(q, zeroM);
     for (q = fi; q < NF; q++) ferns.setMatrixAt(q, zeroM);
@@ -217,7 +357,7 @@ import * as THREE from './vendor/three.module.min.js';
       }
       if (hide) tiles.setMatrixAt(i, zeroM);
       else { dummy.position.set(0, -DEPTH / 2, zc); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); tiles.setMatrixAt(i, dummy.matrix); }
-      tiles.setColorAt(i, (k & 1) ? tileB : tileA);
+      tileColor(tmpC, zc, k & 1); tiles.setColorAt(i, tmpC);
     }
     tiles.instanceMatrix.needsUpdate = true; tiles.instanceColor.needsUpdate = true;
     sideL.position.set(-(PATH_W / 2 + SIDE_W / 2), -DEPTH / 2, vz + 110); sideR.position.set(PATH_W / 2 + SIDE_W / 2, -DEPTH / 2, vz + 110);
@@ -500,6 +640,7 @@ import * as THREE from './vendor/three.module.min.js';
     var dt = lastT ? Math.min((t - lastT) / 1000, 0.1) : 0.016; lastT = t;
     var menu = game.state === 'menu', vz = game.pz + (menu ? (opts.attract || 0) : 0);
 
+    sceneTime = t / 1000; applyTheme(vz);
     updateGround(vz, game, menu); updateScenery(vz); syncObstacles(vz, game, menu); updateCoins(vz, game, t, dt, menu);
     poseExplorer(game, t, vz, dt);
     ensureSprite(opts); ropeCol = opts.ropeColor || '#ffe86a';
@@ -527,7 +668,10 @@ import * as THREE from './vendor/three.module.min.js';
     sporeGeo.attributes.position.needsUpdate = true;
 
     // falling leaves + light rays (soft effects: off when the phone is struggling)
-    var fxOn = quality > 1.4; leaves.visible = fxOn; for (i = 0; i < NRAY; i++) rays[i].visible = fxOn; for (i = 0; i < 3; i++) flowerSets[i].visible = fxOn;
+    var fxOn = quality > 1.4; leaves.visible = fxOn && curW.j > 0.04; leaves.material.opacity = 0.9 * curW.j; for (i = 0; i < NRAY; i++) rays[i].visible = fxOn; for (i = 0; i < 3; i++) flowerSets[i].visible = fxOn && curW.j > 0.04;
+    embers.pts.visible = fxOn && curW.t > 0.03; debris.pts.visible = fxOn && curW.l > 0.03;
+    if (embers.pts.visible) { embers.pts.material.opacity = 0.85 * curW.t; driftUpdate(embers, vz, t / 1000, -0.9, 0.9); }
+    if (debris.pts.visible) { debris.pts.material.opacity = 0.9 * curW.l; driftUpdate(debris, vz, t / 1000, 3.6, 0.5); }
     if (fxOn) {
       var lp = leafPos, ts = t / 1000;
       for (i = 0; i < NLF; i++) {
@@ -538,7 +682,7 @@ import * as THREE from './vendor/three.module.min.js';
       for (i = 0; i < NRAY; i++) {
         var rm2 = rays[i], rs = i % 2 ? 1 : -1, rz = (((i * 17 - vz * 0.5) % 100) + 100) % 100;
         rm2.position.set(rs * (7 + (i % 3) * 3.2), 12, vz + 14 + rz); rm2.rotation.z = rs * 0.32;
-        rm2.material.opacity = 0.11 + 0.07 * Math.sin(ts * 0.7 + i * 1.9);
+        rm2.material.opacity = 0.11 + 0.07 * Math.sin(ts * 0.7 + i * 1.9); rm2.material.color.copy(theme.ray);
       }
     }
 
