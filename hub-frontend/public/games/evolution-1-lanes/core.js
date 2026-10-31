@@ -103,6 +103,7 @@
     this.coins = 0; this.coinList = []; this.stumbles = 0;
     this.wounded = 0; this.invuln = 0; this.slow = 1;
     this.lastEnd = 6; this.lastKind = 'start';
+    this.forcedKind = null; this.routeObstacle = null;
     while (this.nextZ < CFG.SPAWN_AHEAD) this.spawnRow();
   };
 
@@ -152,6 +153,7 @@
     if (m >= 100) pool.push('ledge');
     if (m >= 300) pool.push('slide', 'mixed', 'chasm', 'ledge', 'pit');
     var kind = pool[Math.floor(r() * pool.length)];
+    if (this.forcedKind) { kind = this.forcedKind; this.forcedKind = null; }       // the player chose this route (see setRoute)
     var hookRow = kind === 'chasm' || kind === 'ledge';
     var z = this.nextZ + (hookRow ? v * 0.5 + 6 : 0);
     // pits and chasms sit on the 2.5-unit ground-tile grid so the 3D floor can have clean edges
@@ -196,6 +198,30 @@
     this.addCoins(kind, z, rowLen, v);
     this.lastEnd = z + rowLen; this.lastKind = kind;
     this.nextZ = z + rowLen + gap;
+  };
+
+
+  // ROUTE CHOICE: replace everything further than ROUTE_KEEP ahead with a fresh row of the chosen kind ('pit' | 'chasm' | 'ledge').
+  // Rows already close to the player stay untouched; the chosen hazard comes after them, then normal generation continues.
+  // Returns the chosen obstacle (so the caller can reward clearing it).
+  var ROUTE_KEEP = 45;
+  Game.prototype.setRoute = function (kind) {
+    if (kind !== 'pit' && kind !== 'chasm' && kind !== 'ledge') return null;
+    var keep = this.pz + ROUTE_KEEP, kept = [], i, o, endZ = this.pz, lastKind = 'start', v = Math.min(CFG.MAX_SPEED, Math.max(this.speed, CFG.START_SPEED) + 3);
+    for (i = 0; i < this.obstacles.length; i++) {
+      o = this.obstacles[i];
+      if (o.z < keep) { kept.push(o); if (o.z + o.len > endZ) { endZ = o.z + o.len; lastKind = o.type; } }
+    }
+    this.obstacles = kept;
+    var lim = endZ + (kept.length ? 0 : 0);
+    this.coinList = this.coinList.filter(function (c) { return c.z <= lim; });
+    var gapAfter = lastKind === 'chasm' ? 0.0295 * v * v + v + 4 : lastKind === 'ledge' ? v * 0.9 + 4 : v * 1.2;
+    this.lastEnd = endZ; this.lastKind = lastKind;
+    this.nextZ = Math.max(kept.length ? endZ + gapAfter : keep, keep);
+    this.forcedKind = kind; this.spawnRow();
+    this.routeObstacle = this.obstacles[this.obstacles.length - 1];
+    while (this.nextZ < this.pz + CFG.SPAWN_AHEAD) this.spawnRow();
+    return this.routeObstacle;
   };
 
   Game.prototype.addCoin = function (z, lane, y, tol) {

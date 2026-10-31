@@ -284,5 +284,23 @@ console.log('Hook upgrade (store)');
   ok('swing latch zone is wider with reach', mk(0) === false && mk(2) === true);
 }
 
+console.log('Route choice');
+for (const kind of ['pit', 'chasm', 'ledge']) {
+  const g = new Game(11); g.start(11); g.pz = 320; g.obstacles = []; g.coinList = []; g.nextZ = g.pz + 10; g.lastEnd = g.pz;
+  while (g.nextZ < g.pz + CFG.SPAWN_AHEAD) g.spawnRow();
+  const before = g.obstacles.filter(o => o.z < g.pz + 45).map(o => o.z + ':' + o.type).join();
+  const o = g.setRoute(kind);
+  ok('route ' + kind + ': returns the chosen obstacle', !!o && o.type === kind);
+  ok('route ' + kind + ': near rows (<45 m) are untouched', g.obstacles.filter(x => x.z < g.pz + 45).map(x => x.z + ':' + x.type).join() === before);
+  ok('route ' + kind + ': chosen hazard is at least 45 m ahead', o.z >= g.pz + 45, Math.round(o.z - g.pz));
+  const rowsClash = (a) => a.some((x, i) => a.some((y, j) => j > i && Math.abs(x.z - y.z) > 0.01 && x.z < y.z + y.len - 0.01 && y.z < x.z + x.len - 0.01));   // same-z obstacles belong to one row (e.g. wall + log in different lanes)
+  ok('route ' + kind + ': obstacles from different rows never overlap', !rowsClash(g.obstacles));
+  ok('route ' + kind + ': generation keeps going to the spawn horizon', g.nextZ >= g.pz + CFG.SPAWN_AHEAD);
+  ok('route ' + kind + ': no orphan coins inside the free gap before the hazard sits on a removed row', g.coinList.every(c => c.z > g.pz - 1));
+}
+{
+  const g = new Game(5); g.start(5); ok('bad route kind is ignored', g.setRoute('lava') === null && g.forcedKind === null);
+}
+
 console.log(failed ? `\n${failed} FAILED` : '\nall passed');
 process.exit(failed ? 1 : 0);

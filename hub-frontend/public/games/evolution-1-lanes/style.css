@@ -105,3 +105,13 @@ h1 span { color: #ffd84a; }
 .rd-opts button { flex: 1; min-height: 58px; padding: 8px; border: 2px solid rgba(255,255,255,.5); border-radius: 14px; cursor: pointer; font: 800 16px/1.15 system-ui, sans-serif; color: #06130d; background: #bff7e3; touch-action: manipulation; }
 .rd-opts button:active { transform: translateY(2px); background: #8ff0cc; }
 .rd-note { margin: 10px 0 0; font: 600 11px/1 system-ui, sans-serif; color: #9fd9c3; opacity: .8; }
+
+/* ROUTE CHOICE */
+#route { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(3,10,8,.64); }
+#route[hidden] { display: none; }
+.rt-opts { display: flex; flex-direction: column; gap: 9px; }
+.rt-opts button { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; min-height: 62px; padding: 8px 14px; border: 2px solid rgba(255,255,255,.5); border-radius: 14px; cursor: pointer; text-align: left; color: #06130d; background: #bff7e3; touch-action: manipulation; }
+.rt-opts button:active { transform: translateY(2px); background: #8ff0cc; }
+.rt-opts b { font: 800 16px/1.15 system-ui, sans-serif; }
+.rt-opts span { grid-column: 1; font: 600 12px/1.2 system-ui, sans-serif; opacity: .75; }
+.rt-opts em { grid-row: 1 / span 2; grid-column: 2; font: 800 20px/1 system-ui, sans-serif; font-style: normal; color: #7a4a00; }

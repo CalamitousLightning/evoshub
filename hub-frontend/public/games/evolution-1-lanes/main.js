@@ -584,7 +584,12 @@
     if (game.state === 'playing' && game.score() >= nextMs) { nextMs += 100; say('far'); }
     if (voiceHideAt && performance.now() > voiceHideAt) silenceVoice();
     if (riddleOpen) { riddleT -= dt; rdBar.style.width = Math.max(0, riddleT / RIDDLE_TIME * 100) + '%'; if (riddleT <= 0) closeRiddle(null); }
-    else if (game.state === 'playing' && game.score() >= riddleNext && riddleSafeMoment()) openRiddle();
+    else if (routeOpen) { routeT -= dt; rtBar.style.width = Math.max(0, routeT / ROUTE_TIME * 100) + '%'; if (routeT <= 0) closeRoute(null); }
+    else if (game.state === 'playing' && game.score() >= riddleNext && game.score() >= quietUntil && riddleSafeMoment()) openRiddle();
+    else if (game.state === 'playing' && game.score() >= routeNext && game.score() >= quietUntil && routeSafeMoment()) openRoute();
+    if (routePicked && game.routeObstacle && game.state === 'playing' && game.pz > game.routeObstacle.z + game.routeObstacle.len + 1) {
+      game.coins += routePicked.bonus; coinBump = 1; routePicked = null; game.routeObstacle = null; say('routeWin', true);
+    }
     try { render(t); }
     catch (err) {
       if (r3 && r3.ready) { r3.ready = false; canvas.style.background = '#0b2a1f'; if (window.console) console.warn('3D renderer disabled after an error:', err); }
@@ -746,7 +751,7 @@
     game.pause(); hookBtn.hidden = true; pauseBtn.hidden = true; riddleEl.hidden = false;
   }
   function closeRiddle(choice) {
-    if (!riddleOpen) return; riddleOpen = false; riddleEl.hidden = true; riddleNext = game.score() + RIDDLE_EVERY;
+    if (!riddleOpen) return; riddleOpen = false; riddleEl.hidden = true; riddleNext = game.score() + RIDDLE_EVERY; quietUntil = game.score() + 60;
     var ok = choice === riddleRight;
     if (ok) { game.coins += RIDDLE_BONUS; coinBump = 1; }
     if (game.state === 'paused') { lastT = 0; resumedAt = Date.now(); game.resume(); game.invuln = Math.max(game.invuln || 0, 1.2); hookBtn.hidden = false; pauseBtn.hidden = false; }
@@ -756,8 +761,48 @@
   rdBtn.forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); closeRiddle(+b.getAttribute('data-i')); }); });
   document.addEventListener('keydown', function (e) { if (riddleOpen && (e.key === '1' || e.key === '2')) closeRiddle(+e.key - 1); });
 
+  // ---------------------------------------------------------------- ROUTE CHOICE: 5 s to pick the next hazard (harder = more bonus coins when you clear it)
+  var ROUTES = [
+    { kind: 'pit', name: 'STONE PITS', how: 'Jump', level: 'EASY', bonus: 10 },
+    { kind: 'chasm', name: 'VINE CHASM', how: 'Swing the vine', level: 'MEDIUM', bonus: 20 },
+    { kind: 'ledge', name: 'TEMPLE LEDGE', how: 'Pull yourself up', level: 'HARD', bonus: 30 }
+  ];
+  var ROUTE_TIME = 5, ROUTE_FIRST = 300, ROUTE_EVERY = 400, QUIET_GAP = 80;
+  VOICE.routePick = ['Bold choice.', 'Hm. That one.', 'The jungle noted your choice.'];
+  VOICE.routeLate = ['Indecision. I will choose for you.', 'Too slow. The pits it is.'];
+  VOICE.routeWin = ['You chose well. This time.', 'Hm. Not afraid, then.', 'Brave. Or lucky.'];
+  var routeEl = document.createElement('div'); routeEl.id = 'route'; routeEl.hidden = true;
+  routeEl.innerHTML = '<div class="rd-card"><p class="rd-eyebrow">CHOOSE YOUR ROUTE</p><div class="rd-bar"><i id="rt-bar"></i></div><div class="rt-opts">' +
+    ROUTES.map(function (r, i) { return '<button type="button" data-i="' + i + '"><b>' + r.name + '</b><span>' + r.how + ' \u00B7 ' + r.level + '</span><em>+' + r.bonus + '</em></button>'; }).join('') +
+    '</div><p class="rd-note">Clear it to win the bonus coins</p></div>';
+  document.getElementById('app').appendChild(routeEl);
+  var rtBar = document.getElementById('rt-bar');
+  var routeOpen = false, routeT = 0, routeNext = ROUTE_FIRST, quietUntil = 0, routePicked = null;
+  function routeSafeMoment() {
+    if (!game.onGround || game.hook || game.hookArmed > 0 || game.wounded > 0) return false;
+    var os = game.obstacles, i, o, dz;
+    for (i = 0; i < os.length; i++) { o = os[i]; if (o.z + (o.len || 0) < game.pz) continue; dz = o.z - game.pz; if (dz < 14) return false; }
+    return true;
+  }
+  function openRoute() {
+    routeOpen = true; routeT = ROUTE_TIME; rtBar.style.width = '100%'; silenceVoice(); clearTouch();
+    game.pause(); hookBtn.hidden = true; pauseBtn.hidden = true; routeEl.hidden = false;
+  }
+  function closeRoute(idx) {
+    if (!routeOpen) return; routeOpen = false; routeEl.hidden = true;
+    var r = idx == null ? ROUTES[0] : ROUTES[idx];
+    game.setRoute(r.kind); routePicked = r;
+    routeNext = game.score() + ROUTE_EVERY; quietUntil = game.score() + QUIET_GAP;
+    if (game.state === 'paused') { lastT = 0; resumedAt = Date.now(); game.resume(); game.invuln = Math.max(game.invuln || 0, 1.2); hookBtn.hidden = false; pauseBtn.hidden = false; }
+    say(idx == null ? 'routeLate' : 'routePick', true);
+  }
+  routeEl.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+  [].forEach.call(routeEl.querySelectorAll('.rt-opts button'), function (b) { b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); closeRoute(+b.getAttribute('data-i')); }); });
+  document.addEventListener('keydown', function (e) { if (routeOpen && (e.key === '1' || e.key === '2' || e.key === '3')) closeRoute(+e.key - 1); });
+
   game.onEvent = function (type) {
-    if (type === 'start') { banked = false; applyLoadout(); if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; nextMs = 100; voiceNextOk = 0; riddleNext = RIDDLE_FIRST; if (riddleOpen) { riddleOpen = false; riddleEl.hidden = true; } setTimeout(function () { if (game.state === 'playing') say('start', true); }, 900); }
+    if (type === 'start') { banked = false; applyLoadout(); if (overTimer) { clearTimeout(overTimer); overTimer = null; } hideOverlay(); hintT = 4; shake = 0; nextMs = 100; voiceNextOk = 0; riddleNext = RIDDLE_FIRST; if (riddleOpen) { riddleOpen = false; riddleEl.hidden = true; }
+    routeNext = ROUTE_FIRST; quietUntil = 0; routePicked = null; if (routeOpen) { routeOpen = false; routeEl.hidden = true; } setTimeout(function () { if (game.state === 'playing') say('start', true); }, 900); }
     else if (type === 'stumble') { flash = 1; shake = Math.max(shake, 0.8); say('stumble'); }
     else if (type === 'release') { say('hook'); }
     else if (type === 'coin') { coinBump = 1; if (game.coins > 0 && game.coins % 15 === 0) say('coins'); }
@@ -767,7 +812,7 @@
   var ptr = null, resumedAt = 0;
   function clearTouch() { ptr = null; hookBtn.classList.remove('down'); }
   function resumeGame() {
-    if (game.state !== 'paused' || riddleOpen) return;
+    if (game.state !== 'paused' || riddleOpen || routeOpen) return;
     clearTouch(); lastT = 0; resumedAt = Date.now();      // fresh clock: no time jump after the pause
     game.resume(); hideOverlay();
   }
