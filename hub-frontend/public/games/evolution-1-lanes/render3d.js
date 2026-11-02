@@ -56,6 +56,10 @@ import * as THREE from './vendor/three.module.min.js';
   }
 
   var scene = new THREE.Scene();
+  // root = the track's own content (bends at corners); fxRoot = player + effects that follow the player; decorT / decorB = T-junction and bend-corner pieces
+  var root = new THREE.Group(), fxRoot = new THREE.Group(), decorT = new THREE.Group(), decorB = new THREE.Group();
+  root.matrixAutoUpdate = decorT.matrixAutoUpdate = decorB.matrixAutoUpdate = false;
+  scene.add(root); scene.add(fxRoot); scene.add(decorT); scene.add(decorB); decorT.visible = decorB.visible = false;
   scene.fog = new THREE.Fog(HORIZON.getHex(), 38, 138);
   var camera = new THREE.PerspectiveCamera(62, 1, 0.1, 400);
 
@@ -138,23 +142,23 @@ import * as THREE from './vendor/three.module.min.js';
     beam.position.y = 110; temple.add(beam);
     var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: radialTex, color: 0x78ffe6, fog: false, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
     halo.scale.set(150, 150, 1); halo.position.y = 44; temple.add(halo);
-    scene.add(temple);
+    fxRoot.add(temple);
   })();
 
   // ------------------------------------------------------------------ ground
   var tileMats = [lambert(0x8a6a44), lambert(0x8a6a44), lambert(0xffffff, { map: pathTex }), lambert(0x5a4630), lambert(0x7a5c3a), lambert(0x7a5c3a)];
   var TILES = 64;
   var tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(PATH_W, DEPTH, TILE), tileMats, TILES);
-  tiles.frustumCulled = false; tiles.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(tiles);
+  tiles.frustumCulled = false; tiles.instanceMatrix.setUsage(THREE.DynamicDrawUsage); root.add(tiles);
   var tileA = col(0xffffff), tileB = col(0xd9c8aa), sideTexs = [grassTex, sandTex, metalTex], pathTexs = [pathTex, flagTex, plateTex], texIdx = 0, themeKey = -1;
   for (var ti = 0; ti < TILES; ti++) { tiles.setColorAt(ti, tileA); }
 
   var sideMat = lambert(0xffffff, { map: grassTex });
   var sideMats = [lambert(0x4a3a28), lambert(0x4a3a28), sideMat, lambert(0x2a2218), lambert(0x4a3a28), lambert(0x4a3a28)];
   var sideL = new THREE.Mesh(new THREE.BoxGeometry(SIDE_W, DEPTH, 280), sideMats), sideR = sideL.clone();
-  sideL.frustumCulled = sideR.frustumCulled = false; scene.add(sideL); scene.add(sideR);
+  sideL.frustumCulled = sideR.frustumCulled = false; root.add(sideL); root.add(sideR);
   var voidPlane = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: 0x010201, fog: false }));
-  voidPlane.rotation.x = -Math.PI / 2; voidPlane.position.y = -DEPTH - 0.05; scene.add(voidPlane);
+  voidPlane.rotation.x = -Math.PI / 2; voidPlane.position.y = -DEPTH - 0.05; root.add(voidPlane);
 
   // ------------------------------------------------------------------ scenery (instanced, recycled around the player)
   var NT = 90;
@@ -166,7 +170,7 @@ import * as THREE from './vendor/three.module.min.js';
   var bushGeo = new THREE.IcosahedronGeometry(1, 1);
   var NB = 80, bushes = new THREE.InstancedMesh(bushGeo, lambert(0x3a9a50, { flatShading: true }), NB);
   var NF = 60, ferns = new THREE.InstancedMesh(new THREE.ConeGeometry(0.5, 1.4, 5), lambert(0x59b56a, { flatShading: true }), NF);
-  [trunks, canopyA, canopyB, bushes, ferns].forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); });
+  [trunks, canopyA, canopyB, bushes, ferns].forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); root.add(m); });
   var dummy = new THREE.Object3D(), zeroM = new THREE.Matrix4().makeScale(0, 0, 0);
 
   // --- forest extras: slim palms, glowing flowers, falling leaves, light rays (all cheap; the soft effects switch off on slow phones)
@@ -175,7 +179,7 @@ import * as THREE from './vendor/three.module.min.js';
   var palmCrowns = new THREE.InstancedMesh(canopyGeo, lambert(0x3fbf5a, { flatShading: true }), NP * 2);
   var FL_N = 24, flowerGeo = new THREE.IcosahedronGeometry(0.2, 0);
   var flowerSets = [0x5ff5ff, 0xff7ad9, 0xffc45a].map(function (c) { return new THREE.InstancedMesh(flowerGeo, new THREE.MeshBasicMaterial({ color: c }), FL_N); });
-  [palmTrunks, palmCrowns].concat(flowerSets).forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); });
+  [palmTrunks, palmCrowns].concat(flowerSets).forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); root.add(m); });
 
   var leafTex = canvasTex(32, 32, function (g, w, h) {
     g.translate(w / 2, h / 2); g.rotate(-0.6); g.fillStyle = '#ffffff';
@@ -189,7 +193,7 @@ import * as THREE from './vendor/three.module.min.js';
   }
   var leafGeo = new THREE.BufferGeometry(); leafGeo.setAttribute('position', new THREE.BufferAttribute(leafPos, 3)); leafGeo.setAttribute('color', new THREE.BufferAttribute(leafCol, 3));
   var leaves = new THREE.Points(leafGeo, new THREE.PointsMaterial({ map: leafTex, vertexColors: true, size: 0.55, transparent: true, opacity: 0.9, alphaTest: 0.05, depthWrite: false, sizeAttenuation: true }));
-  leaves.frustumCulled = false; scene.add(leaves);
+  leaves.frustumCulled = false; fxRoot.add(leaves);
 
   var rayTex = canvasTex(32, 128, function (g, w, h) {
     var gv = g.createLinearGradient(0, 0, 0, h); gv.addColorStop(0, 'rgba(255,255,255,.9)'); gv.addColorStop(0.6, 'rgba(255,255,255,.35)'); gv.addColorStop(1, 'rgba(255,255,255,0)');
@@ -199,7 +203,7 @@ import * as THREE from './vendor/three.module.min.js';
   var NRAY = 6, rays = [];
   for (var ri = 0; ri < NRAY; ri++) {
     var rm = new THREE.Mesh(new THREE.PlaneGeometry(2.4 + hash(ri) * 2, 24), new THREE.MeshBasicMaterial({ map: rayTex, color: 0xfff0b0, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }));
-    rm.frustumCulled = false; rm.userData.i = ri; scene.add(rm); rays.push(rm);
+    rm.frustumCulled = false; rm.userData.i = ri; fxRoot.add(rm); rays.push(rm);
   }
 
   // spores floating in the air (mysterious jungle)
@@ -207,7 +211,7 @@ import * as THREE from './vendor/three.module.min.js';
   for (var si = 0; si < NS; si++) { sporeBase[si * 3] = (hash(si * 3.1) - 0.5) * 30; sporeBase[si * 3 + 1] = 0.5 + hash(si * 5.7) * 9; sporeBase[si * 3 + 2] = hash(si * 7.3) * 120; }
   var sporeGeo = new THREE.BufferGeometry(); sporeGeo.setAttribute('position', new THREE.BufferAttribute(sporePos, 3));
   var spores = new THREE.Points(sporeGeo, new THREE.PointsMaterial({ map: radialTex, color: 0xbfffe6, size: 0.55, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true }));
-  spores.frustumCulled = false; scene.add(spores);
+  spores.frustumCulled = false; fxRoot.add(spores);
 
   // --- temple stage (600 m+): broken pillars, rubble, braziers. lab stage (1200 m+): glowing tubes and tilted floating panels
   var NPIL = 30, NRU = 40, NBR = 14, NTU = 30, NPN = 36;
@@ -222,7 +226,7 @@ import * as THREE from './vendor/three.module.min.js';
   var labTubes = new THREE.InstancedMesh(tubeGeo, new THREE.MeshBasicMaterial({ color: 0x6fe8ff }), NTU);
   var labPanels = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lambert(0x6b8398, { flatShading: true }), NPN);
   var stageSets = [pillars, pillarCaps, rubble, brazierPosts, brazierFires, labTubes, labPanels];
-  stageSets.forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.visible = false; scene.add(m); });
+  stageSets.forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.visible = false; root.add(m); });
 
   // drifting particles: warm embers rising (temple), cyan-grey debris falling (lab)
   function makeDrift(n, size, colors, tex, additive, seed) {
@@ -233,7 +237,7 @@ import * as THREE from './vendor/three.module.min.js';
     }
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(cl, 3));
     var pts = new THREE.Points(geo, new THREE.PointsMaterial({ map: tex || null, vertexColors: true, size: size, transparent: true, opacity: 0, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }));
-    pts.frustumCulled = false; pts.visible = false; scene.add(pts);
+    pts.frustumCulled = false; pts.visible = false; fxRoot.add(pts);
     return { pts: pts, geo: geo, base: base, pos: pos, n: n };
   }
   var embers = makeDrift(60, 0.28, [col(0xffb04a), col(0xff8a2a), col(0xffd27a)], radialTex, true, 5.5);
@@ -295,7 +299,7 @@ import * as THREE from './vendor/three.module.min.js';
     fkFloors[id] = new THREE.InstancedMesh(pg, new THREE.MeshLambertMaterial({ map: t, emissive: id === 'river' ? 0x103a58 : 0x18200f }), FK_FLOOR_N);
   });
   var fkAll = [fkPosts, fkLint, fkGlow, fkVines, fkWalls, fkFloors.vine, fkFloors.temple, fkFloors.river];
-  fkAll.forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.visible = false; scene.add(m); });
+  fkAll.forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.visible = false; root.add(m); });
   var signMats = {}, fkSigns = [];
   function signMat(name, id) {
     if (!signMats[name]) {
@@ -307,7 +311,7 @@ import * as THREE from './vendor/three.module.min.js';
     }
     return signMats[name];
   }
-  for (var si = 0; si < FK_SIGN_N; si++) { var sm = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 0.52), signMats.x || (signMats.x = new THREE.MeshBasicMaterial({ color: 0x000000 }))); sm.rotation.y = Math.PI; sm.visible = false; sm.frustumCulled = false; scene.add(sm); fkSigns.push(sm); }
+  for (var si = 0; si < FK_SIGN_N; si++) { var sm = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 0.52), signMats.x || (signMats.x = new THREE.MeshBasicMaterial({ color: 0x000000 }))); sm.rotation.y = Math.PI; sm.visible = false; sm.frustumCulled = false; root.add(sm); fkSigns.push(sm); }
 
   function updateForks(game, vz) {
     var LW = CFG.LANE_W, bx = [-1.5 * LW, -0.5 * LW, 0.5 * LW, 1.5 * LW], i, j, q, f, r, th, n = { po: 0, li: 0, gl: 0, vi: 0, wa: 0, fl: { vine: 0, temple: 0, river: 0 }, sg: 0 };
@@ -527,9 +531,9 @@ import * as THREE from './vendor/three.module.min.js';
       if (o.z - vz > 150 || o.z + o.len - vz < -20) continue;
       if (o.type === 'pit') continue;
       seen.add(o); e = obsMap.get(o);
-      if (!e) { e = buildObstacle(o); obsMap.set(o, e); scene.add(e); }
+      if (!e) { e = buildObstacle(o); obsMap.set(o, e); root.add(e); }
     }
-    obsMap.forEach(function (g, key) { if (!seen.has(key)) { scene.remove(g); obsMap.delete(key); } });
+    obsMap.forEach(function (g, key) { if (!seen.has(key)) { root.remove(g); obsMap.delete(key); } });
   }
 
   // ------------------------------------------------------------------ coins + sparkles
@@ -542,9 +546,9 @@ import * as THREE from './vendor/three.module.min.js';
   var rimMat = new THREE.MeshStandardMaterial({ color: 0xc9d6e8, emissive: 0x1a3c8c, emissiveIntensity: 0.8, metalness: 0.8, roughness: 0.25 });
   var coinMat = [rimMat, faceMat, faceMatF];
   var coinGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.1, 40); coinGeo.rotateX(Math.PI / 2);
-  var coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, NC); coinMesh.frustumCulled = false; coinMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(coinMesh);
+  var coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, NC); coinMesh.frustumCulled = false; coinMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); root.add(coinMesh);
   var sparks = [], sparkMat = new THREE.SpriteMaterial({ map: radialTex, color: 0x7ab8ff, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
-  for (var sp = 0; sp < 14; sp++) { var s = new THREE.Sprite(sparkMat.clone()); s.visible = false; s.userData.life = 0; scene.add(s); sparks.push(s); }
+  for (var sp = 0; sp < 14; sp++) { var s = new THREE.Sprite(sparkMat.clone()); s.visible = false; s.userData.life = 0; root.add(s); sparks.push(s); }
   function spark(x, y, z) {
     for (var i = 0; i < sparks.length; i++) if (sparks[i].userData.life <= 0) { var s = sparks[i]; s.position.set(x, y, z); s.userData.life = 1; s.visible = true; s.scale.set(0.6, 0.6, 1); return; }
   }
@@ -625,7 +629,7 @@ import * as THREE from './vendor/three.module.min.js';
     }
     P.armL = arm(-1, false); P.armR = arm(1, true);
   })();
-  scene.add(player);
+  fxRoot.add(player);
   // The runner itself is the 2D explorer artwork (drawn by main.js into a canvas) shown as a camera-facing billboard.
   var sprTex = null, sprMesh = null;
   function ensureSprite(o) {
@@ -633,11 +637,11 @@ import * as THREE from './vendor/three.module.min.js';
     sprTex = new THREE.CanvasTexture(o.sprite); sprTex.colorSpace = THREE.SRGBColorSpace; sprTex.minFilter = THREE.LinearFilter; sprTex.generateMipmaps = false;
     var I = o.spriteInfo;
     sprMesh = new THREE.Mesh(new THREE.PlaneGeometry(I.w / I.s, I.h / I.s), new THREE.MeshBasicMaterial({ map: sprTex, transparent: true, alphaTest: 0.04, side: THREE.DoubleSide, fog: false, toneMapped: false }));
-    sprMesh.userData.dy = (I.feetY - I.h / 2) / I.s; scene.add(sprMesh);
+    sprMesh.userData.dy = (I.feetY - I.h / 2) / I.s; fxRoot.add(sprMesh);
   }
   var shadow = new THREE.Mesh(new THREE.CircleGeometry(0.75, 20), new THREE.MeshBasicMaterial({ map: radialTex, color: 0x000000, transparent: true, opacity: 0.55, depthWrite: false, fog: false }));
-  shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
-  var rope = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1, 6), new THREE.MeshBasicMaterial({ color: 0xffe86a, fog: false })); rope.visible = false; scene.add(rope);
+  shadow.rotation.x = -Math.PI / 2; fxRoot.add(shadow);
+  var rope = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1, 6), new THREE.MeshBasicMaterial({ color: 0xffe86a, fog: false })); rope.visible = false; fxRoot.add(rope);
 
   var ropeCol = '#ffe86a', ropeA = new THREE.Vector3(), ropeB = new THREE.Vector3(), _v = new THREE.Vector3();
   var lastPx = 0, lean = 0, crashAt = 0, _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quaternion(), DOWN = new THREE.Vector3(0, -1, 0);
@@ -721,6 +725,67 @@ import * as THREE from './vendor/three.module.min.js';
   }
   var quality = 2, lastDpr = 1, frameAcc = 0, frameN = 0, lastT = 0;
 
+
+  // ------------------------------------------------------------------ CORNERS: the track bends at junctions. The game logic stays straight (distance along the track);
+  // every stretch of track ("segment") is drawn in its own pass, rotated into the frame of the segment the player is on, and clipped to its own range.
+  var PLAZA = CFG.J_PLAZA, STUB_L = 34, M4 = THREE.Matrix4, V3 = THREE.Vector3;
+  var mA = new M4(), mB = new M4(), mC = new M4(), pLo = new THREE.Plane(new V3(0, 1, 0), 1e7), pHi = new THREE.Plane(new V3(0, 1, 0), 1e7), vN = new V3();
+  renderer.clippingPlanes = [pLo, pHi];                                  // always two planes (neutral when unused) so the shaders are compiled once
+  function neutral() { pLo.set(vN.set(0, 1, 0), 1e7); pHi.set(vN.set(0, 1, 0), 1e7); }
+  function rotAbout(z, ang, out) { return out.makeTranslation(0, 0, z).multiply(mC.makeRotationY(ang)).multiply(mB.makeTranslation(0, 0, -z)); }
+  function segMatrix(from, to, walls, angs, out) {                       // maps segment `from`'s frame into segment `to`'s frame
+    var k, r = mA; out.identity();
+    if (from < to) for (k = from; k < to; k++) { rotAbout(walls[k], -angs[k], r); out.premultiply(r); }
+    else for (k = from - 1; k >= to; k--) { rotAbout(walls[k], angs[k], r); out.premultiply(r); }
+    return out;
+  }
+  function smooth(x) { return x * x * (3 - 2 * x); }
+
+  // decor: the square where the track turns, the dead-end wall, torches, and (T-junction) the two themed corridors that lead away
+  var fillMat = new THREE.MeshLambertMaterial({ map: null }), fillTexs = sideTexs.map(function (t) { var c = t.clone(); c.needsUpdate = true; c.wrapS = c.wrapT = THREE.RepeatWrapping; c.repeat.set(36, 36); return c; });
+  fillMat.map = fillTexs[0];
+  var wallMat2 = lambert(0x39452f, { flatShading: true }), postMat2 = lambert(0x6a6450, { flatShading: true }), darkMat = new THREE.MeshBasicMaterial({ color: 0x02030a }), fireMat = new THREE.MeshBasicMaterial({ color: 0xff9a2a });
+  var plazaGeo = new THREE.PlaneGeometry(PATH_W, PATH_W); plazaGeo.rotateX(-Math.PI / 2);
+  var fillGeo = new THREE.PlaneGeometry(150, 150); fillGeo.rotateX(-Math.PI / 2);
+  var stubGeo = new THREE.PlaneGeometry(PATH_W, STUB_L); stubGeo.rotateX(-Math.PI / 2);
+  var stubTex = {}; ['vine', 'temple', 'river'].forEach(function (id) { var c = floorTex[id].clone(); c.needsUpdate = true; c.wrapS = c.wrapT = THREE.RepeatWrapping; c.repeat.set(3, 14); stubTex[id] = c; });
+  function basePiece(g) {
+    var f = new THREE.Mesh(fillGeo, fillMat); f.position.y = -0.08; g.add(f);
+    var p = new THREE.Mesh(plazaGeo, tileMats[2]); p.position.y = -0.03; g.add(p);
+    [-1, 1].forEach(function (sd) {                                      // torches flanking the dead end
+      g.add(mesh(boxGeo, postMat2, sd * (PLAZA - 0.5), 0.7, PLAZA - 0.5, 0.16, 1.4, 0.16)); g.add(mesh(sphGeo, fireMat, sd * (PLAZA - 0.5), 1.6, PLAZA - 0.5, 0.26, 0.3, 0.26));
+    });
+    g.add(mesh(boxGeo, wallMat2, 0, 3, PLAZA + 0.5, PATH_W + 1.0, 6, 1.0));        // the dead-end wall
+  }
+  function buildStub() {
+    var g = new THREE.Group(), u = g.userData, k, sg;
+    u.floorMat = new THREE.MeshLambertMaterial({ map: stubTex.vine }); u.lintMat = lambert(0xffffff, { flatShading: true }); u.glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); u.vines = [];
+    var fl = new THREE.Mesh(stubGeo, u.floorMat); fl.rotation.y = Math.PI / 2; fl.position.set(PLAZA + STUB_L / 2, -0.03, 0); g.add(fl);
+    for (sg = -1; sg <= 1; sg += 2) g.add(mesh(boxGeo, wallMat2, PLAZA + STUB_L / 2, 0.8, sg * (PATH_W / 2 + 0.25), STUB_L, 1.6, 0.5));
+    for (k = 0; k < 3; k++) {
+      var xk = PLAZA + 7 + k * 10;
+      for (sg = -1; sg <= 1; sg += 2) g.add(mesh(boxGeo, postMat2, xk, 1.9, sg * (PATH_W / 2), 0.5, 3.8, 0.5));
+      g.add(mesh(boxGeo, u.lintMat, xk, 4.0, 0, 0.6, 0.45, PATH_W + 0.7)); g.add(mesh(boxGeo, u.glowMat, xk, 3.7, 0, 0.12, 0.1, PATH_W - 0.6));
+      for (sg = -2; sg <= 2; sg += 2) { var vv = mesh(boxGeo, vineMat, xk + 0.1, 3.0, sg * 1.2, 0.07, 1.6, 0.07); u.vines.push(vv); g.add(vv); }
+    }
+    g.add(mesh(boxGeo, darkMat, PLAZA + STUB_L + 1, 3, 0, 1, 7, PATH_W + 1.4));            // beyond the corridor: darkness
+    return g;
+  }
+  function setStubTheme(g, id) {
+    var u = g.userData, th = FK[id]; u.floorMat.map = stubTex[id]; u.floorMat.emissive.set(id === 'river' ? 0x103a58 : 0x18200f); u.floorMat.needsUpdate = true;
+    u.lintMat.color.copy(th.lint); u.glowMat.color.copy(th.glow); u.vines.forEach(function (v) { v.visible = id === 'vine'; }); u.id = id;
+  }
+  var stubs = [buildStub(), buildStub()];                                // [0] west (dir -1), [1] east (dir +1)
+  basePiece(decorT); stubs[0].scale.x = -1; decorT.add(stubs[0]); decorT.add(stubs[1]);
+  basePiece(decorB); decorB.add(mesh(boxGeo, wallMat2, -(PLAZA + 0.25), 1.5, 0, 0.5, 3, PATH_W + 0.5));      // a bend is closed on the side away from the turn
+  var seg = { prev: 0, yaw: 0, yawFrom: 0, yawT: 1 };
+  var segWalls = [], segAngs = [];
+  function placeDecor(group, from, to, walls, angs, z, mirror) {
+    segMatrix(from, to, walls, angs, group.matrix); group.matrix.multiply(mB.makeTranslation(0, 0, z)); if (mirror) group.matrix.multiply(mB.makeScale(-1, 1, 1));
+    group.matrixWorldNeedsUpdate = true;
+  }
+  function countBefore(walls, z) { var n = 0; for (var i = 0; i < walls.length; i++) if (walls[i] < z) n++; return n; }
+
   function render(game, t, opts) {
     opts = opts || {};
     var dt = lastT ? Math.min((t - lastT) / 1000, 0.1) : 0.016; lastT = t;
@@ -781,8 +846,20 @@ import * as THREE from './vendor/three.module.min.js';
     var fovT = baseFov + clamp((game.speed * game.slow - CFG.START_SPEED) * 0.35, -2, 7) + (game.hook ? 3 : 0);
     fovS += (fovT - fovS) * 0.08; if (Math.abs(camera.fov - fovS) > 0.01) { camera.fov = fovS; camera.updateProjectionMatrix(); }
     var sk = (opts.shake || 0) * 0.35;
-    camera.position.set(camXs + (Math.random() - 0.5) * sk, camY + (Math.random() - 0.5) * sk, vz - 8.4 - (game.hook ? 1.5 : 0));
-    camera.lookAt(camXs * 0.4, 1.5 + Math.max(0, py) * 0.5, vz + 8);
+    // corners: walls[i] = track distance where the track bends (angs[i] = how far); an unchosen junction is a wall too (the dead end)
+    var walls = segWalls, angs = segAngs, ci, J0 = game.junction, virt = !!(J0 && J0.state === 'approach' && J0.choice == null), ps = 0;
+    walls.length = 0; angs.length = 0;
+    if (game.corners) for (ci = 0; ci < game.corners.length; ci++) { walls.push(game.corners[ci].z); angs.push(game.corners[ci].ang); }
+    if (virt) { walls.push(J0.z); angs.push(0); }
+    for (ci = 0; ci < walls.length; ci++) if (walls[ci] <= vz) ps++;
+    if (menu) ps = 0;
+    if (ps === seg.prev + 1 && ps - 1 < (game.corners ? game.corners.length : 0)) { seg.yawFrom = -angs[ps - 1]; seg.yawT = 0; }     // just crossed a corner: swing the view round
+    else if (ps !== seg.prev) { seg.yawFrom = 0; seg.yawT = 1; }
+    seg.prev = ps; if (seg.yawT < 1) seg.yawT = Math.min(1, seg.yawT + dt / 0.55);
+    var yaw = seg.yawFrom * (1 - smooth(seg.yawT)), sy = Math.sin(yaw), cy = Math.cos(yaw), back = 8.4 + (game.hook ? 1.5 : 0);
+    player.rotation.y = yaw; if (sprMesh) sprMesh.rotation.y = yaw;      // the runner turns with the camera
+    camera.position.set(cy * camXs - sy * back + (Math.random() - 0.5) * sk, camY + (Math.random() - 0.5) * sk, vz - sy * camXs - cy * back);
+    camera.lookAt(0.4 * camXs * cy + 8 * sy, 1.5 + Math.max(0, py) * 0.5, vz - 0.4 * camXs * sy + 8 * cy);
 
     if (rope.visible) {            // screen-space ends of the hook line for the HUD (x is mirrored like the canvas)
       camera.updateMatrixWorld(true);
@@ -790,7 +867,49 @@ import * as THREE from './vendor/three.module.min.js';
       _v.copy(ropeB).project(camera); var x2 = (1 - (_v.x * 0.5 + 0.5)) * W, y2 = (1 - (_v.y * 0.5 + 0.5)) * H;
       api.rope = { x1: x1, y1: y1, x2: x2, y2: y2 };
     }
-    renderer.render(scene, camera);
+    // ---- draw: one pass when the track is straight in view; otherwise one pass per visible stretch of track, plus corner decor, plus the player/effects
+    var near = false, vi;
+    for (ci = 0; ci < walls.length; ci++) if (walls[ci] > vz - 60 && walls[ci] < vz + 170) near = true;
+    if (J0 && J0.z > vz - 60 && J0.z < vz + 170) near = true;
+    var bg = scene.background;
+    if (!near) {
+      root.matrix.identity(); root.matrixWorldNeedsUpdate = true; neutral(); root.visible = fxRoot.visible = true; decorT.visible = decorB.visible = false;
+      renderer.render(scene, camera);
+    } else {
+      var first = true, sI, lo, hi;
+      var pass = function () { renderer.autoClear = first; scene.background = first ? bg : null; renderer.render(scene, camera); first = false; };
+      root.visible = true; fxRoot.visible = false; decorT.visible = decorB.visible = false;
+      var order = [], extra = 0;
+      for (sI = 0; sI <= walls.length; sI++) {
+        if (virt && sI === walls.length) continue;                        // nothing exists past an unchosen junction: it is a dead end
+        lo = sI > 0 ? walls[sI - 1] + PLAZA : -1e7; hi = sI < walls.length ? walls[sI] - PLAZA : 1e7;
+        if (hi < vz - 30 || lo > vz + 170) continue;
+        if (sI === ps) order.unshift(sI); else order.push(sI);
+      }
+      for (vi = 0; vi < order.length; vi++) {
+        sI = order[vi]; lo = sI > 0 ? walls[sI - 1] + PLAZA : -1e7; hi = sI < walls.length ? walls[sI] - PLAZA : 1e7;
+        segMatrix(sI, ps, walls, angs, root.matrix); root.matrixWorldNeedsUpdate = true;
+        pLo.set(vN.set(0, 0, 1), -lo).applyMatrix4(root.matrix); pHi.set(vN.set(0, 0, -1), hi).applyMatrix4(root.matrix);
+        pass();
+      }
+      // corner decor: no clipping, each piece in its own frame
+      root.visible = false; neutral();
+      if (J0 && J0.z > vz - 60 && J0.z < vz + 170) {
+        if (decorT.userData.J !== J0) { decorT.userData.J = J0; setStubTheme(stubs[0], J0.branches[-1].id); setStubTheme(stubs[1], J0.branches[1].id); }
+        stubs[0].visible = J0.choice !== -1; stubs[1].visible = J0.choice !== 1;
+        placeDecor(decorT, countBefore(walls, J0.z - 0.5), ps, walls, angs, J0.z, false);
+        decorT.visible = true; decorB.visible = false; pass();
+      }
+      for (ci = 0; ci < (game.corners ? game.corners.length : 0); ci++) {
+        var cc = game.corners[ci]; if (cc.turn || cc.z < vz - 60 || cc.z > vz + 170) continue;
+        placeDecor(decorB, countBefore(walls, cc.z - 0.5), ps, walls, angs, cc.z, cc.ang < 0);
+        decorT.visible = false; decorB.visible = true; pass();
+      }
+      decorT.visible = decorB.visible = false; fxRoot.visible = true; pass();          // the player and everything that follows the player
+      renderer.autoClear = true; scene.background = bg; root.visible = true; root.matrix.identity(); root.matrixWorldNeedsUpdate = true; neutral();
+    }
+    stubTex.river.offset.y = -((sceneTime * 0.7) % 1);
+    fillMat.map = fillTexs[texIdx]; fillMat.color.copy(sideMat.color);
 
     // adaptive resolution: if the device cannot keep up, lower the pixel ratio a little
     frameAcc += dt; frameN++;

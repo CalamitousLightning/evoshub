@@ -8,6 +8,7 @@ function ok(name, cond, extra) {
   if (!cond) failed++;
 }
 const DT = 1 / 60;
+CFG.JUNCTIONS_ON = false; CFG.FORKS_ON = false;      // the older sections test the plain endless track; forks and junctions have their own sections
 function run(g, secs) { for (let t = 0; t < secs && g.state === 'playing'; t += DT) g.update(DT); }
 
 // An empty, controlled world: no auto-spawning.
@@ -263,6 +264,7 @@ function bot(g, st) {
   ok('an idle player eventually crashes (obstacles matter)', idle.state === 'over', idle.reason);
 }
 
+CFG.FORKS_ON = true;
 console.log('Route choice (the track forks into 3 paths)');
 // a game whose first fork exists; the runner is placed `before` metres ahead of its gate (clear ground, nothing in between)
 function forkWorld(seed, before, lane) {
@@ -361,6 +363,7 @@ console.log('Hook upgrade (store)');
   ok('swing latch zone is wider with reach', mk(0) === false && mk(2) === true);
 }
 
+CFG.FORKS_ON = false;
 console.log('Route choice');
 for (const kind of ['pit', 'chasm', 'ledge']) {
   const g = new Game(11); g.start(11); g.pz = 320; g.obstacles = []; g.coinList = []; g.nextZ = g.pz + 10; g.lastEnd = g.pz;
@@ -378,6 +381,79 @@ for (const kind of ['pit', 'chasm', 'ledge']) {
 {
   const g = new Game(5); g.start(5); ok('bad route kind is ignored', g.setRoute('lava') === null && g.forcedKind === null);
 }
+
+console.log('T-junction (dead end, turn west or east, 5 s window, rejoin)');
+CFG.JUNCTIONS_ON = true;
+// a lane-aware bot (the same as above) that also decides the turn: mode 'follow' = the Voice's life branch, 'defy' = the other one, 'none' = never swipes
+function jbot(g, st, mode) {
+  const J = g.junction;
+  if (J && J.state === 'approach' && J.choice == null && g.pz >= J.slowZ - 2 && mode !== 'none') g.moveLane(mode === 'follow' ? J.lifeDir : -J.lifeDir);
+  bot(g, st);
+}
+function untilJunction(seed) {            // a game run by the bot until its first junction exists
+  const g = new Game(seed); g.start(seed); const st = { cool: 0 };
+  for (let i = 0; i < 60 * 200 && g.state === 'playing' && !g.junction; i++) { bot(g, st); g.update(DT); }
+  return { g, st };
+}
+function toDist(g, st, dist, mode) { for (let i = 0; i < 60 * 120 && g.state === 'playing' && g.junction && g.junction.z - g.pz > dist; i++) { jbot(g, st, mode || 'none'); g.update(DT); } }
+{
+  const { g, st } = untilJunction(11); const J = g.junction;
+  ok('a junction appears, not before the first 300 m', !!J && J.z >= CFG.JUNCTION_FIRST, J && J.z.toFixed(0));
+  ok('it offers two branches: one life (the Voice\'s), one death', J.branches[-1] && J.branches[1] && J.branches[J.lifeDir].kind === 'life' && J.branches[-J.lifeDir].kind === 'death' && J.branches[-1].id !== J.branches[1].id);
+  toDist(g, st, 45);
+  ok('the track is a dead end: nothing generated past the 5 s window', g.obstacles.every(o => o.z + o.len <= J.slowZ + 0.5) && g.coinList.every(c => c.z <= J.z) && g.nextZ <= J.slowZ, `last obstacle end ${Math.max(...g.obstacles.map(o => o.z + o.len)).toFixed(0)} vs slowZ ${J.slowZ.toFixed(0)}`);
+  ok('no rows are generated while waiting at the dead end', (() => { const n = g.obstacles.length; for (let i = 0; i < 30; i++) g.spawnRow(); return g.obstacles.length === n; })());
+}
+{
+  const { g, st } = untilJunction(11); const J = g.junction;
+  toDist(g, st, CFG.J_LOCK_DIST - 1);
+  ok('lane swipes stop meaning lane near the junction: the runner centres itself', g.pz >= J.lockZ && (() => { g.update(0.5); return g.lane === 0; })());
+  g.moveLane(-1); ok('a swipe before the window opens does not choose', J.choice == null && g.lane === 0);
+}
+{
+  // the window: about 5 s from the moment time slows down until the junction
+  const { g, st } = untilJunction(11); const J = g.junction;
+  toDist(g, st, CFG.J_SLOW_DIST + 0.5);
+  let t = 0, v0 = g.speed * g.slow; while (g.state === 'playing' && g.pz < J.z && t < 20) { jbot(g, st, 'follow'); g.update(DT); t += DT; }
+  ok('the decision window lasts about 5 s', t > 4.3 && t < 6.5, t.toFixed(2) + ' s (entered at ' + v0.toFixed(1) + ' m/s)');
+  ok('time slows down in the window', g.jLimit === Infinity || g.jLimit <= CFG.J_WINDOW_V + 3, g.jLimit);
+}
+{
+  const { g, st } = untilJunction(11); const J = g.junction; const ev = [];
+  g.onEvent = (e) => ev.push(e);
+  toDist(g, st, CFG.J_SLOW_DIST - 5, 'follow');
+  ok('a swipe in the window chooses and commits the branch', J.choice === J.lifeDir && J.branch.kind === 'life' && ev.includes('choose'), String(J.choice));
+  ok('the two corners are recorded: the turn, then the bend back', g.corners.length === 2 && g.corners[0].z === J.z && g.corners[1].z === J.end && Math.abs(g.corners[0].ang + g.corners[1].ang) < 1e-9 && Math.abs(Math.abs(g.corners[0].ang) - Math.PI / 2) < 1e-9);
+  g.moveLane(-J.lifeDir); ok('the choice is final', J.choice === J.lifeDir);
+  g.wounded = 5; const c0 = g.coins;
+  for (let i = 0; i < 60 * 80 && g.state === 'playing' && g.junction === J; i++) { jbot(g, st, 'follow'); g.update(DT); }
+  ok('turn, routeEnd fire once each, and nothing else breaks', ev.filter(e => e === 'turn').length === 1 && ev.filter(e => e === 'routeEnd').length === 1 && g.state === 'playing', ev.join(','));
+  ok('the life branch pays 10 coins and mends wounds on rejoining', g.coins >= c0 + 10 && g.wounded <= 0 && g.lastRoute && g.lastRoute.kind === 'life', `${g.coins - c0} coins`);
+  ok('the junction is cleared once the branch is behind, and the next one is scheduled', g.junction === null && g.nextJunction > J.end + CFG.JUNCTION_EVERY - 1, g.nextJunction);
+}
+{
+  const { g, st } = untilJunction(5); const J = g.junction; const ev = [];
+  g.onEvent = (e) => ev.push(e);
+  toDist(g, st, 20, 'none'); for (let i = 0; i < 60 * 10 && g.state === 'playing'; i++) { bot(g, st); g.update(DT); }
+  ok('no turn: the darkness takes the runner at the dead end', g.state === 'over' && g.reason === 'dark' && Math.abs(g.pz - J.z) < 1.2, g.reason + ' at ' + g.pz.toFixed(1) + ' / ' + J.z.toFixed(1));
+}
+{
+  // both turn directions work, and both kinds of branch can be run
+  let left = 0, right = 0, life = 0, death = 0, deaths = 0, bends = 0, fails = [];
+  for (let seed = 1; seed <= 24; seed++) for (const mode of ['follow', 'defy']) {
+    const g = new Game(seed); g.start(seed); g.time = (seed % 6) * 18; const st = { cool: 0 };
+    for (let i = 0; i < 60 * 400 && g.state === 'playing' && g.pz < 1800; i++) { jbot(g, st, mode); g.update(DT); }
+    if (g.state !== 'playing') { deaths++; if (fails.length < 3) fails.push(`seed ${seed} ${mode}: ${g.reason} at ${g.pz.toFixed(0)}`); }
+    bends += g.routesTaken;
+    if (g.lastRoute) { (g.lastRoute.dir < 0 ? left++ : right++); (g.lastRoute.kind === 'life' ? life++ : death++); }
+  }
+  ok('the bot reaches 1800 m through many junctions, on both kinds of branch', deaths === 0 && bends > 60 && left > 5 && right > 5 && life > 5 && death > 5, `${bends} branches, ${deaths} deaths ${fails.join('; ')} (L${left} R${right} life${life} death${death})`);
+}
+{
+  const g = new Game(7); g.start(7); g.junction = null; g.nextJunction = Infinity; g.obstacles = []; g.nextZ = 1e9;
+  ok('junctions can be switched off (JUNCTIONS_ON)', (() => { CFG.JUNCTIONS_ON = false; const h = new Game(7); h.start(7); for (let i = 0; i < 60 * 40; i++) { h.update(DT); if (h.state !== 'playing') break; } CFG.JUNCTIONS_ON = true; return h.junction === null; })());
+}
+CFG.JUNCTIONS_ON = false;
 
 console.log(failed ? `\n${failed} FAILED` : '\nall passed');
 process.exit(failed ? 1 : 0);

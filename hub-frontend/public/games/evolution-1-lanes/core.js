@@ -65,6 +65,16 @@
     COIN_STEP: 2.0,
     TILE: 2.5,             // ground tile length (pits / chasms are aligned to it)
     // ---- route choice: a fork on the track itself, three paths (one per lane) ----
+    FORKS_ON: false,       // the old parallel-lane forks (kept for reference, off)
+    JUNCTIONS_ON: true,
+    JUNCTION_FIRST: 300,   // first T-junction after this many metres
+    JUNCTION_EVERY: 300,   // then about this far after the previous branch has rejoined
+    BRANCH_LEN: 150,       // length of a branch before it bends back onto the main path
+    J_SLOW_DIST: 50,       // the 5 s decision window starts this far before the junction (time slows down)
+    J_WINDOW_V: 9,         // speed during the window (m/s): about 5 s to reach the junction
+    J_CLUE_DIST: 125,      // the Voice gives its riddle this far before the junction
+    J_LOCK_DIST: 70,       // the runner centres itself and lane swipes stop meaning 'lane' this far before the junction
+    J_PLAZA: 3.8,          // half the width of the junction square
     ROUTE_FIRST: 230,      // first fork after this many metres
     ROUTE_EVERY: 260,      // then 260-380 m after the end of the previous fork
     ROUTE_TIME: 5          // seconds of warning: the lane you are in when the gate arrives is your path
@@ -119,8 +129,9 @@
     this.wounded = 0; this.invuln = 0; this.slow = 1;
     this.lastEnd = 6; this.lastKind = 'start';
     this.forcedKind = null; this.routeObstacle = null;
-    this.forks = []; this.route = null; this.nextFork = CFG.ROUTE_FIRST; this.routesTaken = 0; this.lastRoute = null;
-    while (this.nextZ < CFG.SPAWN_AHEAD) this.spawnRow();
+    this.forks = []; this.route = null; this.nextFork = CFG.FORKS_ON ? CFG.ROUTE_FIRST : Infinity; this.routesTaken = 0; this.lastRoute = null;
+    this.junction = null; this.nextJunction = CFG.JUNCTIONS_ON ? CFG.JUNCTION_FIRST : Infinity; this.corners = []; this.profile = null; this.jLimit = Infinity; this.turns = 0;
+    while (this.nextZ < CFG.SPAWN_AHEAD && this.spawnRow() !== false);
   };
 
   Game.prototype.start = function (seed) {
@@ -138,6 +149,11 @@
   Game.prototype.moveLane = function (dir) {
     if (this.state !== 'playing') return;
     if (this.route) return;                                   // committed to a path: the lane is fixed until its end
+    var J = this.junction;
+    if (J && J.state === 'approach' && this.pz >= J.lockZ) {  // the track ends here: a swipe left / right is the turn (accepted once the window opens)
+      if (J.choice == null && this.pz >= J.slowZ - 3) this.chooseBranch(dir < 0 ? -1 : 1);
+      return;
+    }
     var n = clamp(this.lane + (dir < 0 ? -1 : 1), -1, 1);
     if (n !== this.lane) { this.lane = n; this.emit('lane'); }
   };
@@ -230,22 +246,77 @@
     while (this.forks.length && this.forks[0].end < this.pz - 20 && this.forks[0] !== this.route) this.forks.shift();
   };
 
+
+  // ------------------------------------------------------------ T-junction: the straight track ends in a dead end, the runner must turn west or east
+  // Everything stays one-dimensional (distance along the track); the renderer bends the world at each corner in this.corners.
+  // The Voice's riddle (about 125 m before) says which branch is the safe 'life' one; the other is the 'death' one.
+  Game.prototype.spawnJunction = function () {
+    var r = this.rng, J = this.nextZ + 150 + Math.floor(r() * 30), lifeDir = r() < 0.5 ? -1 : 1, th = this.shuffle(THEMES);
+    this.junction = { z: J, slowZ: J - CFG.J_SLOW_DIST, lockZ: J - CFG.J_LOCK_DIST, clueZ: J - CFG.J_CLUE_DIST, end: J + CFG.BRANCH_LEN, state: 'approach', choice: null, branch: null, lifeDir: lifeDir, branches: {} };
+    this.junction.branches[lifeDir] = { dir: lifeDir, kind: 'life', id: th[0].id, name: th[0].name, bonus: KINDS.life.bonus, heal: KINDS.life.heal };
+    this.junction.branches[-lifeDir] = { dir: -lifeDir, kind: 'death', id: th[1].id, name: th[1].name, bonus: KINDS.death.bonus, heal: KINDS.death.heal };
+  };
+
+  Game.prototype.chooseBranch = function (dir) {
+    var J = this.junction; if (!J || J.state !== 'approach' || J.choice != null) return;
+    J.choice = dir; J.branch = J.branches[dir]; this.profile = J.branch.kind;
+    this.nextZ = J.z + 26; this.lastEnd = J.z + 26; this.lastKind = 'branch';        // the branch's rows start just past the junction square
+    this.corners.push({ z: J.z, ang: dir * Math.PI / 2, turn: true }, { z: J.end, ang: -dir * Math.PI / 2, turn: false });
+    this.emit('choose');
+  };
+
+  // What the HUD, the Voice and the renderer need.
+  Game.prototype.junctionInfo = function () {
+    var J = this.junction; if (!J) return null;
+    var d = J.z - this.pz, sp = Math.max(1, Math.min(this.speed * this.slow, this.jLimit));
+    return { state: J.state, dist: d, t: Math.max(0, d / sp), window: J.state === 'approach' && this.pz >= J.slowZ, clue: this.pz >= J.clueZ, choice: J.choice, lifeDir: J.lifeDir, junction: J };
+  };
+
+  Game.prototype.stepJunction = function (dt) {
+    var J = this.junction, V = CFG.J_WINDOW_V, cap = this.speed * this.slow;
+    if (!J) { if (this.jLimit !== Infinity) { this.jLimit += 14 * dt; if (this.jLimit >= cap) this.jLimit = Infinity; } return; }
+    if (J.state === 'approach') {
+      if (this.pz >= J.lockZ) this.lane = 0;                                         // centre yourself: from here a swipe means 'turn'
+      if (this.pz >= J.slowZ) { if (this.jLimit === Infinity) this.jLimit = cap; this.jLimit = Math.max(V, this.jLimit - 22 * dt); }   // time slows down
+      if (this.pz >= J.z) {
+        if (J.choice == null) return this.die('dark');                               // no turn: the darkness takes you
+        J.state = 'turned'; this.turns++; this.emit('turn');
+      }
+    } else {
+      if (this.jLimit !== Infinity) { this.jLimit += 14 * dt; if (this.jLimit >= cap) this.jLimit = Infinity; }
+      if (!J.done && this.pz >= J.end) {                                             // the branch rejoins the main path: bonus (+ mended wounds on the life door)
+        J.done = true; var b = J.branch; this.lastRoute = b; this.routesTaken++; this.coins += b.bonus;
+        if (b.heal && this.wounded > 0) { this.wounded = 0; this.emit('recover'); }
+        this.profile = null; this.nextJunction = J.end + CFG.JUNCTION_EVERY + Math.floor(this.rng() * 80);
+        this.emit('routeEnd');
+      }
+      if (J.done && this.pz > J.end + 25) this.junction = null;
+    }
+    if (this.corners.length && this.corners[0].z < this.pz - 80) this.corners = this.corners.filter(function (k) { return k.z >= this.pz - 80; }, this);
+  };
+
   Game.prototype.spawnRow = function () {
+    var J = this.junction;
+    if (J && J.state === 'approach' && this.nextZ >= J.slowZ - 62) return false;   // dead end ahead: no rows until the turn (the last rows end well before the 5 s window)
+    if (!J && this.nextZ >= this.nextJunction) return this.spawnJunction();
+    if (J && J.state === 'turned' && this.nextZ > J.end - 16 && this.nextZ < J.end + 12) this.nextZ = J.end + 12;   // clear ground around the bend back onto the main path
     if (this.nextZ >= this.nextFork) return this.spawnFork();
     var r = this.rng, v = Math.min(CFG.MAX_SPEED, Math.max(this.speed, CFG.START_SPEED) + 3), m = this.nextZ;
-    var pool = ['jump', 'jump', 'lane'];
+    var pool = ['jump', 'jump', 'lane'], prof = this.profile;
     if (m >= 40) pool.push('pit');
     if (m >= 60) pool.push('chasm');
     if (m >= 80) pool.push('slide', 'mixed');
     if (m >= 100) pool.push('ledge');
     if (m >= 300) pool.push('slide', 'mixed', 'chasm', 'ledge', 'pit');
+    if (prof === 'life') pool = ['jump', 'jump', 'lane', 'slide'];
+    else if (prof === 'death') pool = ['jump', 'mixed', 'slide', 'pit', 'chasm', 'ledge', 'lane', 'mixed'];
     var kind = pool[Math.floor(r() * pool.length)];
     if (this.forcedKind) { kind = this.forcedKind; this.forcedKind = null; }       // the player chose this route (see setRoute)
     var hookRow = kind === 'chasm' || kind === 'ledge';
     var z = this.nextZ + (hookRow ? v * 0.5 + 6 : 0);
     // pits and chasms sit on the 2.5-unit ground-tile grid so the 3D floor can have clean edges
     if (kind === 'pit' || kind === 'chasm') z = Math.ceil(z / CFG.TILE) * CFG.TILE;
-    var rowLen = 2.2, gap = v * (0.95 + 0.6 * r());
+    var rowLen = 2.2, gap = v * (0.95 + 0.6 * r()) * (prof === 'life' ? 1.5 : prof === 'death' ? 0.75 : 1);
     var i, lanes, o;
 
     if (kind === 'jump') {
@@ -307,7 +378,7 @@
     this.nextZ = Math.max(kept.length ? endZ + gapAfter : keep, keep);
     this.forcedKind = kind; this.spawnRow();
     this.routeObstacle = this.obstacles[this.obstacles.length - 1];
-    while (this.nextZ < this.pz + CFG.SPAWN_AHEAD) this.spawnRow();
+    while (this.nextZ < this.pz + CFG.SPAWN_AHEAD && this.spawnRow() !== false);
     return this.routeObstacle;
   };
 
@@ -488,7 +559,7 @@
       this.emit('jump');
     }
 
-    this.pz += (this.airVz != null ? this.airVz : this.speed * this.slow) * dt;
+    this.pz += (this.airVz != null ? this.airVz : Math.min(this.speed * this.slow, this.jLimit)) * dt;
     this.vy -= CFG.GRAV * dt;
     var ny = this.y + this.vy * dt;
 
@@ -530,6 +601,8 @@
     if (this.hookArmed > 0 && !this.hook) this.tryLatch();
     if (this.hook) this.stepHook(dt); else this.stepFree(dt);
     if (this.state !== 'playing') return;
+    this.stepJunction(dt);
+    if (this.state !== 'playing') return;
     this.collide();
     if (this.state !== 'playing') return;
     this.collectCoins();
@@ -537,7 +610,7 @@
 
     // look far enough ahead that a fork is announced a full ROUTE_TIME seconds before its gate, even at top speed
     var look = Math.max(CFG.SPAWN_AHEAD, this.speed * (CFG.ROUTE_TIME + 0.4) + 10);
-    while (this.nextZ < this.pz + look) this.spawnRow();
+    while (this.nextZ < this.pz + look && this.spawnRow() !== false);
     while (this.obstacles.length && this.obstacles[0].z + this.obstacles[0].len < this.pz - 20) this.obstacles.shift();
     if (this.coinList.length && this.coinList[0].z < this.pz - 20) { var pz0 = this.pz - 20; this.coinList = this.coinList.filter(function (c) { return c.z >= pz0; }); }
   };

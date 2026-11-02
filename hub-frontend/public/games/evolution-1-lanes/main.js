@@ -36,7 +36,8 @@
     branch: 'Low branch! Swipe down to slide under it.',
     ledge: 'Stone ledge! Tap HOOK early to be pulled up.',
     pit: 'You fell in the pit. Swipe up to jump it.',
-    fell: 'You fell into the chasm. Tap HOOK to swing across.'
+    fell: 'You fell into the chasm. Tap HOOK to swing across.',
+    dark: 'The darkness caught you. You never turned.'
   };
 
   function resize() {
@@ -191,8 +192,14 @@
       }
     }
   }
+  function drawJunctionWall(zr) {                                 // 2D fallback: the dead end (the 3D view bends the track here; the flat view only shows the wall)
+    var W = CFG.PATH_W || 7.6, h = 5.5, z = zr + CFG.J_PLAZA;
+    box(-4.3, 4.3, 0, h, z, z + 1.0, [40, 52, 36], [58, 72, 50], [30, 40, 28], z);
+    [-1, 1].forEach(function (sd) { var a = proj(sd * (CFG.J_PLAZA - 0.5), 1.4, z - 0.4), b = proj(sd * (CFG.J_PLAZA - 0.5), 0.2, z - 0.4); ctx.strokeStyle = '#6a5a48'; ctx.lineWidth = Math.max(2, a.s * 0.16); ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(a.x, a.y); ctx.stroke(); ctx.fillStyle = '#ff9a2a'; ctx.beginPath(); ctx.arc(a.x, a.y - a.s * 0.15, Math.max(2, a.s * 0.2), 0, 6.3); ctx.fill(); });
+  }
   function pushForkItems(items) {
     var fs = game.forks || [], LW = CFG.LANE_W, bx = [-1.5 * LW, -0.5 * LW, 0.5 * LW, 1.5 * LW], i, j, f, zs, a, b, zf, rel;
+    var J0 = game.junction; if (J0 && J0.state === 'approach' && J0.z - rz < VIEW && J0.z - rz > -CAM_D + 0.6) items.push({ z: J0.z - rz + CFG.J_PLAZA, f: drawJunctionWall, a: [J0.z - rz] });
     for (i = 0; i < fs.length; i++) {
       f = fs[i]; if (!f.routes || f.end - rz < -CAM_D + 0.5 || f.z - rz > VIEW) continue;
       for (zs = f.z - 3; zs < f.end + 3; zs += 6) {
@@ -496,6 +503,29 @@
     ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r); ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
     ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r); ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r); ctx.closePath();
   }
+
+  // ---- junction HUD: the darkness closes in during the 5 s window; two quiet arrows say 'swipe left or right'
+  function drawJunction(ji, W, H) {
+    if (!ji || ji.state !== 'approach') return;
+    var near = clamp(1 - ji.dist / (CFG.J_LOCK_DIST + 20), 0, 1), win = ji.window ? clamp(1 - ji.dist / CFG.J_SLOW_DIST, 0, 1) : 0;
+    var dark = ji.choice != null ? 0.18 * near : (0.12 * near + 0.55 * win), pulse = 0.5 + 0.5 * Math.sin(performance.now() / 180);
+    if (dark > 0.01) {
+      var g2 = ctx.createRadialGradient(W / 2, H * 0.55, Math.min(W, H) * (0.55 - 0.3 * win), W / 2, H * 0.55, Math.max(W, H) * 0.85);
+      g2.addColorStop(0, 'rgba(0,0,0,0)'); g2.addColorStop(1, 'rgba(2,0,10,' + Math.min(0.92, dark * 1.6).toFixed(3) + ')');
+      ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+    }
+    if (ji.window && ji.choice == null) {
+      var m = Math.min(W, H), s = m * 0.09, y = H * 0.46, a = 0.45 + 0.4 * pulse;
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = '#ffe86a'; ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 3;
+      [-1, 1].forEach(function (d) {
+        var x = W / 2 + d * W * 0.36;
+        ctx.beginPath(); ctx.moveTo(x + d * s, y); ctx.lineTo(x - d * s * 0.2, y - s * 0.7); ctx.lineTo(x - d * s * 0.2, y + s * 0.7); ctx.closePath(); ctx.fill(); ctx.stroke();
+      });
+      ctx.globalAlpha = 0.85; ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(W * 0.3, H * 0.93, W * 0.4, 5);
+      ctx.fillStyle = '#ffe86a'; ctx.fillRect(W * 0.3, H * 0.93, W * 0.4 * clamp(ji.dist / CFG.J_SLOW_DIST, 0, 1), 5);
+      ctx.restore();
+    }
+  }
   function drawRouteChoice(fi, W, H) {
     var m = Math.min(W, H), cw = Math.min(W * 0.3, 132), chh = Math.max(46, m * 0.12), gap = Math.min(W * 0.02, 10), y = H * 0.41, i, r, x, cur = game.lane;      // below the Voice's bubble
     var secs = Math.max(0, Math.ceil(fi.t - 0.001));
@@ -571,6 +601,7 @@
 
     // route choice: 5 s warning with the three paths, then a small tag while running the chosen one
     if (game.state === 'playing') {
+      drawJunction(game.junctionInfo(), W, H);
       var fi = game.forkInfo();
       if (fi && fi.state === 'approach' && fi.shown) drawRouteChoice(fi, W, H);
       else if (fi && fi.state === 'route') drawRouteTag(fi, W, H);
@@ -824,6 +855,8 @@
     if (!game.onGround || game.hook || game.hookArmed > 0 || game.wounded > 0) return false;
     var fk = game.forkInfo();                                      // never during a path, nor in the 14 s before a fork (the Voice's clue and the 5 s choice stay clear)
     if (fk && (fk.state === 'route' || fk.t < Core.CFG.ROUTE_TIME + 9)) return false;
+    var jn = game.junctionInfo();                                  // same for the T-junction: the whole approach and the whole branch belong to the Voice's clue and the turn
+    if (jn && (jn.state === 'turned' || jn.dist < 280)) return false;
     var os = game.obstacles, pz = game.pz, i, o, dz, hazard = -1, any = Infinity;
     for (i = 0; i < os.length; i++) {
       o = os[i]; dz = o.z - pz;
@@ -870,7 +903,15 @@
   VOICE.routeWin = ['You chose well. This time.', 'Hm. Not afraid, then.', 'Brave. Or lucky.'];
   function sayText(txt, ms) { voiceEl.textContent = txt; voiceEl.className = 'show'; voiceHideAt = performance.now() + (ms || 4500); voiceNextOk = performance.now() + (ms || 4500) + 1500; }
   // the Voice's riddle: once per fork, about 12 s before its gate (a long-lived line, text only, never blocks touches)
+  function junctionClue() {                                       // the riddle about the safe branch, once per junction, before the 5 s window
+    var ji = game.junctionInfo();
+    if (!ji || ji.state !== 'approach' || !ji.clue || ji.junction.hinted) return;
+    ji.junction.hinted = true;
+    var ok = ji.junction.branches[ji.lifeDir], pool = CLUES[ok.id] || CLUES.vine;
+    sayText(pool[Math.floor(Math.random() * pool.length)], 7000);
+  }
   function pathClue() {
+    junctionClue();
     var fi = game.forkInfo();
     if (!fi || fi.state !== 'approach' || fi.fork.hinted || fi.t > 12) return;
     var ok = game.routeAt(fi.fork, fi.fork.correct); if (!ok) return;
@@ -883,6 +924,11 @@
     quietUntil = 0; setTimeout(function () { if (game.state === 'playing') say('start', true); }, 900); }
     else if (type === 'stumble') { flash = 1; shake = Math.max(shake, 0.8); say('stumble'); }
     else if (type === 'release') { say('hook'); }
+    else if (type === 'choose') {                               // you swiped at the junction: praise, or sarcasm if you went against the Voice
+      var ji = game.junctionInfo(), jj = game.junction;
+      if (jj && jj.choice != null) say(jj.choice === jj.lifeDir ? 'routeFollow' : (Math.random() < 0.35 ? 'routeDeath' : 'routeDefy'), true);
+    }
+    else if (type === 'turn') { shake = Math.max(shake, 0.35); }
     else if (type === 'route') {                                // the gate arrived: sarcasm if you ignored the Voice
       var f = game.route, rp = f && game.routeAt(f, f.pick); if (!rp) return;
       if (f.pick === f.correct) say('routeFollow', true);
