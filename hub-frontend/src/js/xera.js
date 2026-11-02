@@ -77,7 +77,7 @@ function switchTab(name) {
     $('walletView').querySelector('.scroll').scrollTop = 0;
     if (name === 'wallet') loadWalletTotals();
     if (name === 'hashrate' && token()) loadHashrate();
-    if (name === 'rewards' && token()) loadReferral();
+    if (name === 'profile' && token()) loadReferral();
 }
 
 document.querySelectorAll('[data-tab]').forEach((btn) => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
