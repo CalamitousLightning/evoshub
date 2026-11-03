@@ -226,9 +226,9 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
 .ptile:nth-child(2) { animation-delay: .43s; }
 .ptile:nth-child(3) { animation-delay: .51s; }
 .ptile:nth-child(4) { animation-delay: .57s; }
-.ptile--data { --rgb: 51, 224, 174; }
+.ptile--eco { --rgb: 51, 224, 174; }
 .ptile--xera { --rgb: 124, 139, 255; }
-.ptile--gpt  { --rgb: 255, 176, 72; }
+.ptile--integrated { --rgb: 255, 176, 72; }
 .ptile:hover, .ptile:focus-visible { --lit: 1; transform: translateY(-3px); }
 .ptile:focus-visible { outline: none; }
 .ptile:focus-visible .ptile__face { box-shadow: inset 0 0 0 1px rgba(var(--rgb), .7); }
@@ -370,9 +370,9 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
 .edlg__go:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
 /* "Other products & ecosystem" tile: a full app tile (button) in the same family as EvosData / XERA / EVOSGPT */
-.ptile--more { --rgb: 176, 124, 255; --h: 230px; width: 100%; font: inherit; text-align: left; border: 0; }
-.ptile--more:focus-visible { outline: none; }
-.ptile--more .ptile__name { font-size: clamp(24px, 7.2vw, 48px); }
+.ptile--company { --rgb: 176, 124, 255; --h: 230px; width: 100%; font: inherit; text-align: left; border: 0; }
+.ptile--company:focus-visible { outline: none; }
+.ptile--company .ptile__name { font-size: clamp(24px, 7.2vw, 48px); }
 .edlg__panel--list { max-width: 440px; text-align: left; }
 .edlg__list { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 10px; }
 .edlg__item {
@@ -398,13 +398,13 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
   .ehub__main { padding-top: 20px; }
   .ehub__hero { margin-bottom: 30px; }
   .ehub__deck { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .ptile--data, .ptile--xera, .ptile--gpt { grid-column: 1 / -1; --cut: 26px; --h: 268px; }
+  .ptile--eco, .ptile--xera, .ptile--integrated { grid-column: 1 / -1; --cut: 26px; --h: 268px; }
   .ptile__art { right: -14%; top: 3%; width: 88%; }
   .ptile__open { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--ex-line); justify-content: space-between; }
   .ptile__open::before { display: none; }
   .ptile__open svg { order: 0; width: 44px; height: 44px; padding: 13px; }
   .ptile--soon { --h: 72px; grid-column: 1 / -1; }
-  .ptile--more { grid-column: 1 / -1; --cut: 26px; --h: 230px; }
+  .ptile--company { grid-column: 1 / -1; --cut: 26px; --h: 230px; }
   .ptile--soon .ptile__face { padding: 14px 16px; }
   .ptile--soon .ptile__label { font-size: 8.5px; letter-spacing: .2em; white-space: nowrap; }
   .ptile--soon .ptile__slot { display: none; }
@@ -414,9 +414,9 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
 /* Tablet and up */
 @media (min-width: 640px) {
   .ehub__deck { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ptile--data, .ptile--xera, .ptile--gpt { grid-column: 1 / -1; --h: 280px; }
+  .ptile--eco, .ptile--xera, .ptile--integrated { grid-column: 1 / -1; --h: 280px; }
   .ptile--soon { grid-column: 1 / -1; }
-  .ptile--more { grid-column: 1 / -1; --h: 220px; }
+  .ptile--company { grid-column: 1 / -1; --h: 220px; }
   .ehub__status { display: inline-flex; }
   .ehub__title { font-size: clamp(40px, 7.4vw, 100px); }
 }
@@ -424,17 +424,17 @@ body { font-family: var(--ex-body); -webkit-tap-highlight-color: transparent; ov
 /* Desktop: an asymmetric operating-surface layout */
 @media (min-width: 980px) {
   .ehub__deck { grid-template-columns: repeat(24, minmax(0, 1fr)); grid-template-rows: 300px 300px auto; gap: 16px; }
-  .ptile--data { grid-column: 1 / 15; grid-row: 1 / 3; --h: 100%; --cut: 40px; }
-  .ptile--xera { grid-column: 15 / 25; grid-row: 1; --h: 100%; --cut: 34px; }
-  .ptile--gpt  { grid-column: 15 / 25; grid-row: 2; --h: 100%; --cut: 34px; }
+  .ptile--xera { grid-column: 1 / 15; grid-row: 1 / 3; --h: 100%; --cut: 40px; }
+  .ptile--eco { grid-column: 15 / 25; grid-row: 1; --h: 100%; --cut: 34px; }
+  .ptile--integrated { grid-column: 15 / 25; grid-row: 2; --h: 100%; --cut: 34px; }
   .ptile--soon { grid-column: 1 / 25; grid-row: 3; }
-  .ptile--more { grid-column: 1 / 25; grid-row: 3; --h: 230px; --cut: 34px; }
-  .ptile--data .ptile__name { font-size: clamp(40px, 4.3vw, 66px); }
-  .ptile--data .ptile__art { width: min(70%, 520px); top: 4%; right: -4%; }
-  .ptile--xera .ptile__name { font-size: clamp(40px, 4.2vw, 64px); }
-  .ptile--xera .ptile__art { width: 86%; right: -16%; top: 4%; }
-  .ptile--gpt .ptile__name { font-size: clamp(36px, 3.8vw, 58px); }
-  .ptile--gpt .ptile__art { width: 72%; right: -10%; top: 2%; }
+  .ptile--company { grid-column: 1 / 25; grid-row: 3; --h: 230px; --cut: 34px; }
+  .ptile--xera .ptile__name { font-size: clamp(40px, 4.3vw, 66px); }
+  .ptile--xera .ptile__art { width: min(86%, 560px); top: 4%; right: -8%; }
+  .ptile--eco .ptile__name { font-size: clamp(36px, 3.8vw, 58px); }
+  .ptile--eco .ptile__art { width: 72%; right: -10%; top: 2%; }
+  .ptile--integrated .ptile__name { font-size: clamp(36px, 3.8vw, 58px); }
+  .ptile--integrated .ptile__art { width: 72%; right: -10%; top: 2%; }
 }
 
 /* Reduced motion: present everything immediately, nothing drifts */
