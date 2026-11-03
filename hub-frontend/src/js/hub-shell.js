@@ -11,7 +11,6 @@ const NAV_ITEMS = [
     { key: 'xera',       label: 'XERA',       href: '/xera', icon: 'bolt' },
     { key: 'ecosystem',  label: 'Ecosystem',  href: '/ecosystem.html', icon: 'signal' },
     { key: 'integrated', label: 'Integrated', href: '/integrated.html', icon: 'link' },
-    { key: 'company',    label: 'Company',    href: '/about.html', icon: 'building' },
     { key: 'activity',   label: 'Activity',   href: '/hub/#activity', icon: 'clock' },
     { key: 'settings',   label: 'Settings',   href: '/hub/settings.html', icon: 'gear' },
 ];
