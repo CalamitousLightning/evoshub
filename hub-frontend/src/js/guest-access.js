@@ -11,7 +11,7 @@ const BANNER_KEY = 'evos_guest_banner_dismissed';
 const STYLE_ID = 'evos-guest-style';
 
 const CSS = `
-.evos-guest-banner{position:relative;z-index:900;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 16px;font-size:13px;line-height:1.45;background:rgba(22,163,74,.12);border-bottom:1px solid rgba(22,163,74,.35);color:inherit}
+.evos-guest-banner{position:relative;z-index:900;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:6px 14px;font-size:12px;line-height:1.45;background:rgba(22,163,74,.12);border-bottom:1px solid rgba(22,163,74,.35);color:inherit}
 .evos-guest-banner__msg{flex:1;min-width:220px}
 .evos-guest-banner a{color:var(--green,#16a34a);font-weight:700;text-decoration:none}
 .evos-guest-banner button{background:none;border:0;color:inherit;font-size:18px;line-height:1;cursor:pointer;opacity:.7}
@@ -93,7 +93,7 @@ export function mountGuestBanner() {
     el.className = 'evos-guest-banner';
     el.setAttribute('role', 'status');
     el.innerHTML = `
-        <span class="evos-guest-banner__msg">You're browsing as a guest. Some progress, preferences, or activity may be lost if you leave or refresh this session. Sign in to help save and sync your progress across EVOS products.</span>
+        <span class="evos-guest-banner__msg">Guest mode: sign in to save your progress.</span>
         <a href="${esc(signInUrl(location.pathname.startsWith('/xera') ? '' : here(), 'login'))}">Sign in</a>
         <button type="button" aria-label="Dismiss">&times;</button>`;
     el.querySelector('button').addEventListener('click', () => {

@@ -348,6 +348,19 @@ function setRing(fraction, done) {
     fg.classList.toggle('done', !!done);
 }
 
+// Home hero: ring progress + state colour (idle teal, active blue, ready amber).
+const HERO_CIRC = 2 * Math.PI * 112;
+function setHero(state, fraction) {
+    const card = $('miningCardDash');
+    if (card) card.dataset.state = state;
+    const fg = $('heroRingFg');
+    if (fg) {
+        fg.style.strokeDasharray = String(HERO_CIRC);
+        fg.style.strokeDashoffset = String(HERO_CIRC * (1 - Math.max(0, Math.min(1, fraction))));
+        fg.style.opacity = state === 'idle' ? '0' : '1';
+    }
+}
+
 function setMiningSceneState(state) {
     const scene = $('miningScene');
     if (scene) scene.dataset.state = state;
@@ -391,6 +404,7 @@ function renderMining() {
 
     if (!mining) {
         setRing(0, false);
+        setHero('idle', 0);
         setMiningSceneState('idle');
         $('countdown').textContent = '24:00:00';
         $('countdownDash').textContent = '24:00:00';
@@ -403,7 +417,8 @@ function renderMining() {
         setDashMiningProgress(null, 0);
         [btn, btnDash].forEach((b) => { b.textContent = 'Start mining'; b.classList.remove('ready'); b.disabled = false; });
         setMiningLock(true);
-        if (signedIn) $('ringCaptionDash').textContent = 'Tap here to start mining';
+        $('rewardTextDash').textContent = signedIn ? 'Tap to begin your 24-hour session' : '';
+        if (signedIn) $('ringCaptionDash').textContent = 'Ready to mine';
         return;
     }
 
@@ -422,6 +437,7 @@ function renderMining() {
 
     if (remain <= 0) {
         setRing(1, true);
+        setHero('ready', 1);
         setMiningSceneState('ready');
         $('countdown').textContent = '00:00:00';
         $('countdownDash').textContent = '00:00:00';
@@ -433,10 +449,11 @@ function renderMining() {
         $('rewardTextDash').innerHTML = `<b>Claimable: ${fmt(mining.estimated_reward)} XERA</b>`;
         [btn, btnDash].forEach((b) => { b.textContent = 'Claim XERA'; b.classList.add('ready'); b.disabled = false; });
         setMiningLock(true);
-        $('ringCaptionDash').textContent = 'Session complete. Tap to claim';
+        $('ringCaptionDash').textContent = 'Session complete';
     } else {
         setMiningLock(false);
         setRing(fraction, false);
+        setHero('active', fraction);
         setMiningSceneState('active');
         const s = Math.floor(remain / 1000);
         const h = String(Math.floor(s / 3600)).padStart(2, '0');
