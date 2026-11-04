@@ -1,8 +1,10 @@
 import { initTheme } from './hub-theme.js';
-import { getUser, api } from './evos-session.js';
+import { getUser } from './evos-session.js';
+import { apiFetch as api } from './hub-api.js';
 import { mountHubShell } from './hub-shell.js';
 import { guestGate } from './guest-access.js';
 import { resolveEcosystemLink } from './internal-links.js';
+import { XERA_API } from './xera-public.js';
 
 initTheme();
 
@@ -193,7 +195,7 @@ async function loadEcosystemLinks() {
     const grid = document.getElementById('hubAppGrid');
     if (!grid) return;
     try {
-        const res = await fetch('/api/xera/ecosystem').then((r) => r.json());
+        const res = await fetch(`${XERA_API}/api/xera/ecosystem`).then((r) => r.json());
         const links = res.status === 'ok' ? (res.links || []) : [];
         links.forEach((link) => {
             const dest = resolveEcosystemLink(link.url);
