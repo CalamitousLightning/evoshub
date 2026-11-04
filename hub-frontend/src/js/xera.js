@@ -188,7 +188,6 @@ function renderProfile() {
 }
 
 $('logoutProfile').onclick = () => { doLogout(); };
-$('profileOpenEcosystem').onclick = () => { $('ecosystemModal').hidden = false; loadEcosystem(); };
 $('profileOpenStats').onclick = openStats;
 
 // ================= WALLET / MINING =================

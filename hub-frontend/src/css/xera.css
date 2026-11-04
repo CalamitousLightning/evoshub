@@ -1411,3 +1411,9 @@ body{
   .chain-claim-selector{flex-wrap:wrap}
   .chain-claim-row .btn{width:100%;min-height:44px}
 }
+
+/* BNB network-fee note on the claim card */
+.chain-gas-note{margin:0;padding:9px 12px;border-radius:12px;font-size:.8rem;line-height:1.4;overflow-wrap:anywhere;border:1px solid var(--border,rgba(255,255,255,.12))}
+.chain-gas-note[hidden]{display:none}
+.chain-gas-note.ok{color:var(--text-dim,#9aa6bd);background:rgba(255,255,255,.03)}
+.chain-gas-note.warn{color:#f5b942;background:rgba(245,185,66,.10);border-color:rgba(245,185,66,.45)}
