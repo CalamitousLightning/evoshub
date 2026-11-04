@@ -4,50 +4,104 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#0b2a1f">
-  <title>EVOLUTION 1: THE RUNNER (portrait)</title>
+  <meta name="theme-color" content="#071713">
+  <meta name="color-scheme" content="dark">
+  <title>EVOLUTION 1: THE RUNNER</title>
   <link rel="stylesheet" href="/games/evolution-1-lanes/style.css">
 </head>
 <body>
-  <div id="app">
+  <main id="app" aria-label="Evolution 1: The Runner">
     <canvas id="gl" aria-hidden="true"></canvas>
-    <canvas id="game" aria-label="EVOLUTION 1: THE RUNNER game"></canvas>
+    <canvas id="game" aria-label="Evolution 1: The Runner game"></canvas>
 
-    <button id="hook-btn" type="button" aria-label="Hook">HOOK</button>
-    <button id="pause-btn" type="button" aria-label="Pause" hidden>&#10074;&#10074;</button>
-
-    <div id="overlay" class="overlay" role="dialog" aria-live="polite">
-      <div class="panel">
-        <p class="eyebrow">EVOXERA TECHNOLOGY</p>
-        <h1 id="ov-title">EVOLUTION 1<br><span>THE RUNNER</span></h1>
-        <p id="ov-text" class="text">A laboratory fell from the sky and became a temple in the jungle. Run toward it.</p>
-        <p id="ov-stats" class="stats" hidden></p>
-        <button id="ov-btn" class="btn" type="button">START</button>
-        <button id="store-open" class="btn2" type="button">STORE <span id="wallet-mini"></span></button>
-        <ul id="ov-help" class="help">
-          <li><b>Swipe &larr; &rarr;</b> change lane</li>
-          <li><b>Swipe &uarr;</b> jump &nbsp; <b>Swipe &darr;</b> slide</li>
-          <li><b>Tap / HOOK</b> swing over chasms &amp; pull up ledges</li>
-          <li class="kbd">Keyboard: arrows / WASD, Space = jump, X = hook</li>
-        </ul>
-      </div>
+    <div class="game-vignette" aria-hidden="true"></div>
+    <div class="game-brand" aria-hidden="true">
+      <span class="brand-mark">E<span>X</span></span>
+      <span class="brand-name">EVOXERA <i>TECHNOLOGY</i></span>
     </div>
 
-    <div id="store" class="overlay" role="dialog" aria-label="Store" hidden>
-      <div class="panel store-panel">
-        <p class="eyebrow">EVOLUTION 1 &middot; STORE</p>
-        <div class="st-top"><canvas id="st-prev" width="150" height="190" aria-hidden="true"></canvas>
-          <div><div class="st-wallet"><img src="/games/evolution-1-lanes/xera-coin.png" alt="" width="26" height="26"> <b id="st-coins">0</b></div>
-          <p class="st-note">Earn coins on runs. Coins are saved on this device.</p></div></div>
-        <div id="st-list"></div>
-        <button id="store-close" class="btn" type="button">BACK</button>
-      </div>
+    <div class="game-topline" aria-hidden="true">
+      <span class="topline-dot"></span>
+      <span>FIELD EXPEDITION</span>
+      <span class="topline-rule"></span>
+      <span>SECTOR 01</span>
     </div>
-  </div>
+
+    <div id="voice" aria-live="polite"></div>
+
+    <button id="pause-btn" type="button" aria-label="Pause" hidden>
+      <span class="pause-glyph"><i></i><i></i></span>
+    </button>
+
+    <button id="hook-btn" type="button" aria-label="Hook">
+      <span class="hook-orbit" aria-hidden="true"></span>
+      <span class="hook-symbol" aria-hidden="true">↗</span>
+      <span class="hook-label">HOOK</span>
+    </button>
+
+    <section id="overlay" class="overlay overlay-menu" role="dialog" aria-modal="true" aria-live="polite">
+      <div class="menu-backdrop" aria-hidden="true">
+        <div class="menu-grid"></div>
+        <div class="menu-sun"></div>
+        <div class="menu-scan"></div>
+      </div>
+      <div class="menu-shell">
+        <header class="menu-header">
+          <div class="wordmark">
+            <span class="wordmark-icon">E<span>X</span></span>
+            <span class="wordmark-copy"><b>EVOXERA</b><small>TECHNOLOGY</small></span>
+          </div>
+          <span class="edition-tag"><i></i> ORIGINAL EXPEDITION</span>
+        </header>
+
+        <div class="menu-content">
+          <div class="menu-kicker"><span>01</span> AN UNKNOWN WORLD AWAITS</div>
+          <h1 id="ov-title">EVOLUTION <em>1</em><br><span>THE RUNNER</span></h1>
+          <div class="title-rule"><i></i><span>RUN · CHOOSE · SURVIVE</span><i></i></div>
+          <p id="ov-text" class="text">A laboratory fell from the sky and became a temple in the jungle. Run toward it.</p>
+          <p id="ov-stats" class="stats" hidden></p>
+
+          <div class="menu-actions">
+            <button id="ov-btn" class="btn btn-primary" type="button">
+              <span class="btn-index">01</span><span class="btn-copy">START EXPEDITION</span><span class="btn-arrow">↗</span>
+            </button>
+            <button id="store-open" class="btn btn-secondary" type="button">
+              <span class="store-glyph">◇</span><span>FIELD STORE</span><span id="wallet-mini" class="wallet-mini"></span>
+            </button>
+          </div>
+
+          <div class="menu-footer">
+            <ul id="ov-help" class="help">
+              <li><b>← →</b><span>CHANGE LANE</span></li>
+              <li><b>↑</b><span>JUMP</span></li>
+              <li><b>↓</b><span>SLIDE</span></li>
+              <li><b>HOOK</b><span>SWING / PULL</span></li>
+              <li class="kbd">KEYBOARD: ARROWS / WASD · SPACE · X</li>
+            </ul>
+            <div class="menu-signoff"><span>CREATING EVOLUTION</span><b>FOR THE FUTURE.</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="store" class="overlay overlay-store" role="dialog" aria-modal="true" aria-label="Field store" hidden>
+      <div class="store-shell">
+        <header class="store-header">
+          <div><p class="eyebrow">EVOLUTION 1 / EQUIPMENT</p><h2>FIELD <span>STORE</span></h2></div>
+          <div class="store-wallet"><img src="/games/evolution-1-lanes/xera-coin.png" alt="" width="28" height="28"><b id="st-coins">0</b><small>COINS</small></div>
+        </header>
+        <div class="store-feature">
+          <div class="store-preview-wrap"><canvas id="st-prev" width="150" height="190" aria-hidden="true"></canvas><span class="preview-ring"></span></div>
+          <div class="store-feature-copy"><span class="feature-label">YOUR NEXT EVOLUTION</span><h3>GEAR UP.<br>GO FURTHER.</h3><p class="st-note">Earn coins on every run. Unlock equipment and make the expedition your own.</p></div>
+        </div>
+        <div id="st-list" class="store-list"></div>
+        <button id="store-close" class="btn btn-primary store-back" type="button"><span class="btn-arrow back-arrow">←</span><span class="btn-copy">BACK TO EXPEDITION</span></button>
+      </div>
+    </section>
+  </main>
 
   <script src="/games/evolution-1-lanes/core.js"></script>
   <script src="/games/evolution-1-lanes/main.js"></script>
-  <!-- optional real-3D renderer; does nothing (2D stays) if WebGL is missing or ?mode=2d -->
   <script type="module" src="/games/evolution-1-lanes/render3d.js"></script>
 </body>
 </html>
