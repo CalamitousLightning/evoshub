@@ -17,6 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="../css/app-home.css">
+  <link rel="stylesheet" href="../css/updates.css">
 </head>
 <body class="ah-body">
   <div class="ah">
@@ -48,6 +49,16 @@
           <span class="ah-xera-pill" id="xeraCardPill">Checking&hellip;</span>
         </div>
         <span class="ah-xera-chev" aria-hidden="true">&rsaquo;</span>
+      </a>
+
+      <!-- Admin announcements: latest post preview; the full feed lives at /updates. Public, read-only. -->
+      <a class="ah-updates" id="updatesCard" href="/updates" aria-label="Open updates">
+        <div class="ah-updates-head">
+          <span class="ah-updates-title">Updates</span>
+          <span class="ah-updates-count" id="updatesCount" hidden></span>
+          <span class="ah-updates-all">See all &rsaquo;</span>
+        </div>
+        <div class="ah-updates-row" id="updatesRow"><p class="ah-updates-empty">Loading&hellip;</p></div>
       </a>
 
       <h2 class="ah-title">Ecosystem</h2>

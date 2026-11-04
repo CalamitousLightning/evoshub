@@ -9,6 +9,7 @@ import { apiFetch as api } from './hub-api.js'
 import { requireAuthFor } from './guest-access.js'
 import { fetchPublicJson } from './xera-public.js'
 import { resolveEcosystemLink } from './internal-links.js'
+import { fetchUpdates, getSeen, ago as updatesAgo } from './updates-core.js'
 
 initInstallButton(document.getElementById('install-btn'))
 
@@ -113,3 +114,33 @@ $('barActivity').addEventListener('click', (e) => {
 
 loadXera()
 loadActivity()
+
+// ---- Updates card: newest announcement + unread count (read-only, public, no sign-in needed) ----
+async function loadUpdatesCard() {
+  const row = $('updatesRow')
+  try {
+    const { updates, hasMore } = await fetchUpdates({ limit: 10 })
+    if (!updates.length) { row.innerHTML = '<p class="ah-updates-empty">No updates yet.</p>'; return }
+    const seen = getSeen()
+    const fresh = updates.filter((u) => u.id > seen).length
+    if (fresh) {
+      $('updatesCount').textContent = `${fresh >= 10 && hasMore ? '10+' : fresh} new`
+      $('updatesCount').hidden = false
+      $('updatesCard').classList.add('has-new')
+    }
+    const top = updates[0]
+    row.textContent = ''
+    if (top.images && top.images[0]) {
+      const t = document.createElement('img'); t.className = 'ah-updates-thumb'; t.src = top.images[0].url; t.alt = ''; t.loading = 'lazy'; t.width = 54; t.height = 54
+      t.addEventListener('error', () => t.remove(), { once: true })
+      row.appendChild(t)
+    }
+    const box = document.createElement('div'); box.style.minWidth = '0'
+    const txt = document.createElement('p'); txt.className = 'ah-updates-text'
+    txt.textContent = top.body || (top.images && top.images.length > 1 ? `${top.images.length} new images` : 'New image')   // textContent only
+    const tm = document.createElement('p'); tm.className = 'ah-updates-time'; tm.textContent = updatesAgo(top.created_at)
+    box.append(txt, tm)
+    row.appendChild(box)
+  } catch (e) { row.innerHTML = '<p class="ah-updates-empty">Tap to see the latest updates.</p>' }
+}
+loadUpdatesCard()

@@ -45,6 +45,8 @@ export default defineConfig({
         adminWebsiteChat:  'src/pages/admin-website-chat.html',
         adminXeraWallet:   'src/pages/admin-xera-wallet.html',
         adminXeraKyc:      'src/pages/admin-xera-kyc.html',
+        adminUpdates:      'src/pages/admin-updates.html',
+        updates:           'src/pages/updates.html',
         comingSoon:        'src/pages/coming-soon.html',
         notFound:          'src/pages/404.html',
         xera:               'src/pages/xera/index.html',
