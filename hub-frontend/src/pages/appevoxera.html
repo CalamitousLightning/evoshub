@@ -33,6 +33,24 @@
       </div>
     </header>
 
+    <!-- Shown only to active admin agents (appevoxera.js checks /api/updates/agent-status). Opens website tools. -->
+    <button type="button" class="adm" id="admStrip" hidden aria-haspopup="dialog">
+      <span class="adm-ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Zm-1.2 14-3.3-3.3 1.4-1.4 1.9 1.9 4.6-4.6 1.4 1.4-6 6Z"/></svg></span>
+      <span class="adm-tx"><b>Evoxera Admin</b><span class="s">Post updates &middot; DashXERA &middot; Admin login</span></span>
+      <span class="adm-chev" aria-hidden="true">&rsaquo;</span>
+    </button>
+    <div class="adm-scrim" id="admScrim" hidden>
+      <div class="adm-sheet" role="dialog" aria-modal="true" aria-labelledby="admTitle">
+        <div class="adm-grab"></div>
+        <h3 id="admTitle">Evoxera Admin</h3>
+        <p class="adm-d">Opens on the website in a new tab.</p>
+        <a class="adm-opt" href="/admin-updates.html" target="_blank" rel="noopener"><span class="adm-oic" style="background:linear-gradient(135deg,#8b6bff,#4c7eff)">&#9998;</span><span><b>Post an update</b><span class="s">Announcements for everyone</span></span><span class="adm-chev">&nearr;</span></a>
+        <a class="adm-opt" href="/evosdata/dashxera" target="_blank" rel="noopener"><span class="adm-oic" style="background:linear-gradient(135deg,#12b886,#1fb6ff)">D</span><span><b>DashXERA</b><span class="s">Agent dashboard</span></span><span class="adm-chev">&nearr;</span></a>
+        <a class="adm-opt" href="/admin-login.html" target="_blank" rel="noopener"><span class="adm-oic" style="background:linear-gradient(135deg,#f59f00,#e8590c)">H</span><span><b>EVOS Hub admin</b><span class="s">Admin login</span></span><span class="adm-chev">&nearr;</span></a>
+        <button type="button" class="adm-close" id="admClose">Close</button>
+      </div>
+    </div>
+
     <main class="ah-main">
 
       <section class="ah-greet" aria-label="Greeting">

@@ -1,6 +1,6 @@
-// Admin page: post, edit and delete app updates. Same admin session as the rest of the console
+// Admin "Post update" screen (app style). Same admin session as the rest of the console
 // (sessionStorage token from admin-login.js). The BACKEND decides who may post — it re-checks
-// admin_agents.is_active on every call — this page only hides itself from people without a session.
+// admin_agents.is_active on every call — this page only hides its controls from people without a session.
 import { fetchUpdates, renderPost, toast } from './updates-core.js'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ||
@@ -11,34 +11,58 @@ const MAX_SIDE = 1600
 
 const $ = (id) => document.getElementById(id)
 const auth = () => ({ Authorization: `Bearer ${sessionStorage.getItem(TOKEN_KEY) || ''}` })
-const toLogin = () => { window.location.href = '/admin-login.html' }
 
+function showGate() {
+  $('au-gate').hidden = false
+  $('au-main').hidden = true
+  $('au-form').hidden = true
+  $('admin-signout').hidden = true
+  $('admin-whoami').textContent = ''
+}
+function showApp() {
+  $('au-gate').hidden = true
+  $('au-main').hidden = false
+  $('au-form').hidden = false
+  $('admin-signout').hidden = false
+}
+
+// ---- gate the screen behind a real server-side admin check ----
 async function guard() {
-  if (!sessionStorage.getItem(TOKEN_KEY)) return toLogin()
+  if (!sessionStorage.getItem(TOKEN_KEY)) return showGate()
   try {
     const res = await fetch(`${API_BASE}/api/admin/me`, { headers: auth() })
-    if (!res.ok) { sessionStorage.removeItem(TOKEN_KEY); return toLogin() }
+    if (!res.ok) { sessionStorage.removeItem(TOKEN_KEY); return showGate() }
     const d = await res.json()
-    $('admin-whoami').textContent = d.user?.display_name || d.user?.username || d.user?.email || 'Agent'
-  } catch (e) { /* offline blip: stay, the first request will tell */ }
+    $('admin-whoami').textContent = d.user?.display_name || d.user?.username || ''
+    showApp()
+    load(true)
+  } catch (e) {
+    showApp()                      // offline blip: keep the session, the first request will tell
+    load(true)
+  }
 }
-$('admin-signout').addEventListener('click', () => { sessionStorage.removeItem(TOKEN_KEY); toLogin() })
+$('admin-signout').addEventListener('click', () => { sessionStorage.removeItem(TOKEN_KEY); showGate() })
 
-function msg(text, kind) { const m = $('au-msg'); m.textContent = text || ''; m.className = 'au-msg ' + (kind || '') }
+function msg(text, kind) { const m = $('au-msg'); m.textContent = text || ''; m.className = 'ad-msg ' + (kind || '') }
 
-// ---------------------------------------------------------------- images: shrink in the browser (also drops EXIF/GPS)
+// ---- composer: grows with the text ----
+const ta = $('au-body')
+function grow() { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 140) + 'px' }
+ta.addEventListener('input', () => { grow(); $('au-chars').textContent = `${ta.value.length} / 4000` })
+
+// ---- images: shrink in the browser (also drops EXIF/GPS); the server re-encodes again ----
 let picked = []   // [{ blob, url }]
 
 async function shrink(file) {
   if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Only JPEG, PNG or WebP images.')
   let bmp
-  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }) } catch (e) { return file }   // server re-validates anyway
+  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }) } catch (e) { return file }
   const k = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height))
   const w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k))
   const c = document.createElement('canvas'); c.width = w; c.height = h
   const ctx = c.getContext('2d')
   const toBlob = (type, q) => new Promise((r) => c.toBlob(r, type, q))
-  if (file.type === 'image/png') {                       // logos / flyers: keep transparency if it fits
+  if (file.type === 'image/png') {
     ctx.drawImage(bmp, 0, 0, w, h)
     const png = await toBlob('image/png')
     if (png && png.size <= 1.5 * 1024 * 1024) return png
@@ -52,13 +76,13 @@ async function shrink(file) {
 function renderPicked() {
   const box = $('au-previews'); box.textContent = ''
   picked.forEach((p, i) => {
-    const d = document.createElement('div'); d.className = 'au-prev'
+    const d = document.createElement('div'); d.className = 'ad-prev'
     const im = document.createElement('img'); im.src = p.url; im.alt = `Image ${i + 1}`
     const x = document.createElement('button'); x.type = 'button'; x.textContent = '×'; x.setAttribute('aria-label', `Remove image ${i + 1}`)
     x.addEventListener('click', () => { URL.revokeObjectURL(p.url); picked.splice(i, 1); renderPicked() })
     d.append(im, x); box.appendChild(d)
   })
-  $('au-count').textContent = `${picked.length} of ${MAX_IMAGES}`
+  $('au-count').textContent = `${picked.length} of ${MAX_IMAGES} images`
   $('au-add').disabled = picked.length >= MAX_IMAGES
 }
 
@@ -73,12 +97,10 @@ $('au-files').addEventListener('change', async (e) => {
   renderPicked()
 })
 
-$('au-body').addEventListener('input', () => { $('au-chars').textContent = `${$('au-body').value.length} / 4000` })
-
-// ---------------------------------------------------------------- post
+// ---- post ----
 $('au-form').addEventListener('submit', async (e) => {
   e.preventDefault()
-  const body = $('au-body').value.trim()
+  const body = ta.value.trim()
   if (!body && !picked.length) return msg('Write something or add an image.', 'error')
   const btn = $('au-send'); btn.disabled = true; btn.textContent = 'Posting…'; msg('')
   try {
@@ -86,43 +108,44 @@ $('au-form').addEventListener('submit', async (e) => {
     fd.append('body', body)
     picked.forEach((p, i) => fd.append('images', p.blob, `image-${i + 1}.${p.blob.type === 'image/png' ? 'png' : 'jpg'}`))
     const res = await fetch(`${API_BASE}/api/admin/updates`, { method: 'POST', headers: auth(), body: fd })   // no Content-Type: the browser sets the multipart boundary
-    if (res.status === 401 || res.status === 403) return toLogin()
+    if (res.status === 401 || res.status === 403) { sessionStorage.removeItem(TOKEN_KEY); return showGate() }
     const j = await res.json().catch(() => ({}))
     if (!res.ok) return msg(j.detail || 'Could not post. Try again.', 'error')
-    $('au-body').value = ''; $('au-chars').textContent = '0 / 4000'
+    ta.value = ''; grow(); $('au-chars').textContent = '0 / 4000'
     picked.forEach((p) => URL.revokeObjectURL(p.url)); picked = []; renderPicked()
     msg('Posted. It is live in the app now.', 'ok')
+    listEl.querySelectorAll('.up-state').forEach((n) => n.remove())
     listEl.prepend(withControls(j.update))
-    listEl.querySelectorAll('.au-hint').forEach((n) => n.remove())
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (err) { msg('Network problem. Check your connection and try again.', 'error') }
-  finally { btn.disabled = false; btn.textContent = 'Post update' }
+  finally { btn.disabled = false; btn.textContent = 'Post' }
 })
 
-// ---------------------------------------------------------------- list + edit/delete
+// ---- list + edit / delete ----
 const listEl = $('au-list')
 let oldest = null
 
 function withControls(post) {
   const { el } = renderPost(post)
-  const manage = document.createElement('div'); manage.className = 'au-manage'
-  const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'btn btn--ghost'; edit.textContent = 'Edit text'
-  const del = document.createElement('button'); del.type = 'button'; del.className = 'btn btn--ghost'; del.textContent = 'Delete'
+  const manage = document.createElement('div'); manage.className = 'ad-manage'
+  const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'up-btn'; edit.textContent = 'Edit text'
+  const del = document.createElement('button'); del.type = 'button'; del.className = 'up-btn danger'; del.textContent = 'Delete'
   manage.append(edit, del); el.appendChild(manage)
 
   edit.addEventListener('click', () => {
-    if (el.querySelector('.au-edit')) return
-    const wrap = document.createElement('div'); wrap.className = 'au-edit'
-    const ta = document.createElement('textarea'); ta.className = 'form-input'; ta.rows = 4; ta.maxLength = 4000; ta.value = post.body || ''; ta.setAttribute('aria-label', 'Edit text')
-    const row = document.createElement('div'); row.className = 'au-manage'
-    const save = document.createElement('button'); save.type = 'button'; save.className = 'btn btn--primary'; save.textContent = 'Save'
-    const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'btn btn--ghost'; cancel.textContent = 'Cancel'
-    row.append(save, cancel); wrap.append(ta, row); manage.before(wrap); ta.focus()
+    if (el.querySelector('.ad-edit')) return
+    const wrap = document.createElement('div'); wrap.className = 'ad-edit'
+    const t = document.createElement('textarea'); t.className = 'ad-ta'; t.maxLength = 4000; t.value = post.body || ''; t.setAttribute('aria-label', 'Edit text')
+    const row = document.createElement('div'); row.className = 'ad-manage'
+    const save = document.createElement('button'); save.type = 'button'; save.className = 'ad-primary'; save.textContent = 'Save'
+    const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'up-btn'; cancel.textContent = 'Cancel'
+    row.append(save, cancel); wrap.append(t, row); manage.before(wrap); t.focus()
     cancel.addEventListener('click', () => wrap.remove())
     save.addEventListener('click', async () => {
       save.disabled = true
       try {
-        const res = await fetch(`${API_BASE}/api/admin/updates/${post.id}`, { method: 'PATCH', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ body: ta.value }) })
-        if (res.status === 401 || res.status === 403) return toLogin()
+        const res = await fetch(`${API_BASE}/api/admin/updates/${post.id}`, { method: 'PATCH', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ body: t.value }) })
+        if (res.status === 401 || res.status === 403) { sessionStorage.removeItem(TOKEN_KEY); return showGate() }
         const j = await res.json().catch(() => ({}))
         if (!res.ok) { toast(j.detail || 'Could not save'); return }
         el.replaceWith(withControls(j.update)); toast('Saved')
@@ -135,7 +158,7 @@ function withControls(post) {
     del.disabled = true
     try {
       const res = await fetch(`${API_BASE}/api/admin/updates/${post.id}`, { method: 'DELETE', headers: auth() })
-      if (res.status === 401 || res.status === 403) return toLogin()
+      if (res.status === 401 || res.status === 403) { sessionStorage.removeItem(TOKEN_KEY); return showGate() }
       const j = await res.json().catch(() => ({}))
       if (!res.ok) { toast(j.detail || 'Could not delete'); del.disabled = false; return }
       el.remove(); toast('Deleted')
@@ -144,16 +167,19 @@ function withControls(post) {
   return el
 }
 
+function note(text) { listEl.textContent = ''; const p = document.createElement('p'); p.className = 'up-state'; p.textContent = text; listEl.appendChild(p) }
+
 async function load(first) {
   try {
     const { updates, hasMore } = await fetchUpdates({ limit: 15, before: first ? undefined : oldest })
     if (first) listEl.textContent = ''
-    if (first && !updates.length) { const p = document.createElement('p'); p.className = 'au-hint'; p.textContent = 'Nothing published yet.'; listEl.appendChild(p) }
+    if (first && !updates.length) note('Nothing published yet. Write your first update below.')
     updates.forEach((u) => listEl.appendChild(withControls(u)))
     if (updates.length) oldest = updates[updates.length - 1].id
     $('au-more').hidden = !hasMore
-  } catch (e) { if (first) listEl.textContent = 'Could not load published updates.' }
+  } catch (e) { if (first) note('Could not load published updates.') }
 }
 $('au-more').addEventListener('click', () => load(false))
 
-guard(); renderPicked(); load(true)
+renderPicked()
+guard()

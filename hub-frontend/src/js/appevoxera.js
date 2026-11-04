@@ -144,3 +144,21 @@ async function loadUpdatesCard() {
   } catch (e) { row.innerHTML = '<p class="ah-updates-empty">Tap to see the latest updates.</p>' }
 }
 loadUpdatesCard()
+
+// ---- Admin shortcut: only for an active admin agent. This just shows a button; every admin page still needs the admin login. ----
+async function initAdminStrip() {
+  if (!signedIn) return
+  let res
+  try { res = await api('/api/updates/agent-status') } catch (e) { return }
+  if (!res || res.is_agent !== true) return
+  const strip = $('admStrip'), scrim = $('admScrim')
+  strip.hidden = false
+  const open = () => { scrim.hidden = false; document.addEventListener('keydown', onKey); $('admClose').focus() }
+  const close = () => { scrim.hidden = true; document.removeEventListener('keydown', onKey); strip.focus() }
+  const onKey = (e) => { if (e.key === 'Escape') close() }
+  strip.addEventListener('click', open)
+  $('admClose').addEventListener('click', close)
+  scrim.addEventListener('click', (e) => { if (e.target === scrim) close() })
+  scrim.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setTimeout(close, 0)))
+}
+initAdminStrip()

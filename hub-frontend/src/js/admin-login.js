@@ -18,6 +18,12 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ||
 const DASHBOARD_URL = "admin-website-chat.html";
 const TOKEN_STORAGE_KEY = "evoshub_admin_token";
 
+// Optional ?next=/some-page — same-site relative paths only (no "//", no scheme), else the default dashboard.
+function destination() {
+  const next = new URLSearchParams(location.search).get("next") || "";
+  return /^\/[A-Za-z0-9][A-Za-z0-9_\-./]*$/.test(next) && !next.includes("..") ? next : DASHBOARD_URL;
+}
+
 const form = document.getElementById("admin-login-form");
 const emailInput = document.getElementById("al-email");
 const passwordInput = document.getElementById("al-password");
@@ -49,7 +55,7 @@ function setLoading(isLoading) {
       headers: { Authorization: `Bearer ${existingToken}` },
     });
     if (res.ok) {
-      window.location.href = DASHBOARD_URL;
+      window.location.href = destination();
     } else {
       sessionStorage.removeItem(TOKEN_STORAGE_KEY);
     }
@@ -119,7 +125,7 @@ form.addEventListener("submit", async (event) => {
     // machine. Swap to localStorage only if "remember me" is a
     // requirement, and add an explicit opt-in checkbox for it.
     sessionStorage.setItem(TOKEN_STORAGE_KEY, data.token);
-    window.location.href = DASHBOARD_URL;
+    window.location.href = destination();
     return;
   }
 
