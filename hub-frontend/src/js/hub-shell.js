@@ -20,6 +20,7 @@ const NAV_ITEMS = [
 const MOBILE_ITEMS = [
     { key: 'overview',  label: 'Home',      href: '/hub/', icon: 'grid' },
     { key: 'ecosystem', label: 'Ecosystem', href: '/ecosystem.html', icon: 'signal' },
+    { key: 'xera',      label: 'XERA',      href: '/xera', icon: 'bolt', raised: true },
     { key: 'activity',  label: 'Activity',  href: '/hub/#activity', icon: 'clock' },
     { key: 'settings',  label: 'Profile',   href: '/hub/settings.html', icon: 'user' },
 ];
@@ -89,7 +90,11 @@ export function mountHubShell(activeKey) {
 
     const bottomNav = document.getElementById('hubBottomNav');
     if (bottomNav) {
-        bottomNav.innerHTML = MOBILE_ITEMS.map(item => `
+        bottomNav.innerHTML = MOBILE_ITEMS.map(item => item.raised ? `
+            <a class="hub-bottom-link hub-bottom-mid" href="${item.href}" aria-label="${item.label}">
+                ${icon(item.icon, 'hub-bottom-icon')}
+            </a>
+        ` : `
             <a class="hub-bottom-link${item.key === activeKey ? ' active' : ''}" href="${item.href}">
                 ${icon(item.icon, 'hub-bottom-icon')}
                 <span>${item.label}</span>

@@ -1,4 +1,4 @@
-import { THEMES, getTheme, applyTheme, initTheme } from './theme.js';
+import { THEMES, getTheme, applyTheme, initTheme } from './hub-theme.js';
 import { getUser } from './evos-session.js';
 import { mountHubShell } from './hub-shell.js';
 import { guestGate } from './guest-access.js';

@@ -19,7 +19,7 @@
 
   var HUB_PATH = '/appevoxera';
   // Pages that ARE the hub (or its public front door): nothing to go back to.
-  var HIDE_ON = ['/', '/index.html', '/home', '/home.html', '/appevoxera', '/appevoxera.html', '/xera', '/xera/', '/xera/index.html', '/xera/dashboard'];
+  var HIDE_ON = ['/', '/index.html', '/home', '/home.html', '/appevoxera', '/appevoxera.html', '/xera', '/xera/', '/xera/index.html', '/xera/dashboard', '/hub', '/hub/index.html'];
   function hidden() {
     var p = location.pathname.replace(/\/+$/, '') || '/';
     return HIDE_ON.indexOf(p) !== -1;

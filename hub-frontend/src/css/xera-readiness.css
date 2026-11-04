@@ -118,7 +118,7 @@
 /* the hero is the primary action: keep its card chrome calm, the button does the blinking */
 .mini-card.home-hero.needs-mining{animation:none;border:1px solid rgba(var(--hc),.35)}
 @media(prefers-reduced-motion:reduce){.hh-dots,.home-hero .hh-cta{animation:none!important}}
-#dashGrid .rd-status-card:last-child{grid-column:1/-1;aspect-ratio:auto}
+/* Notifications, Verification, Transfer fee, Hashrate: a plain 2x2 grid */
 
 /* ---- Bottom bar: five tabs, Mine raised in the centre ---- */
 .bottom-tab-item.bt-mid{flex:none;width:60px;height:60px;margin:-26px 6px 0;padding:0;justify-content:center;border-radius:50%;color:#04121a;

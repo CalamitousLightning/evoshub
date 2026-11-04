@@ -389,3 +389,61 @@ body.hub-body{
 @media (prefers-reduced-motion: reduce){
     *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
 }
+
+/* ================= HUB HOME (phone-style) ================= */
+.hub-home{max-width:760px}
+.hh-greet{margin:0 0 18px}
+.hh-greet-eyebrow{margin:0 0 4px;font-size:14px;color:var(--text-dim)}
+.hh-greet-name{margin:0;font-family:var(--font-display);font-weight:700;font-size:clamp(26px,5vw,34px);letter-spacing:-.4px}
+
+/* XERA status card */
+.hh-xera{--hc:51,224,174;display:flex;align-items:center;gap:16px;padding:16px 18px;margin-bottom:28px;border-radius:22px;
+  border:1px solid rgba(var(--hc),.45);background:linear-gradient(135deg,rgba(var(--hc),.10),rgba(var(--hc),.02) 70%),var(--surface);
+  box-shadow:0 18px 40px -26px rgba(var(--hc),.7);color:inherit;transition:transform .15s ease,border-color .2s ease}
+.hh-xera:active{transform:scale(.985)}
+.hh-xera:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.hh-xera[data-state="mining"]{--hc:76,126,255}
+.hh-xera[data-state="claim"]{--hc:245,185,66}
+.hh-xera[data-state="unknown"],.hh-xera[data-state="loading"]{--hc:140,150,180}
+.hh-xera-coin{width:64px;height:64px;border-radius:50%;object-fit:cover;flex-shrink:0;box-shadow:0 0 28px rgba(var(--hc),.45)}
+.hh-xera-body{flex:1;min-width:0}
+.hh-xera-label{margin:0 0 2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim)}
+.hh-xera-balance{margin:0 0 8px;font-family:var(--font-display);line-height:1.1;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.hh-xera-balance b{font-size:clamp(24px,6vw,30px);font-weight:700;font-variant-numeric:tabular-nums}
+.hh-xera-balance small{font-size:13px;font-weight:600;color:var(--text-dim)}
+.hh-xera-pill{display:inline-block;max-width:100%;padding:4px 12px;border-radius:999px;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;
+  color:rgb(var(--hc));background:rgba(var(--hc),.14)}
+.hh-xera-chev{font-size:26px;line-height:1;color:rgb(var(--hc));flex-shrink:0}
+
+/* Icon grid (same look as the Ecosystem page) */
+.hh-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 8px;justify-items:center;margin-bottom:30px}
+.hh-app{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:104px;color:var(--text);-webkit-tap-highlight-color:transparent}
+.hh-tile{--c:var(--accent);position:relative;width:72px;height:72px;border-radius:21px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#fff;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--c) 82%,#fff),var(--c) 55%,color-mix(in srgb,var(--c) 70%,#000));
+  box-shadow:0 10px 22px -10px var(--c),inset 0 1px 0 rgba(255,255,255,.28);transition:transform .15s ease}
+.hh-app:hover .hh-tile{transform:translateY(-3px) scale(1.04)}
+.hh-app:active .hh-tile{transform:scale(.94)}
+.hh-app:focus-visible{outline:none}
+.hh-app:focus-visible .hh-tile{outline:2px solid var(--accent);outline-offset:3px}
+.hh-tile svg{width:32px;height:32px}
+.hh-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hh-app-name{font-size:12.5px;line-height:1.25;text-align:center;word-break:break-word}
+.hh-app--soon{opacity:.45;pointer-events:none}
+
+.hh-activity{margin-bottom:18px}
+.hh-support{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--radius-md);border:1px solid var(--border);
+  background:var(--surface);font-size:13.5px;color:var(--text-dim)}
+.hh-support:hover{color:var(--text)}
+.hh-support-icon{display:inline-flex;width:34px;height:34px;border-radius:10px;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);flex-shrink:0}
+.hh-support-icon svg{width:18px;height:18px}
+
+/* Bottom bar: five slots, XERA raised in the centre */
+.hub-bottom-nav{align-items:flex-end;justify-content:space-between;border-radius:22px 22px 0 0}
+.hub-bottom-link{min-width:0}
+.hub-bottom-link.hub-bottom-mid{flex:none;width:58px;height:58px;margin:-26px 6px 0;padding:0;justify-content:center;border-radius:50%;color:#04121a;
+  background:linear-gradient(135deg,#4af0c6,#1fb6ff);box-shadow:0 10px 26px -6px rgba(51,224,174,.6),0 0 0 6px rgba(6,8,16,.95)}
+.hub-bottom-link.hub-bottom-mid .hub-bottom-icon{width:26px;height:26px;fill:currentColor;stroke:none}
+
+@media (min-width:821px){
+  .hh-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+}

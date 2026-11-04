@@ -681,6 +681,23 @@ function loadHashrate() {
     return hashrateLoading;
 }
 
+// Home "Hashrate" card: Active / Awaiting payment / Inactive, from the person's own sessions.
+function renderHashCard() {
+    const card = $('hashCard');
+    if (!card) return;
+    const list = isGuest() ? [] : (hashrateSessions || []);
+    const active = list.find((s) => s.status === 'ACTIVE');
+    const pending = !active && list.find((s) => s.status === 'PENDING_PAYMENT');
+    const v = active
+        ? { tone: 'ok', label: 'Active', hint: `${hashrateTierLabel(active.tier_id)} is boosting your mining` }
+        : pending
+            ? { tone: 'warn', label: 'Awaiting payment', hint: 'Activates once payment is confirmed' }
+            : { tone: 'neutral', label: 'Inactive', hint: 'Tap to see plans' };
+    card.dataset.tone = v.tone;
+    $('hashLabel').textContent = v.label;
+    $('hashHint').textContent = v.hint;
+}
+
 async function doLoadHashrate() {
     if (!$('hashrateGrid')) return;
     $('hashrateError').textContent = '';
@@ -711,6 +728,7 @@ async function doLoadHashrate() {
     } else if (catalogRes.status === 'fulfilled') {
         $('hashrateError').textContent = sessionsRes.reason?.message || 'Could not load your hashrate sessions.';
     }
+    renderHashCard();
 }
 
 // USDT (BNB Smart Chain) is the main rail; Paystack stays as the alternative.

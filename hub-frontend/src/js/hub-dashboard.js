@@ -1,4 +1,4 @@
-import { initTheme } from './theme.js';
+import { initTheme } from './hub-theme.js';
 import { getUser, api } from './evos-session.js';
 import { mountHubShell } from './hub-shell.js';
 import { guestGate } from './guest-access.js';
@@ -9,33 +9,83 @@ initTheme();
 if (guestGate('view your dashboard')) {
     const user = getUser();
     const nameEl = document.getElementById('welcomeName');
-    if (nameEl) nameEl.textContent = user?.full_name || user?.username || 'there';
+    if (nameEl) nameEl.textContent = firstName(user);
 
     mountHubShell('overview');
+    wireTileImages(document.getElementById('hubAppGrid'));
     loadXeraCard();
     loadActivity();
     loadEcosystemLinks();
 }
 
+function firstName(user) {
+    const raw = String(user?.full_name || user?.username || '').trim();
+    return raw ? raw.split(/\s+/)[0] : 'there';
+}
+
 // ---------------------------------------------------------------
-// XERA card — the one product with a real, live wallet today, so
-// its card shows an actual balance instead of a generic blurb.
+// XERA status card — balance plus mining state, both fetched from
+// the same endpoints the XERA app uses. Nothing is fabricated: if a
+// call fails the card falls back to "Open XERA". The Hub never runs
+// start/claim logic itself; tapping the card opens XERA.
 // ---------------------------------------------------------------
+let miningEndsAt = null;
+let miningTick = null;
+
 async function loadXeraCard() {
+    const card = document.getElementById('xeraStatusCard');
     const balanceEl = document.getElementById('xeraCardBalance');
-    if (!balanceEl) return;
-    const settle = (text) => {
-        balanceEl.textContent = text;
-        balanceEl.classList.remove('hub-skel');
-        balanceEl.style.width = 'auto';
-        balanceEl.style.height = 'auto';
-    };
-    try {
-        const res = await api('/api/xera/wallet');
-        settle(res.status === 'ok' ? `${formatXera(res.balance)} XERA` : 'View wallet');
-    } catch (e) {
-        settle('View wallet');
+    if (!card || !balanceEl) return;
+
+    const [walletRes, miningRes] = await Promise.allSettled([
+        api('/api/xera/wallet'),
+        api('/api/xera/mining/status'),
+    ]);
+
+    const wallet = walletRes.status === 'fulfilled' ? walletRes.value : null;
+    balanceEl.textContent = wallet && wallet.status === 'ok' ? formatXera(wallet.balance) : '—';
+
+    const mining = miningRes.status === 'fulfilled' && miningRes.value && miningRes.value.status === 'ok'
+        ? (miningRes.value.mining || null)
+        : undefined; // undefined = unknown, null = no session
+    if (mining === undefined) {
+        setCard('unknown', 'Open XERA');
+        return;
     }
+    if (!mining) {
+        setCard('ready', 'Ready to mine');
+        return;
+    }
+    miningEndsAt = new Date(mining.expires_at).getTime();
+    renderMiningState();
+    clearInterval(miningTick);
+    miningTick = setInterval(renderMiningState, 1000);
+}
+
+function setCard(state, text) {
+    const card = document.getElementById('xeraStatusCard');
+    const pill = document.getElementById('xeraCardPill');
+    if (card) card.dataset.state = state;
+    if (pill) pill.textContent = text;
+}
+
+function renderMiningState() {
+    const remain = miningEndsAt - Date.now();
+    if (!Number.isFinite(remain)) { setCard('unknown', 'Open XERA'); return; }
+    if (remain <= 0) {
+        clearInterval(miningTick);
+        setCard('claim', 'Claim ready');
+        return;
+    }
+    setCard('mining', `Mining · ${formatClock(remain)} left`);
+}
+
+function formatClock(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const h = String(Math.floor(total / 3600)).padStart(2, '0');
+    const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+    const s = String(total % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`;
 }
 
 function formatXera(n) {
@@ -44,22 +94,33 @@ function formatXera(n) {
 }
 
 // ---------------------------------------------------------------
-// Quick activity — real XERA transactions only (mining/claims/etc).
-// Section 7 of the brief: never fabricate activity.
+// Recent activity — the last 3 real XERA transactions only.
+// Never fabricate activity.
 // ---------------------------------------------------------------
-const ACTIVITY_META = {
-    mining_reward: { label: 'Mining reward', icon: 'bolt' },
-    daily_claim:   { label: 'Daily claim', icon: 'gift' },
-    claim:         { label: 'XERA claimed', icon: 'bolt' },
-    adjustment:    { label: 'Balance adjustment', icon: 'gear' },
+const ACTIVITY_LABELS = {
+    MINING_REWARD: 'Mining reward',
+    DAILY_CLAIM: 'Daily claim',
+    REFERRAL_REWARD: 'Referral reward',
+    XERA_PURCHASE: 'XERA purchase',
+    BONUS: 'Bonus',
+    ADMIN_CREDIT: 'Balance adjustment',
+    ADMIN_DEBIT: 'Balance adjustment',
+    REVERSAL: 'Reversal',
+    MIGRATION: 'Migration',
+};
+const ACTIVITY_ICON = {
+    MINING_REWARD: 'bolt',
+    DAILY_CLAIM: 'sun',
+    REFERRAL_REWARD: 'gift',
+    BONUS: 'gift',
 };
 
 async function loadActivity() {
     const list = document.getElementById('activityList');
     if (!list) return;
     try {
-        const res = await api('/api/xera/transactions?limit=6');
-        const txs = res.status === 'ok' ? (res.transactions || []) : [];
+        const res = await api('/api/xera/transactions?limit=3');
+        const txs = res.status === 'ok' ? (res.transactions || []).slice(0, 3) : [];
         if (!txs.length) {
             list.innerHTML = `<p class="hub-empty">No activity yet — start a XERA mining session to see it here.</p>`;
             return;
@@ -71,20 +132,22 @@ async function loadActivity() {
 }
 
 function renderActivityRow(tx) {
-    const meta = ACTIVITY_META[tx.type] || { label: tx.type || 'Transaction', icon: 'clock' };
-    const amount = Number(tx.amount) || 0;
-    const sign = amount > 0 ? '+' : '';
+    const type = String(tx.type || '').toUpperCase();
+    const label = ACTIVITY_LABELS[type]
+        || (type ? type.replaceAll('_', ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) : 'Transaction');
+    const credit = tx.direction ? tx.direction === 'CREDIT' : Number(tx.amount) > 0;
+    const amount = Math.abs(Number(tx.amount) || 0);
     const when = tx.created_at ? timeAgo(tx.created_at) : '';
     return `
         <div class="hub-activity-row">
             <div class="hub-activity-left">
-                <span class="hub-activity-icon">${iconSvg(meta.icon)}</span>
+                <span class="hub-activity-icon">${iconSvg(ACTIVITY_ICON[type] || 'clock')}</span>
                 <div>
-                    <p class="hub-activity-title">${meta.label}</p>
-                    <p class="hub-activity-time">${when}</p>
+                    <p class="hub-activity-title">${escapeHtml(label)}</p>
+                    <p class="hub-activity-time">${escapeHtml(when)}</p>
                 </div>
             </div>
-            <span class="hub-activity-amount${amount > 0 ? ' positive' : ''}">${sign}${formatXera(amount)} XERA</span>
+            <span class="hub-activity-amount${credit ? ' positive' : ''}">${credit ? '+' : '-'}${formatXera(amount)} XERA</span>
         </div>
     `;
 }
@@ -103,57 +166,60 @@ function timeAgo(iso) {
 function iconSvg(name) {
     const paths = {
         bolt:  '<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" stroke-linejoin="round"/>',
-        gift:  '<rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 9h18v0M12 9v12M12 9c-2-4-7-3-6-.5S9 9 12 9Zm0 0c2-4 7-3 6-.5S15 9 12 9Z"/>',
-        gear:  '<circle cx="12" cy="12" r="3"/>',
+        sun:   '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" stroke-linecap="round"/>',
+        gift:  '<rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 9h18M12 9v12M12 9c-2-4-7-3-6-.5S9 9 12 9Zm0 0c2-4 7-3 6-.5S15 9 12 9Z"/>',
         clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2" stroke-linecap="round"/>',
     };
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${paths[name] || paths.clock}</svg>`;
 }
 
 // ---------------------------------------------------------------
-// Other ecosystem products — pulled from the admin-curated
-// xera_ecosystem_links table (already live, used by ecosystem.html)
-// rather than hardcoding a second copy of the same list.
+// Icon grid — the same six icons as the Ecosystem page, plus any
+// admin-curated links from xera_ecosystem_links (already live and
+// used by the Ecosystem page), appended as extra icons.
 // ---------------------------------------------------------------
+function wireTileImages(root) {
+    if (!root) return;
+    root.querySelectorAll('.hh-tile img').forEach((img) => {
+        const svg = img.parentElement.querySelector('svg');
+        const ok = () => { if (img.naturalWidth > 0 && svg) svg.style.display = 'none'; };
+        img.addEventListener('error', () => img.remove(), { once: true });
+        if (img.complete) { if (img.naturalWidth > 0) ok(); else img.remove(); }
+        else img.addEventListener('load', ok, { once: true });
+    });
+}
+
 async function loadEcosystemLinks() {
-    const grid = document.getElementById('ecoLinksSlot');
+    const grid = document.getElementById('hubAppGrid');
     if (!grid) return;
     try {
-        const res = await fetch('/api/xera/ecosystem').then(r => r.json());
+        const res = await fetch('/api/xera/ecosystem').then((r) => r.json());
         const links = res.status === 'ok' ? (res.links || []) : [];
-        if (!links.length) {
-            grid.innerHTML = '';
-            return;
-        }
-        grid.innerHTML = links.map(link => {
+        links.forEach((link) => {
             const dest = resolveEcosystemLink(link.url);
-            return `
-            <a class="hub-product-card" href="${escapeAttr(dest.href)}"${dest.external ? ' target="_blank" rel="noopener"' : ''}>
-                <span class="hub-product-icon">
-                    ${link.image_url
-                        ? `<img src="${escapeAttr(link.image_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px"/>`
-                        : iconSvg('bolt')}
-                </span>
-                <div>
-                    <p class="hub-product-name">${escapeHtml(link.name)}</p>
-                    <p class="hub-product-desc">Part of the EVOXERA ecosystem</p>
-                </div>
-                <div class="hub-product-foot">
-                    <span class="hub-status-pill is-live"><span class="dot"></span>Live</span>
-                    <span class="hub-product-open">Open ${dest.external ? '↗' : '→'}</span>
-                </div>
-            </a>
-        `; }).join('');
-    } catch (e) {
-        grid.innerHTML = '';
-    }
+            const a = document.createElement('a');
+            a.className = 'hh-app';
+            a.href = dest.href;
+            if (dest.external) { a.target = '_blank'; a.rel = 'noopener'; }
+            const tile = document.createElement('span');
+            tile.className = 'hh-tile';
+            if (link.image_url) {
+                const img = document.createElement('img');
+                img.src = link.image_url; img.alt = ''; img.loading = 'lazy';
+                tile.appendChild(img);
+            }
+            const name = document.createElement('span');
+            name.className = 'hh-app-name';
+            name.textContent = link.name; // textContent only: admin text is never parsed as HTML
+            a.append(tile, name);
+            grid.appendChild(a);
+        });
+        wireTileImages(grid);
+    } catch (e) { /* curated icons are optional */ }
 }
 
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = String(str ?? '');
     return div.innerHTML;
-}
-function escapeAttr(str) {
-    return escapeHtml(str).replace(/"/g, '&quot;');
 }
