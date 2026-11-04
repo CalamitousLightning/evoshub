@@ -431,9 +431,15 @@
     var tw = sl ? 0.74 : 0.62, tb = hipY + 0.02, tt = shY + 0.04;
     ctx.fillStyle = JACKET; roundRect(-tw / 2, tb, tw, tt - tb, 0.16); ctx.fill();
     ctx.fillStyle = JACKET_D; roundRect(-tw / 2, tb, tw * 0.2, tt - tb, 0.1); ctx.fill(); roundRect(tw / 2 - tw * 0.2, tb, tw * 0.2, tt - tb, 0.1); ctx.fill();
-    ctx.fillStyle = JACKET_L; ctx.fillRect(-0.025, tb + 0.05, 0.05, tt - tb - 0.12);               // back seam
+    ctx.fillStyle = JACKET_L; ctx.fillRect(-0.025, tb + 0.05, 0.05, tt - tb - 0.12);               // reinforced back seam
+    // Expedition armour panels: keep the original explorer silhouette, but give
+    // the jacket a more deliberate, high-tech field-gear identity.
+    ctx.fillStyle = '#163c35'; roundRect(-tw * 0.39, tb + 0.16, tw * 0.78, Math.max(0.12, tt - tb - 0.28), 0.08); ctx.fill();
+    ctx.fillStyle = '#3d8c72'; ctx.fillRect(-tw * 0.34, tb + 0.2, 0.045, Math.max(0.08, tt - tb - 0.38));
+    ctx.fillStyle = '#b8d7c7'; ctx.fillRect(tw * 0.27, tb + 0.22, 0.035, 0.16);
     ctx.fillStyle = STRAP; ctx.fillRect(-tw / 2, tb + 0.02, tw, 0.075);                            // belt
-    ctx.fillStyle = METAL; ctx.fillRect(-0.04, tb + 0.015, 0.08, 0.085);
+    ctx.fillStyle = METAL; roundRect(-0.055, tb + 0.015, 0.11, 0.09, 0.025); ctx.fill();
+    ctx.fillStyle = MINT; ctx.fillRect(-0.018, tb + 0.035, 0.036, 0.05);
 
     // coiled rope on the left hip
     ctx.strokeStyle = '#d8c79a'; ctx.lineWidth = 0.03;
@@ -469,8 +475,13 @@
     ctx.fillStyle = '#3b2a1d'; ctx.beginPath(); ctx.arc(-0.05, headY + 0.07, hr * 0.62, 0.3, 2.5); ctx.fill();   // hair highlight
     ctx.fillStyle = SKIN; ctx.beginPath(); ctx.ellipse(-hr * 0.96, headY - 0.03, 0.035, 0.06, 0, 0, 6.3); ctx.fill(); ctx.beginPath(); ctx.ellipse(hr * 0.96, headY - 0.03, 0.035, 0.06, 0, 0, 6.3); ctx.fill();   // ears
     ctx.fillStyle = '#1f4f46'; ctx.fillRect(-hr * 0.99, headY + 0.03, hr * 1.98, 0.07);               // goggle strap
+    // Twin rear-profile goggle housings with cyan glass and a small EVOXERA mark.
+    ctx.fillStyle = '#172b2a'; roundRect(-0.16, headY + 0.015, 0.13, 0.095, 0.035); ctx.fill();
+    roundRect(0.03, headY + 0.015, 0.13, 0.095, 0.035); ctx.fill();
+    ctx.fillStyle = 'rgba(101,223,240,.82)'; roundRect(-0.135, headY + 0.035, 0.08, 0.055, 0.02); ctx.fill();
+    roundRect(0.055, headY + 0.035, 0.08, 0.055, 0.02); ctx.fill();
     ctx.fillStyle = MINT; ctx.fillRect(-0.03, headY + 0.03, 0.06, 0.07);                              // strap buckle
-    ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.beginPath(); ctx.arc(-0.07, headY + 0.1, 0.07, 3.4, 5.2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.24)'; ctx.fillRect(-0.11, headY + 0.075, 0.025, 0.012); ctx.fillRect(0.08, headY + 0.075, 0.025, 0.012);
 
     if (stars) {                                                       // dizzy stars after a crash
       for (var q = 0; q < 3; q++) {

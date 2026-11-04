@@ -760,14 +760,26 @@ import * as THREE from './vendor/three.module.min.js';
   function buildStub() {
     var g = new THREE.Group(), u = g.userData, k, sg;
     u.floorMat = new THREE.MeshLambertMaterial({ map: stubTex.vine }); u.lintMat = lambert(0xffffff, { flatShading: true }); u.glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); u.vines = [];
-    var fl = new THREE.Mesh(stubGeo, u.floorMat); fl.rotation.y = Math.PI / 2; fl.position.set(PLAZA + STUB_L / 2, -0.03, 0); g.add(fl);
-    for (sg = -1; sg <= 1; sg += 2) g.add(mesh(boxGeo, wallMat2, PLAZA + STUB_L / 2, 0.8, sg * (PATH_W / 2 + 0.25), STUB_L, 1.6, 0.5));
+    // Use a shallow solid floor under the textured plane as well. The old plane-only
+    // corridor could disappear on some desktop GPU / depth-buffer combinations at
+    // the T-junction, making the 90-degree exits look like empty space.
+    var fl = new THREE.Mesh(stubGeo, u.floorMat); fl.rotation.y = Math.PI / 2; fl.position.set(PLAZA + STUB_L / 2, -0.035, 0); g.add(fl);
+    var corridorBed = mesh(boxGeo, wallMat2, PLAZA + STUB_L / 2, -0.16, 0, STUB_L, 0.24, PATH_W);
+    corridorBed.material = lambert(0x6b6248); g.add(corridorBed);
+    var edgeGlowMat = new THREE.MeshBasicMaterial({ color: 0x72e9c4, transparent: true, opacity: 0.78, fog: false });
+    for (sg = -1; sg <= 1; sg += 2) {
+      g.add(mesh(boxGeo, wallMat2, PLAZA + STUB_L / 2, 0.8, sg * (PATH_W / 2 + 0.25), STUB_L, 1.6, 0.5));
+      g.add(mesh(boxGeo, edgeGlowMat, PLAZA + STUB_L / 2, 0.035, sg * (PATH_W / 2 - 0.12), STUB_L, 0.055, 0.09));
+    }
     for (k = 0; k < 3; k++) {
       var xk = PLAZA + 7 + k * 10;
       for (sg = -1; sg <= 1; sg += 2) g.add(mesh(boxGeo, postMat2, xk, 1.9, sg * (PATH_W / 2), 0.5, 3.8, 0.5));
       g.add(mesh(boxGeo, u.lintMat, xk, 4.0, 0, 0.6, 0.45, PATH_W + 0.7)); g.add(mesh(boxGeo, u.glowMat, xk, 3.7, 0, 0.12, 0.1, PATH_W - 0.6));
       for (sg = -2; sg <= 2; sg += 2) { var vv = mesh(boxGeo, vineMat, xk + 0.1, 3.0, sg * 1.2, 0.07, 1.6, 0.07); u.vines.push(vv); g.add(vv); }
     }
+    // A clearly readable threshold at the end of each branch makes the route
+    // silhouette legible from the wide desktop camera as well as on mobile.
+    g.add(mesh(boxGeo, u.glowMat, PLAZA + STUB_L - 0.45, 0.08, 0, 0.16, 0.12, PATH_W - 0.5));
     g.add(mesh(boxGeo, darkMat, PLAZA + STUB_L + 1, 3, 0, 1, 7, PATH_W + 1.4));            // beyond the corridor: darkness
     return g;
   }
