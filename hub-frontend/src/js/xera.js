@@ -8,7 +8,7 @@ let tickHandle = null;
 
 import { safeNext, isExpired, notifyAuthChange } from './evos-session.js';
 import { mountGuestBanner, requireAuthFor } from './guest-access.js';
-import { maybeShowWelcome, startMiningWithOnboarding, resetLaunchSession } from './xera-launch.js';
+import { maybeShowWelcome, startMiningWithOnboarding, resetLaunchSession, showAgreementView } from './xera-launch.js';
 import { initReadiness, resetReadiness } from './xera-readiness.js';
 
 const token = () => localStorage.getItem('xera_evos_token') || '';
@@ -189,6 +189,15 @@ function renderProfile() {
 
 $('logoutProfile').onclick = () => { doLogout(); };
 $('profileOpenStats').onclick = openStats;
+$('profileOpenAgreement').onclick = async (e) => {
+    const btn = e.currentTarget;
+    if (btn.dataset.busy) return;
+    btn.dataset.busy = '1';
+    let name = '';
+    try { name = (JSON.parse(localStorage.getItem('xera_evos_user') || '{}').full_name) || ''; } catch (err) { /* ignore */ }
+    try { await showAgreementView(req, name); } catch (err) { alert(err.message || 'Could not open the agreement.'); }
+    finally { delete btn.dataset.busy; }
+};
 
 // ================= WALLET / MINING =================
 
