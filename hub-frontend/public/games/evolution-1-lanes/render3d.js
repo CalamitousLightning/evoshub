@@ -28,7 +28,7 @@ import * as THREE from './vendor/three.module.min.js';
   function hash(n) { n = Math.sin(n * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); }
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function col(hex) { return new THREE.Color(hex); }
-  var HORIZON = col(0x315b72);
+  var HORIZON = col(0x2f9fb0);
 
   // ------------------------------------------------------------------ STAGES: jungle -> temple ruins (600 m) -> falling laboratory (1200 m), blended over 90 m
   var STAGE_T = 600, STAGE_L = 1200, STAGE_BLEND = 90;
@@ -38,9 +38,9 @@ import * as THREE from './vendor/three.module.min.js';
   }
   var curW = { j: 1, t: 0, l: 0 }, tmpW = { j: 1, t: 0, l: 0 }, swO = { j: 1, t: 0, l: 0 }, sceneTime = 0;
   var THEMES = {
-    j: { hor: col(0x315b72), top: col(0x030d1c), mid: col(0x0d5368), hs: col(0xc8f4ff), hg: col(0x183c39), sun: col(0x9deaff), tA: col(0x8eb4c8), tB: col(0x54748c), ray: col(0x70eaff), fogN: 42, fogF: 150, hi: 1.25, si: 1.8 },
-    t: { hor: col(0x6c526b), top: col(0x100d25), mid: col(0x704b5f), hs: col(0xffdfc4), hg: col(0x342b3b), sun: col(0xffc27a), tA: col(0xb4a4a0), tB: col(0x796c76), ray: col(0xffbd7c), fogN: 38, fogF: 138, hi: 1.2, si: 1.75 },
-    l: { hor: col(0x315b80), top: col(0x020713), mid: col(0x104c78), hs: col(0xc5efff), hg: col(0x172b42), sun: col(0x9edfff), tA: col(0x9db9d0), tB: col(0x54728f), ray: col(0x63dcff), fogN: 34, fogF: 124, hi: 1.3, si: 1.65 }
+    j: { hor: col(0x2f9fb0), top: col(0x020a1c), mid: col(0x0b4a6e), hs: col(0xa8f0ff), hg: col(0x123a46), sun: col(0xbfeeff), tA: col(0xffffff), tB: col(0xc4d4e6), ray: col(0x7cf0ff), fogN: 30, fogF: 120, hi: 1.05, si: 1.9 },
+    t: { hor: col(0xf29a64), top: col(0x090b2c), mid: col(0x5a3a86), hs: col(0xffd9b0), hg: col(0x2a2a50), sun: col(0xffb870), tA: col(0xdfe6f0), tB: col(0xb4c0d2), ray: col(0xffd08a), fogN: 30, fogF: 118, hi: 1.05, si: 1.8 },
+    l: { hor: col(0xa6d8ee), top: col(0x050b18), mid: col(0x1b4f80), hs: col(0xbfe6ff), hg: col(0x2a3a4a), sun: col(0xcfe8ff), tA: col(0xd4e4f0), tB: col(0x9db4c8), ray: col(0x9fe8ff), fogN: 30, fogF: 108, hi: 1.2, si: 1.5 }
   };
   var theme = { hor: col(0), top: col(0), mid: col(0), hs: col(0), hg: col(0), sun: col(0), tA: col(0), tB: col(0), ray: col(0), fogN: 38, fogF: 138, hi: 1.15, si: 1.6 };
   var CK = ['hor', 'top', 'mid', 'hs', 'hg', 'sun', 'tA', 'tB', 'ray'], NK = ['fogN', 'fogF', 'hi', 'si'], tmpC = col(0);
@@ -60,13 +60,11 @@ import * as THREE from './vendor/three.module.min.js';
   var root = new THREE.Group(), fxRoot = new THREE.Group(), decorT = new THREE.Group(), decorB = new THREE.Group();
   root.matrixAutoUpdate = decorT.matrixAutoUpdate = decorB.matrixAutoUpdate = false;
   scene.add(root); scene.add(fxRoot); scene.add(decorT); scene.add(decorB); decorT.visible = decorB.visible = false;
-  scene.fog = new THREE.Fog(HORIZON.getHex(), 38, 138);
+  scene.fog = new THREE.Fog(HORIZON.getHex(), 30, 120);
   var camera = new THREE.PerspectiveCamera(62, 1, 0.1, 400);
 
-  var hemi = new THREE.HemisphereLight(0xc9f3ff, 0x172c3b, 1.3); scene.add(hemi);
-  var sun = new THREE.DirectionalLight(0xb9eaff, 1.8); scene.add(sun); scene.add(sun.target);
-  var cyanFill = new THREE.PointLight(0x24cfff, 1.15, 42, 2); scene.add(cyanFill);
-  var warmFill = new THREE.PointLight(0xffb66e, 0.55, 34, 2); scene.add(warmFill);
+  var hemi = new THREE.HemisphereLight(0xdff5e6, 0x4a5a3a, 1.15); scene.add(hemi);
+  var sun = new THREE.DirectionalLight(0xfff0cc, 1.6); scene.add(sun); scene.add(sun.target);
 
   // ------------------------------------------------------------------ materials
   function lambert(c, o) { var m = new THREE.MeshLambertMaterial(Object.assign({ color: c }, o || {})); return m; }
@@ -82,26 +80,25 @@ import * as THREE from './vendor/three.module.min.js';
     gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.4, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   });
-  var pathTex = canvasTex(128, 128, function (g, w, h) {            // obsidian composite track with cyan lane guides
-    g.fillStyle = '#101d2b'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#172a3c'; g.fillRect(5, 5, w - 10, h - 10);
-    g.strokeStyle = 'rgba(98,170,205,.28)'; g.lineWidth = 1;
-    for (var y = 0; y <= h; y += 16) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
-    for (var x = 0; x <= w; x += 16) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
-    g.fillStyle = 'rgba(3,10,20,.9)'; g.fillRect(7, 7, 4, 4); g.fillRect(w - 11, 7, 4, 4); g.fillRect(7, h - 11, 4, 4); g.fillRect(w - 11, h - 11, 4, 4);
+  var pathTex = canvasTex(128, 128, function (g, w, h) {            // packed earth with lane markings
+    var bg = g.createLinearGradient(0, 0, w, 0); bg.addColorStop(0, '#16202c'); bg.addColorStop(0.5, '#243446'); bg.addColorStop(1, '#16202c'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(8,14,22,.9)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3); g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
+    for (var i = 0; i < 40; i++) { g.fillStyle = 'rgba(120,200,230,' + (0.03 + (i % 4) * 0.015) + ')'; g.fillRect((i * 97) % w, (i * 61) % h, 3 + (i % 5), 1 + (i % 2)); }
+    g.shadowColor = '#2de6ff'; g.shadowBlur = 8; g.fillStyle = 'rgba(60,230,255,.95)';
+    g.fillRect(2, 0, 3, h); g.fillRect(w - 5, 0, 3, h);        // glowing edge rails
+    g.shadowBlur = 0; g.fillStyle = 'rgba(60,230,255,.75)';
     var u1 = w * (0.5 - (CFG.LANE_W / 2) / PATH_W), u2 = w * (0.5 + (CFG.LANE_W / 2) / PATH_W);
-    [u1,u2].forEach(function(u){ g.shadowColor='#3edfff'; g.shadowBlur=9; g.fillStyle='rgba(55,220,255,.95)'; g.fillRect(u-1.8, 0, 3.6, h); g.shadowBlur=0; g.fillStyle='rgba(180,250,255,.45)'; g.fillRect(u-.45, 0, .9, h); });
-    g.fillStyle='rgba(255,197,105,.65)'; for(var q=0;q<12;q++){var px=(q*37)%w,py=(q*53)%h;g.fillRect(px,py,3,2);}
+    g.fillRect(u1 - 1.5, h * 0.12, 3, h * 0.62); g.fillRect(u2 - 1.5, h * 0.12, 3, h * 0.62);
   });
   pathTex.anisotropy = 4;
   var grassTex = canvasTex(64, 64, function (g, w, h) {
-    g.fillStyle = '#2f6a46'; g.fillRect(0, 0, w, h);
-    for (var i = 0; i < 90; i++) { g.fillStyle = 'rgba(' + (30 + (i * 29) % 40) + ',' + (90 + (i * 43) % 60) + ',' + (50 + (i * 17) % 30) + ',.35)'; g.fillRect((i * 53) % w, (i * 31) % h, 3, 5); }
+    g.fillStyle = '#0f4a45'; g.fillRect(0, 0, w, h);
+    for (var i = 0; i < 90; i++) { g.fillStyle = 'rgba(' + (20 + (i * 29) % 30) + ',' + (120 + (i * 43) % 90) + ',' + (110 + (i * 17) % 90) + ',.35)'; g.fillRect((i * 53) % w, (i * 31) % h, 3, 5); }
   });
   grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping; grassTex.repeat.set(SIDE_W / 4, 18);
   var sandTex = canvasTex(64, 64, function (g, w, h) {              // temple stage: sun-baked sand and chips of stone
-    g.fillStyle = '#c9a56e'; g.fillRect(0, 0, w, h);
-    for (var i = 0; i < 110; i++) { g.fillStyle = 'rgba(' + (120 + (i * 29) % 70) + ',' + (90 + (i * 41) % 50) + ',' + (50 + (i * 17) % 30) + ',.35)'; g.fillRect((i * 53) % w, (i * 31) % h, 2 + i % 3, 2 + i % 2); }
+    g.fillStyle = '#5b4d7c'; g.fillRect(0, 0, w, h);
+    for (var i = 0; i < 110; i++) { g.fillStyle = 'rgba(' + (90 + (i * 29) % 60) + ',' + (110 + (i * 41) % 70) + ',' + (170 + (i * 17) % 60) + ',.3)'; g.fillRect((i * 53) % w, (i * 31) % h, 2 + i % 3, 2 + i % 2); }
   });
   var metalTex = canvasTex(64, 64, function (g, w, h) {             // lab stage: dark plating with seams and rivets
     g.fillStyle = '#31465a'; g.fillRect(0, 0, w, h);
@@ -109,25 +106,21 @@ import * as THREE from './vendor/three.module.min.js';
     g.fillStyle = 'rgba(160,220,255,.45)'; for (var i = 0; i < 8; i++) g.fillRect(6 + (i % 4) * 16, 6 + Math.floor(i / 4) * 40, 2, 2);
   });
   sandTex.wrapS = sandTex.wrapT = metalTex.wrapS = metalTex.wrapT = THREE.RepeatWrapping; sandTex.repeat.set(SIDE_W / 4, 18); metalTex.repeat.set(SIDE_W / 4, 18);
-  var flagTex = canvasTex(128, 128, function (g, w, h) {           // precision-cut ancient alloy / stone hybrid
-    g.fillStyle = '#394452'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#596474'; g.fillRect(3, 3, w-6, h-6);
-    g.strokeStyle = 'rgba(13,29,44,.85)'; g.lineWidth = 3; g.strokeRect(2,2,w-4,h-4);
-    g.strokeStyle = 'rgba(145,218,232,.35)'; g.lineWidth = 1; for(var y=16;y<h;y+=32){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
-    for(var x=16;x<w;x+=32){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
-    var a1=w*(0.5-(CFG.LANE_W/2)/PATH_W),a2=w*(0.5+(CFG.LANE_W/2)/PATH_W);
-    [a1,a2].forEach(function(u){g.shadowColor='#ffc66e';g.shadowBlur=7;g.fillStyle='rgba(255,194,100,.9)';g.fillRect(u-1.5,0,3,h);g.shadowBlur=0;});
-    g.fillStyle='rgba(255,214,150,.7)'; for(var i=0;i<12;i++){g.fillRect(8+(i%4)*30,8+Math.floor(i/4)*38,3,3);}
+  var flagTex = canvasTex(128, 128, function (g, w, h) {            // temple stage path: worn flagstones
+    g.fillStyle = '#b79b72'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(80,60,36,.75)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3); g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.moveTo(w * 0.33, 0); g.lineTo(w * 0.33, h / 2); g.moveTo(w * 0.7, h / 2); g.lineTo(w * 0.7, h); g.stroke();
+    for (var i = 0; i < 90; i++) { g.fillStyle = 'rgba(90,64,36,' + (0.05 + (i % 4) * 0.03) + ')'; g.fillRect((i * 97) % w, (i * 61) % h, 2 + i % 4, 2 + i % 3); }
+    g.shadowColor = '#ffc45a'; g.shadowBlur = 8; g.fillStyle = 'rgba(255,200,100,.95)'; g.fillRect(2, 0, 3, h); g.fillRect(w - 5, 0, 3, h); g.shadowBlur = 0;
+    g.fillStyle = 'rgba(70,46,22,.55)'; var a1 = w * (0.5 - (CFG.LANE_W / 2) / PATH_W), a2 = w * (0.5 + (CFG.LANE_W / 2) / PATH_W);
+    g.fillRect(a1 - 1.5, h * 0.12, 3, h * 0.62); g.fillRect(a2 - 1.5, h * 0.12, 3, h * 0.62);
   });
-  var plateTex = canvasTex(128, 128, function (g, w, h) {           // futuristic lab deck with illuminated panel seams
-    g.fillStyle = '#132a40'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#203e59'; g.fillRect(3,3,w-6,h-6);
-    g.strokeStyle='rgba(4,15,29,.95)';g.lineWidth=3;g.strokeRect(2,2,w-4,h-4);
-    g.strokeStyle='rgba(104,206,245,.38)';g.lineWidth=1;for(var y=16;y<h;y+=32){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
-    for(var x=16;x<w;x+=32){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
-    var b1=w*(0.5-(CFG.LANE_W/2)/PATH_W),b2=w*(0.5+(CFG.LANE_W/2)/PATH_W);
-    [b1,b2].forEach(function(u){g.shadowColor='#4bdfff';g.shadowBlur=10;g.fillStyle='rgba(75,224,255,.95)';g.fillRect(u-2,0,4,h);g.shadowBlur=0;});
-    g.fillStyle='rgba(180,240,255,.8)';[[8,8],[w-11,8],[8,h-11],[w-11,h-11],[8,h/2],[w-11,h/2]].forEach(function(p){g.fillRect(p[0],p[1],3,3);});
+  var plateTex = canvasTex(128, 128, function (g, w, h) {           // lab stage path: metal plates with glowing lane lines
+    g.fillStyle = '#42607a'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(12,24,36,.85)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3); g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
+    g.fillStyle = 'rgba(190,235,255,.5)'; [[8, 8], [w - 10, 8], [8, h - 10], [w - 10, h - 10], [8, h / 2 + 6], [w - 10, h / 2 + 6]].forEach(function (p) { g.fillRect(p[0], p[1], 3, 3); });
+    g.shadowColor = '#2de6ff'; g.shadowBlur = 8; g.fillStyle = 'rgba(60,230,255,.95)'; g.fillRect(2, 0, 3, h); g.fillRect(w - 5, 0, 3, h); g.shadowBlur = 0;
+    g.fillStyle = 'rgba(120,240,255,.85)'; var b1 = w * (0.5 - (CFG.LANE_W / 2) / PATH_W), b2 = w * (0.5 + (CFG.LANE_W / 2) / PATH_W);
+    g.fillRect(b1 - 1.5, h * 0.12, 3, h * 0.62); g.fillRect(b2 - 1.5, h * 0.12, 3, h * 0.62);
   });
   flagTex.anisotropy = plateTex.anisotropy = 4;
 
@@ -175,13 +168,13 @@ import * as THREE from './vendor/three.module.min.js';
   // ------------------------------------------------------------------ scenery (instanced, recycled around the player)
   var NT = 90;
   var trunkGeo = new THREE.CylinderGeometry(0.62, 0.9, 1, 7); trunkGeo.translate(0, 0.5, 0);
-  var trunks = new THREE.InstancedMesh(trunkGeo, lambert(0x5a3e24), NT);
-  var canopyGeo = new THREE.IcosahedronGeometry(1, 1);
-  var canopyA = new THREE.InstancedMesh(canopyGeo, lambert(0x2a8048, { flatShading: true }), NT * 2);
-  var canopyB = new THREE.InstancedMesh(canopyGeo, lambert(0x4aa660, { flatShading: true }), NT * 2);
-  var bushGeo = new THREE.IcosahedronGeometry(1, 1);
-  var NB = 80, bushes = new THREE.InstancedMesh(bushGeo, lambert(0x3a9a50, { flatShading: true }), NB);
-  var NF = 60, ferns = new THREE.InstancedMesh(new THREE.ConeGeometry(0.5, 1.4, 5), lambert(0x59b56a, { flatShading: true }), NF);
+  var trunks = new THREE.InstancedMesh(trunkGeo, lambert(0x2a3a44, { emissive: 0x08121a }), NT);
+  var canopyGeo = new THREE.IcosahedronGeometry(1, 3);
+  var canopyA = new THREE.InstancedMesh(canopyGeo, lambert(0x1c8a5a, { emissive: 0x06382e }), NT * 2);
+  var canopyB = new THREE.InstancedMesh(canopyGeo, lambert(0x2fcf8a, { emissive: 0x0a4a3c }), NT * 2);
+  var bushGeo = new THREE.IcosahedronGeometry(1, 3);
+  var NB = 80, bushes = new THREE.InstancedMesh(bushGeo, lambert(0x22b080, { emissive: 0x083a30 }), NB);
+  var NF = 60, ferns = new THREE.InstancedMesh(new THREE.ConeGeometry(0.5, 1.4, 5), lambert(0x4fe6c0, { emissive: 0x0f5a48 }), NF);
   [trunks, canopyA, canopyB, bushes, ferns].forEach(function (m) { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); root.add(m); });
   var dummy = new THREE.Object3D(), zeroM = new THREE.Matrix4().makeScale(0, 0, 0);
 
@@ -468,8 +461,8 @@ import * as THREE from './vendor/three.module.min.js';
   }
 
   // ------------------------------------------------------------------ obstacles
-  var stone = std(0x7d847c, { flatShading: true }), stoneDark = std(0x5d645c, { flatShading: true }), moss = std(0x3f8f4e, { flatShading: true });
-  var rockMat = std(0x777b80, { flatShading: true }), woodMat = std(0x7a5230), woodCap = std(0xb08a58), barkMat = std(0x5c3d22);
+  var stone = std(0x4a5d74, { metalness: 0.5, roughness: 0.4 }), stoneDark = std(0x2e3c50, { metalness: 0.5, roughness: 0.45 }), moss = std(0x14c8b0, { emissive: 0x0a7a6a, emissiveIntensity: 1.2, roughness: 0.4 });
+  var rockMat = std(0x3d4f66, { metalness: 0.55, roughness: 0.35, emissive: 0x0a2a44, emissiveIntensity: 0.9 }), woodMat = std(0x2d3a4e, { metalness: 0.6, roughness: 0.35 }), woodCap = std(0xffc45a, { emissive: 0xc88a1a, emissiveIntensity: 1.3, metalness: 0.5, roughness: 0.3 }), barkMat = std(0x26364a, { metalness: 0.5, roughness: 0.4 });
   var leafMat = lambert(0x2f9a4c, { flatShading: true }), vineMat = lambert(0x4f9a3c);
   var runeMat = glow(0x78ffe6), ringYellow = new THREE.MeshStandardMaterial({ color: 0xffe86a, emissive: 0xffd23a, emissiveIntensity: 1.0, roughness: 0.4 });
   var ringOrange = new THREE.MeshStandardMaterial({ color: 0xffa33a, emissive: 0xff8a1f, emissiveIntensity: 1.0, roughness: 0.4 });
@@ -555,11 +548,11 @@ import * as THREE from './vendor/three.module.min.js';
   var coinTexF = new THREE.TextureLoader().load('/games/evolution-1-lanes/xera-coin.png'); coinTexF.colorSpace = THREE.SRGBColorSpace; coinTexF.anisotropy = 4; coinTexF.wrapS = THREE.RepeatWrapping; coinTexF.repeat.x = -1; coinTexF.offset.x = 1;   // the canvas is mirrored by CSS, so the face that looks at the camera is pre-flipped
   var faceMatF = new THREE.MeshStandardMaterial({ map: coinTexF, emissiveMap: coinTexF, emissive: 0xffffff, emissiveIntensity: 0.55, metalness: 0.2, roughness: 0.45, transparent: true, alphaTest: 0.4 });
   var faceMat = new THREE.MeshStandardMaterial({ map: coinTex, emissiveMap: coinTex, emissive: 0xffffff, emissiveIntensity: 0.55, metalness: 0.2, roughness: 0.45, transparent: true, alphaTest: 0.4 });
-  var rimMat = new THREE.MeshStandardMaterial({ color: 0xc9d6e8, emissive: 0x1a3c8c, emissiveIntensity: 0.8, metalness: 0.8, roughness: 0.25 });
+  var rimMat = new THREE.MeshStandardMaterial({ color: 0xffd06a, emissive: 0xd9930f, emissiveIntensity: 1.1, metalness: 0.85, roughness: 0.22 });
   var coinMat = [rimMat, faceMat, faceMatF];
   var coinGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.1, 40); coinGeo.rotateX(Math.PI / 2);
   var coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, NC); coinMesh.frustumCulled = false; coinMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); root.add(coinMesh);
-  var sparks = [], sparkMat = new THREE.SpriteMaterial({ map: radialTex, color: 0x7ab8ff, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+  var sparks = [], sparkMat = new THREE.SpriteMaterial({ map: radialTex, color: 0xffd06a, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
   for (var sp = 0; sp < 14; sp++) { var s = new THREE.Sprite(sparkMat.clone()); s.visible = false; s.userData.life = 0; root.add(s); sparks.push(s); }
   function spark(x, y, z) {
     for (var i = 0; i < sparks.length; i++) if (sparks[i].userData.life <= 0) { var s = sparks[i]; s.position.set(x, y, z); s.userData.life = 1; s.visible = true; s.scale.set(0.6, 0.6, 1); return; }
@@ -583,64 +576,83 @@ import * as THREE from './vendor/three.module.min.js';
   }
 
   // ------------------------------------------------------------------ the explorer (low-poly, built from capsules and boxes)
+  // ---- SCI-FI EXPLORER: armoured suit, helmet with glowing visor, energy backpack, magnetic boots (all procedural, no assets)
+  function armor(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.42, metalness: 0.55 }, o || {})); }
+  function emis(c, k) { return new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: k || 1.6, roughness: 0.3, metalness: 0 }); }
   var M = {
-    jacket: lambert(0xd9b25f), jacketD: lambert(0xb8913f), pants: lambert(0x27405a), boot: lambert(0x3a2a1a), skin: lambert(0xc68a5a),
-    hair: lambert(0x2a1c14), pack: lambert(0x2f6b4c), packD: lambert(0x22513a), scarf: lambert(0xf08a1f), scarfD: lambert(0xc46a0f),
-    strap: lambert(0x4a3220), metal: new THREE.MeshStandardMaterial({ color: 0x9fb2bf, metalness: 0.6, roughness: 0.4 }), bedroll: lambert(0x8a5a2b),
-    mint: new THREE.MeshBasicMaterial({ color: 0x7cf0cf, fog: false })
+    plate: armor(0x8ea6bd, { roughness: 0.38, metalness: 0.5 }), plateL: armor(0xf4f8fc, { roughness: 0.35, metalness: 0.4 }), suit: armor(0x2b3d5a, { roughness: 0.6, metalness: 0.2 }),
+    gold: armor(0xf2b73a, { roughness: 0.3, metalness: 0.8 }), cyan: emis(0x2de6ff, 1.9), cyanD: emis(0x1aa9c9, 1.2), glass: emis(0x7cf6ff, 1.1),
+    skin: armor(0xc68a5a, { roughness: 0.8, metalness: 0 })
   };
-  function caps(r, len, m) { return new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 4, 8), m); }
+  function caps(r, len, m) { return new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 6, 14), m); }
+  function ball(r, m, sx, sy, sz) { var b = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), m); b.scale.set(r * (sx || 1), r * (sy || 1), r * (sz || 1)); return b; }
   function box(w, h, d, m, x, y, z) { var b = new THREE.Mesh(boxGeo, m); b.scale.set(w, h, d); b.position.set(x, y, z); return b; }
+  function bevel(w, h, d, m, x, y, z, r) {                       // rounded armour plate
+    var sh = new THREE.Shape(), hw = w / 2, hh = h / 2; r = Math.min(r || 0.03, hw, hh);
+    sh.moveTo(-hw + r, -hh); sh.lineTo(hw - r, -hh); sh.quadraticCurveTo(hw, -hh, hw, -hh + r); sh.lineTo(hw, hh - r); sh.quadraticCurveTo(hw, hh, hw - r, hh);
+    sh.lineTo(-hw + r, hh); sh.quadraticCurveTo(-hw, hh, -hw, hh - r); sh.lineTo(-hw, -hh + r); sh.quadraticCurveTo(-hw, -hh, -hw + r, -hh);
+    var g = new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.012, bevelSegments: 2, curveSegments: 6 }); g.translate(0, 0, -d / 2);
+    var m2 = new THREE.Mesh(g, m); m2.position.set(x, y, z); return m2;
+  }
 
   var P = {};
   var player = new THREE.Group(), hip = new THREE.Group();
   (function () {
     hip.position.y = 0.95; player.add(hip);
     function leg(side) {
-      var th = new THREE.Group(); th.position.set(side * 0.12, 0, 0);
-      var up = caps(0.085, 0.28, M.pants); up.position.y = -0.24; th.add(up);
+      var th = new THREE.Group(); th.position.set(side * 0.13, 0, 0);
+      var up = caps(0.098, 0.26, M.suit); up.position.y = -0.24; th.add(up);
+      var thPlate = bevel(0.13, 0.22, 0.06, M.plate, 0, -0.2, 0.09, 0.04); th.add(thPlate);
+      th.add(box(0.025, 0.2, 0.02, M.cyan, side * 0.07, -0.22, 0.095));
       var sh = new THREE.Group(); sh.position.y = -0.46; th.add(sh);
-      var lo = caps(0.075, 0.28, M.pants); lo.position.y = -0.22; sh.add(lo);
-      var boot = box(0.22, 0.17, 0.34, M.boot, 0, -0.43, 0.04); sh.add(boot);
-      var cuff = box(0.2, 0.05, 0.2, M.strap, 0, -0.34, 0); sh.add(cuff);
+      var lo = caps(0.085, 0.26, M.suit); lo.position.y = -0.22; sh.add(lo);
+      var greave = bevel(0.15, 0.26, 0.07, M.plate, 0, -0.2, 0.08, 0.04); sh.add(greave);
+      var knee = ball(0.09, M.gold, 1, 0.8, 0.8); knee.position.set(0, 0.0, 0.09); sh.add(knee);
+      var boot = bevel(0.21, 0.17, 0.36, M.plate, 0, -0.43, 0.05, 0.05); sh.add(boot);
+      sh.add(box(0.22, 0.04, 0.37, M.cyan, 0, -0.52, 0.05));          // glowing magnetic sole
+      sh.add(box(0.18, 0.05, 0.02, M.gold, 0, -0.42, 0.24));
       hip.add(th); return { th: th, sh: sh };
     }
     P.legL = leg(-1); P.legR = leg(1);
-    var torso = caps(0.21, 0.36, M.jacket); torso.position.y = 0.42; torso.scale.set(1.0, 1, 0.72); hip.add(torso);
-    hip.add(box(0.44, 0.06, 0.32, M.strap, 0, 0.14, 0));
-    hip.add(box(0.07, 0.08, 0.02, M.metal, 0, 0.14, -0.21));
-    // backpack (faces the camera) with the glowing EVO light
-    var pack = box(0.4, 0.46, 0.22, M.pack, 0, 0.48, -0.27); hip.add(pack);
-    hip.add(box(0.08, 0.26, 0.08, M.packD, -0.24, 0.42, -0.27), box(0.08, 0.26, 0.08, M.packD, 0.24, 0.42, -0.27));
-    hip.add(box(0.06, 0.22, 0.02, M.mint, 0, 0.5, -0.39));
-    var roll = new THREE.Mesh(cylGeo, M.bedroll); roll.scale.set(0.12, 0.62, 0.12); roll.rotation.z = Math.PI / 2; roll.position.set(0, 0.8, -0.32); hip.add(roll);
-    // rope coil on the left hip
-    var coil = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.03, 6, 12), lambert(0xd8c79a)); coil.position.set(-0.3, 0.16, -0.05); coil.rotation.y = Math.PI / 2; hip.add(coil);
-    // head
-    var head = new THREE.Group(); head.position.y = 0.88; hip.add(head); P.head = head;
-    var skull = new THREE.Mesh(sphGeo, M.skin); skull.scale.set(0.2, 0.22, 0.21); head.add(skull);
-    var hair = new THREE.Mesh(sphGeo, M.hair); hair.scale.set(0.225, 0.23, 0.225); hair.position.set(0, 0.025, -0.03); head.add(hair);
-    head.add(box(0.46, 0.06, 0.4, lambert(0x1f4f46), 0, 0.03, 0));
-    head.add(box(0.05, 0.06, 0.02, M.mint, 0, 0.03, -0.205));
-    var neck = caps(0.07, 0.06, M.skin); neck.position.y = -0.2; head.add(neck);
-    // scarf: wrap + two tails that flutter
-    hip.add(box(0.46, 0.1, 0.38, M.scarf, 0, 0.74, 0));
-    P.tailL = box(0.12, 0.34, 0.03, M.scarf, 0, 0, 0); P.tailR = box(0.12, 0.3, 0.03, M.scarfD, 0, 0, 0);
-    P.tailLg = new THREE.Group(); P.tailLg.position.set(-0.13, 0.72, -0.4); P.tailL.position.y = -0.17; P.tailLg.add(P.tailL); hip.add(P.tailLg);
-    P.tailRg = new THREE.Group(); P.tailRg.position.set(0.13, 0.72, -0.4); P.tailR.position.y = -0.15; P.tailRg.add(P.tailR); hip.add(P.tailRg);
-    // arms
+    // chest armour: back plate seen from behind with glowing spine and the energy core backpack
+    var torso = caps(0.2, 0.34, M.suit); torso.position.y = 0.42; torso.scale.set(1.04, 1, 0.78); hip.add(torso);
+    hip.add(bevel(0.42, 0.4, 0.07, M.plate, 0, 0.5, -0.17, 0.06));
+    hip.add(box(0.035, 0.34, 0.03, M.cyan, 0, 0.5, -0.215));
+    hip.add(bevel(0.46, 0.08, 0.3, M.gold, 0, 0.18, 0, 0.03));        // belt
+    var pack = bevel(0.34, 0.42, 0.18, M.plateL, 0, 0.5, -0.31, 0.06); hip.add(pack);
+    var core = ball(0.075, M.cyan); core.position.set(0, 0.52, -0.41); hip.add(core);
+    hip.add(box(0.28, 0.025, 0.02, M.cyanD, 0, 0.36, -0.405), box(0.28, 0.025, 0.02, M.cyanD, 0, 0.68, -0.405));
+    var fin1 = bevel(0.04, 0.26, 0.1, M.gold, -0.14, 0.66, -0.34, 0.015), fin2 = bevel(0.04, 0.26, 0.1, M.gold, 0.14, 0.66, -0.34, 0.015); hip.add(fin1, fin2);
+    // helmet: dark shell, glowing visor strip wraps the front, cyan comm fin on the back
+    var head = new THREE.Group(); head.position.y = 0.95; hip.add(head); P.head = head;
+    var shell = ball(0.27, M.plate, 1, 1.02, 1.05); head.add(shell);
+    var crest = bevel(0.06, 0.2, 0.46, M.plateL, 0, 0.2, 0, 0.025); head.add(crest);
+    var visor = ball(0.27, M.glass, 0.96, 0.4, 0.78); visor.position.set(0, 0.0, 0.1); head.add(visor);
+    var ringB = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.022, 10, 28), M.cyan); ringB.position.set(0, -0.01, -0.2); head.add(ringB);
+    head.add(box(0.5, 0.05, 0.05, M.gold, 0, -0.17, 0), box(0.05, 0.09, 0.05, M.cyan, -0.27, 0, 0), box(0.05, 0.09, 0.05, M.cyan, 0.27, 0, 0));
+    var neck = caps(0.09, 0.05, M.suit); neck.position.y = -0.24; head.add(neck);
+    // cape-like energy scarf tails (flutter)
+    P.tailL = bevel(0.1, 0.36, 0.02, M.cyan, 0, 0, 0, 0.03); P.tailR = bevel(0.1, 0.3, 0.02, M.cyanD, 0, 0, 0, 0.03);
+    P.tailLg = new THREE.Group(); P.tailLg.position.set(-0.12, 0.7, -0.36); P.tailL.position.y = -0.17; P.tailLg.add(P.tailL); hip.add(P.tailLg);
+    P.tailRg = new THREE.Group(); P.tailRg.position.set(0.12, 0.7, -0.36); P.tailR.position.y = -0.15; P.tailRg.add(P.tailR); hip.add(P.tailRg);
+    // arms with shoulder pads and a glowing wrist gauntlet
     function arm(side, gaunt) {
-      var sh = new THREE.Group(); sh.position.set(side * 0.29, 0.66, 0);
-      var up = caps(0.06, 0.22, M.jacketD); up.position.y = -0.17; sh.add(up);
+      var sh = new THREE.Group(); sh.position.set(side * 0.3, 0.66, 0);
+      var pad = ball(0.13, M.plate, 1.05, 0.8, 1.05); pad.position.y = 0.02; sh.add(pad);
+      sh.add(box(0.2, 0.025, 0.2, M.gold, 0, 0.06, 0));
+      var up = caps(0.068, 0.2, M.suit); up.position.y = -0.17; sh.add(up);
       var el = new THREE.Group(); el.position.y = -0.34; sh.add(el);
-      var lo = caps(0.055, 0.22, M.jacket); lo.position.y = -0.17; el.add(lo);
-      var hand = new THREE.Mesh(sphGeo, M.skin); hand.scale.setScalar(0.065); hand.position.y = -0.36; el.add(hand);
-      var tip = new THREE.Object3D(); tip.position.y = -0.38; el.add(tip);
-      if (gaunt) { el.add(box(0.14, 0.3, 0.14, M.metal, 0, -0.18, 0)); el.add(box(0.05, 0.1, 0.152, M.mint, 0, -0.14, 0)); }
+      var lo = caps(0.062, 0.2, M.suit); lo.position.y = -0.17; el.add(lo);
+      el.add(bevel(0.12, 0.17, 0.12, M.plate, 0, -0.2, 0, 0.04));
+      var hand = ball(0.08, M.plateL); hand.position.y = -0.38; el.add(hand);
+      el.add(box(0.13, 0.03, 0.13, M.cyan, 0, -0.1, 0));
+      var tip = new THREE.Object3D(); tip.position.y = -0.4; el.add(tip);
+      if (gaunt) { var dev = bevel(0.15, 0.11, 0.07, M.gold, 0, -0.22, 0.09, 0.03); el.add(dev); el.add(box(0.07, 0.05, 0.02, M.cyan, 0, -0.22, 0.13)); }
       hip.add(sh); return { sh: sh, el: el, tip: tip };
     }
     P.armL = arm(-1, false); P.armR = arm(1, true);
   })();
+  player.scale.setScalar(1.18);
   fxRoot.add(player);
   // The runner itself is the 2D explorer artwork (drawn by main.js into a canvas) shown as a camera-facing billboard.
   var sprTex = null, sprMesh = null;
@@ -756,7 +768,7 @@ import * as THREE from './vendor/three.module.min.js';
   // decor: the square where the track turns, the dead-end wall, torches, and (T-junction) the two themed corridors that lead away
   var fillMat = new THREE.MeshLambertMaterial({ map: null }), fillTexs = sideTexs.map(function (t) { var c = t.clone(); c.needsUpdate = true; c.wrapS = c.wrapT = THREE.RepeatWrapping; c.repeat.set(36, 36); return c; });
   fillMat.map = fillTexs[0];
-  var wallMat2 = lambert(0x26394b, { flatShading: true }), postMat2 = lambert(0x6e8294, { flatShading: true }), darkMat = new THREE.MeshBasicMaterial({ color: 0x020713 }), fireMat = new THREE.MeshBasicMaterial({ color: 0x48dcff });
+  var wallMat2 = lambert(0x39452f, { flatShading: true }), postMat2 = lambert(0x6a6450, { flatShading: true }), darkMat = new THREE.MeshBasicMaterial({ color: 0x02030a }), fireMat = new THREE.MeshBasicMaterial({ color: 0xff9a2a });
   var plazaGeo = new THREE.PlaneGeometry(PATH_W, PATH_W); plazaGeo.rotateX(-Math.PI / 2);
   var fillGeo = new THREE.PlaneGeometry(150, 150); fillGeo.rotateX(-Math.PI / 2);
   var stubGeo = new THREE.PlaneGeometry(PATH_W, STUB_L); stubGeo.rotateX(-Math.PI / 2);
@@ -771,27 +783,15 @@ import * as THREE from './vendor/three.module.min.js';
   }
   function buildStub() {
     var g = new THREE.Group(), u = g.userData, k, sg;
-    u.floorMat = new THREE.MeshLambertMaterial({ map: stubTex.vine }); u.lintMat = lambert(0x8ca9bb, { flatShading: true }); u.glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); u.vines = [];
-    // Use a shallow solid floor under the textured plane as well. The old plane-only
-    // corridor could disappear on some desktop GPU / depth-buffer combinations at
-    // the T-junction, making the 90-degree exits look like empty space.
-    var fl = new THREE.Mesh(stubGeo, u.floorMat); fl.rotation.y = Math.PI / 2; fl.position.set(PLAZA + STUB_L / 2, -0.035, 0); g.add(fl);
-    var corridorBed = mesh(boxGeo, wallMat2, PLAZA + STUB_L / 2, -0.16, 0, STUB_L, 0.24, PATH_W);
-    corridorBed.material = lambert(0x6b6248); g.add(corridorBed);
-    var edgeGlowMat = new THREE.MeshBasicMaterial({ color: 0x42dcff, transparent: true, opacity: 0.96, fog: false, toneMapped: false });
-    for (sg = -1; sg <= 1; sg += 2) {
-      g.add(mesh(boxGeo, wallMat2, PLAZA + STUB_L / 2, 0.8, sg * (PATH_W / 2 + 0.25), STUB_L, 1.6, 0.5));
-      g.add(mesh(boxGeo, edgeGlowMat, PLAZA + STUB_L / 2, 0.035, sg * (PATH_W / 2 - 0.12), STUB_L, 0.075, 0.12));
-    }
+    u.floorMat = new THREE.MeshLambertMaterial({ map: stubTex.vine }); u.lintMat = lambert(0xffffff, { flatShading: true }); u.glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); u.vines = [];
+    var fl = new THREE.Mesh(stubGeo, u.floorMat); fl.rotation.y = Math.PI / 2; fl.position.set(PLAZA + STUB_L / 2, -0.03, 0); g.add(fl);
+    for (sg = -1; sg <= 1; sg += 2) g.add(mesh(boxGeo, wallMat2, PLAZA + STUB_L / 2, 0.8, sg * (PATH_W / 2 + 0.25), STUB_L, 1.6, 0.5));
     for (k = 0; k < 3; k++) {
       var xk = PLAZA + 7 + k * 10;
       for (sg = -1; sg <= 1; sg += 2) g.add(mesh(boxGeo, postMat2, xk, 1.9, sg * (PATH_W / 2), 0.5, 3.8, 0.5));
       g.add(mesh(boxGeo, u.lintMat, xk, 4.0, 0, 0.6, 0.45, PATH_W + 0.7)); g.add(mesh(boxGeo, u.glowMat, xk, 3.7, 0, 0.12, 0.1, PATH_W - 0.6));
       for (sg = -2; sg <= 2; sg += 2) { var vv = mesh(boxGeo, vineMat, xk + 0.1, 3.0, sg * 1.2, 0.07, 1.6, 0.07); u.vines.push(vv); g.add(vv); }
     }
-    // A clearly readable threshold at the end of each branch makes the route
-    // silhouette legible from the wide desktop camera as well as on mobile.
-    g.add(mesh(boxGeo, u.glowMat, PLAZA + STUB_L - 0.45, 0.08, 0, 0.16, 0.12, PATH_W - 0.5));
     g.add(mesh(boxGeo, darkMat, PLAZA + STUB_L + 1, 3, 0, 1, 7, PATH_W + 1.4));            // beyond the corridor: darkness
     return g;
   }
@@ -862,8 +862,7 @@ import * as THREE from './vendor/three.module.min.js';
     }
 
     // lights follow the runner (no shadow maps: cheap)
-    sun.position.set(-8, 18, vz - 6); sun.target.position.set(0, 0, vz + 4); sun.target.updateMatrixWorld();
-    cyanFill.position.set(-5.5, 3.2, vz + 8); warmFill.position.set(5.5, 2.6, vz + 20);
+    sun.position.set(vz * 0 - 8, 16, vz - 6); sun.target.position.set(0, 0, vz + 4); sun.target.updateMatrixWorld();
 
     // chase camera: lateral follow, rises with the runner, speed-based field of view, shake after a hit
     var py = clamp(game.y, -1, 4.5), want = game.hook ? 6.0 : 5.3 + Math.max(0, py) * 0.55;

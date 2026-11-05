@@ -151,7 +151,7 @@
     if (this.route) return;                                   // committed to a path: the lane is fixed until its end
     var J = this.junction;
     if (J && J.state === 'approach' && this.pz >= J.lockZ) {  // the track ends here: a swipe left / right is the turn (accepted once the window opens)
-      if (J.choice == null && this.pz >= J.slowZ - 3) this.chooseBranch(dir < 0 ? -1 : 1);
+      if (J.choice == null) this.chooseBranch(dir < 0 ? -1 : 1);   // accepted from the moment the lane lock starts: a key pressed early is no longer silently dropped
       return;
     }
     var n = clamp(this.lane + (dir < 0 ? -1 : 1), -1, 1);

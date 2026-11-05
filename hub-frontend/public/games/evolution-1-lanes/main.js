@@ -129,28 +129,28 @@
 
   function drawGround() {
     var g = ctx.createLinearGradient(0, HOR, 0, H);
-    g.addColorStop(0, 'rgb(' + FOG.join(',') + ')'); g.addColorStop(0.18, '#123c4c'); g.addColorStop(1, '#061525');
+    g.addColorStop(0, 'rgb(' + FOG.join(',') + ')'); g.addColorStop(0.18, '#2d6a4a'); g.addColorStop(1, '#10351f');
     ctx.fillStyle = g; ctx.fillRect(0, HOR, W, H - HOR);
 
     // path
     var zn = -CAM_D + 0.6, zf = VIEW;
-    poly([proj(-PATH_HALF, 0, zn), proj(PATH_HALF, 0, zn), proj(PATH_HALF, 0, zf), proj(-PATH_HALF, 0, zf)], mix([19, 39, 57], 20));
+    poly([proj(-PATH_HALF, 0, zn), proj(PATH_HALF, 0, zn), proj(PATH_HALF, 0, zf), proj(-PATH_HALF, 0, zf)], mix([128, 94, 54], 20));
     var k0 = Math.floor((rz + zn) / SEG), k;
     for (k = k0; k * SEG - rz < zf; k++) {
       var za = Math.max(k * SEG - rz, zn), zb = k * SEG + SEG - rz;
       if (zb <= zn) continue;
       var zm = (za + zb) / 2, par = (k & 1) ? 1 : 0;
-      poly([proj(-PATH_HALF, 0, za), proj(PATH_HALF, 0, za), proj(PATH_HALF, 0, zb), proj(-PATH_HALF, 0, zb)], mix(par ? [31, 65, 88] : [22, 48, 70], zm));
+      poly([proj(-PATH_HALF, 0, za), proj(PATH_HALF, 0, za), proj(PATH_HALF, 0, zb), proj(-PATH_HALF, 0, zb)], mix(par ? [158, 118, 70] : [138, 102, 60], zm));
       if (par) {                       // lane markings (also give a strong sense of speed)
         for (var lx = -1; lx <= 1; lx += 2) {
           var xl = lx * CFG.LANE_W / 2;
-          poly([proj(xl - 0.055, 0, za), proj(xl + 0.055, 0, za), proj(xl + 0.055, 0, zb - 0.6), proj(xl - 0.055, 0, zb - 0.6)], mix([62, 211, 245], zm));
+          poly([proj(xl - 0.06, 0, za), proj(xl + 0.06, 0, za), proj(xl + 0.06, 0, zb - 0.6), proj(xl - 0.06, 0, zb - 0.6)], mix([96, 68, 38], zm));
         }
       }
     }
     // path edge roots
     for (var sd = -1; sd <= 1; sd += 2) {
-      poly([proj(sd * PATH_HALF, 0, zn), proj(sd * (PATH_HALF + 0.5), 0, zn), proj(sd * (PATH_HALF + 0.5), 0, zf), proj(sd * PATH_HALF, 0, zf)], mix([18, 76, 102], 25));
+      poly([proj(sd * PATH_HALF, 0, zn), proj(sd * (PATH_HALF + 0.5), 0, zn), proj(sd * (PATH_HALF + 0.5), 0, zf), proj(sd * PATH_HALF, 0, zf)], mix([60, 96, 52], 25));
     }
   }
 
@@ -317,10 +317,9 @@
   // Explorer seen from behind. Drawn in "character units" (1 unit ~ 1 m, y up, feet at 0) so the pose maths
   // stays readable; only the look changes here - physics, hitboxes and controls live in core.js.
   var leanS = 0, lastPx = 0, crashAt = 0, hookSwayT = 0;
-  // EVOLUTION 1 signature suit: obsidian alloy, ceramic silver and ion-cyan energy.
-  var SKIN = '#c68a5a', SKIN_D = '#a9714a', HAIR = '#101d2b', JACKET = '#172b3d', JACKET_D = '#0b1726', JACKET_L = '#91b8ca',
-      PANTS = '#20364c', PANTS_D = '#101e30', BOOT = '#182638', SOLE = '#07111d', PACK = '#122b40', PACK_D = '#091a2b', PACK_L = '#4a9bb0',
-      MINT = '#54f5ff', SCARF = '#31d9ef', SCARF_D = '#087d9b', METAL = '#b8d5e2', METAL_D = '#536f82', STRAP = '#091827';
+  var SKIN = '#c68a5a', SKIN_D = '#a9714a', HAIR = '#2a1c14', JACKET = '#d9b25f', JACKET_D = '#b8913f', JACKET_L = '#ecc979',
+      PANTS = '#27405a', PANTS_D = '#1c3248', BOOT = '#3a2a1a', SOLE = '#160e08', PACK = '#2f6b4c', PACK_D = '#22513a', PACK_L = '#41905f',
+      MINT = '#7cf0cf', SCARF = '#f08a1f', SCARF_D = '#c46a0f', METAL = '#9fb2bf', METAL_D = '#6c808e', STRAP = '#4a3220';
 
   function limb(x0, y0, x1, y1, w, col) {
     ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
@@ -342,9 +341,7 @@
     ctx.fillStyle = BOOT; roundRect(fx - 0.115, lift + 0.02, 0.23, 0.2, 0.07); ctx.fill();
     ctx.fillStyle = SOLE; roundRect(fx - 0.12, lift - 0.015, 0.24, 0.07 + 0.09 * up, 0.035); ctx.fill();
     if (up > 0.4) { ctx.fillStyle = '#2d1f14'; ctx.fillRect(fx - 0.08, lift + 0.01, 0.16, 0.025); ctx.fillRect(fx - 0.08, lift + 0.07, 0.16, 0.02); }
-    ctx.fillStyle = '#8eb8c9'; ctx.fillRect(fx - 0.1, lift + 0.18, 0.2, 0.035);
-    ctx.fillStyle = MINT; ctx.globalAlpha = 0.8; ctx.fillRect(fx - 0.085, lift + 0.11, 0.17, 0.018); ctx.globalAlpha = 1;
-    ctx.fillStyle = '#6f91a5'; roundRect(fx - 0.105, lift + 0.2, 0.21, 0.055, 0.025); ctx.fill(); // magnetic boot cuff
+    ctx.fillStyle = '#5a4128'; ctx.fillRect(fx - 0.1, lift + 0.18, 0.2, 0.035);                    // boot cuff
   }
   function arm(side, sx, sy, hx, hy, gauntlet, t) {
     ctx.lineCap = 'round';
@@ -356,9 +353,7 @@
       ctx.save(); ctx.translate(ex + dx * 0.55, ey + dy * 0.55); ctx.rotate(ang);
       ctx.fillStyle = METAL; roundRect(-L * 0.4, -0.1, L * 0.78, 0.2, 0.06); ctx.fill();
       ctx.fillStyle = METAL_D; ctx.fillRect(-L * 0.4, -0.1, L * 0.78, 0.04);
-      ctx.fillStyle = '#142b3d'; roundRect(-L * 0.16, -0.14, L * 0.34, 0.28, 0.045); ctx.fill();
       ctx.fillStyle = MINT; ctx.globalAlpha = 0.65 + 0.35 * Math.sin(t / 220); ctx.fillRect(-0.02, -0.105, 0.07, 0.21); ctx.globalAlpha = 1;
-      ctx.strokeStyle = '#b9e8f2'; ctx.lineWidth = 0.025; ctx.strokeRect(-L * 0.36, -0.075, L * 0.68, 0.15);
       ctx.restore();
     }
     ctx.fillStyle = SKIN; ctx.beginPath(); ctx.arc(hx, hy, 0.085, 0, 6.3); ctx.fill();               // glove-less hand
@@ -432,89 +427,50 @@
 
     leg(-1, hipY, liftL, spreadL, sl); leg(1, hipY, liftR, spreadR, sl);
 
-    // Armoured torso: layered carbon-fibre plates with luminous reactor spine.
+    // torso (jacket) with shading
     var tw = sl ? 0.74 : 0.62, tb = hipY + 0.02, tt = shY + 0.04;
-    ctx.fillStyle = JACKET_D; roundRect(-tw / 2, tb, tw, tt - tb, 0.16); ctx.fill();
-    ctx.fillStyle = JACKET; roundRect(-tw * 0.43, tb + 0.08, tw * 0.86, tt - tb - 0.16, 0.12); ctx.fill();
-    ctx.fillStyle = '#0a1b2b'; roundRect(-tw * 0.34, tb + 0.18, tw * 0.68, Math.max(0.12, tt - tb - 0.32), 0.075); ctx.fill();
-    // segmented shoulder and back plates
-    ctx.fillStyle = '#7e9eaf'; roundRect(-tw * 0.49, shY - 0.16, tw * 0.32, 0.2, 0.07); ctx.fill();
-    roundRect(tw * 0.17, shY - 0.16, tw * 0.32, 0.2, 0.07); ctx.fill();
-    ctx.fillStyle = '#29465d'; roundRect(-tw * 0.42, tb + 0.12, tw * 0.84, 0.12, 0.045); ctx.fill();
-    ctx.fillStyle = '#9fc7d7'; ctx.fillRect(-tw * 0.34, tb + 0.25, 0.035, Math.max(0.12, tt - tb - 0.43));
-    ctx.fillStyle = MINT; ctx.globalAlpha = 0.9; ctx.fillRect(-0.018, tb + 0.25, 0.036, Math.max(0.12, tt - tb - 0.43)); ctx.globalAlpha = 1;
-    // central EVOXERA power cell and waist seal
-    ctx.fillStyle = '#d3edf4'; roundRect(-0.105, tb + 0.04, 0.21, 0.17, 0.045); ctx.fill();
-    ctx.fillStyle = '#0c2638'; roundRect(-0.075, tb + 0.065, 0.15, 0.12, 0.035); ctx.fill();
-    ctx.fillStyle = MINT; ctx.globalAlpha = 0.75 + 0.25 * Math.sin(t / 190); roundRect(-0.035, tb + 0.085, 0.07, 0.08, 0.025); ctx.fill(); ctx.globalAlpha = 1;
-    ctx.strokeStyle = '#83eaff'; ctx.lineWidth = 0.018; ctx.beginPath(); ctx.moveTo(-0.17, tb + 0.31); ctx.lineTo(0, tb + 0.39); ctx.lineTo(0.17, tb + 0.31); ctx.stroke();
-    ctx.fillStyle = 'rgba(72,220,255,.18)'; roundRect(-0.23, tb + 0.35, 0.46, 0.055, 0.02); ctx.fill();
-    ctx.fillStyle = STRAP; ctx.fillRect(-tw / 2, tb + 0.01, tw, 0.075);
-    ctx.fillStyle = METAL; roundRect(-0.055, tb + 0.005, 0.11, 0.09, 0.025); ctx.fill();
-    ctx.fillStyle = MINT; ctx.fillRect(-0.018, tb + 0.025, 0.036, 0.05);
-    // twin magnetic-boot energy vents
-    ctx.fillStyle = '#071c2d'; roundRect(-0.27, tb - 0.02, 0.16, 0.075, 0.025); ctx.fill(); roundRect(0.11, tb - 0.02, 0.16, 0.075, 0.025); ctx.fill();
-    ctx.fillStyle = '#5de8ff'; ctx.globalAlpha = 0.75 + 0.25 * Math.sin(t / 120); ctx.fillRect(-0.24, tb + 0.005, 0.10, 0.018); ctx.fillRect(0.14, tb + 0.005, 0.10, 0.018); ctx.globalAlpha = 1;
+    ctx.fillStyle = JACKET; roundRect(-tw / 2, tb, tw, tt - tb, 0.16); ctx.fill();
+    ctx.fillStyle = JACKET_D; roundRect(-tw / 2, tb, tw * 0.2, tt - tb, 0.1); ctx.fill(); roundRect(tw / 2 - tw * 0.2, tb, tw * 0.2, tt - tb, 0.1); ctx.fill();
+    ctx.fillStyle = JACKET_L; ctx.fillRect(-0.025, tb + 0.05, 0.05, tt - tb - 0.12);               // back seam
+    ctx.fillStyle = STRAP; ctx.fillRect(-tw / 2, tb + 0.02, tw, 0.075);                            // belt
+    ctx.fillStyle = METAL; ctx.fillRect(-0.04, tb + 0.015, 0.08, 0.085);
 
-    // Modular utility cells on the hips.
-    ctx.fillStyle = '#91adbd'; roundRect(-tw / 2 - 0.09, tb + 0.08, 0.12, 0.22, 0.035); ctx.fill();
-    ctx.fillStyle = '#10283b'; roundRect(-tw / 2 - 0.065, tb + 0.11, 0.07, 0.15, 0.025); ctx.fill();
-    ctx.fillStyle = MINT; ctx.fillRect(-tw / 2 - 0.045, tb + 0.14, 0.03, 0.08);
-    ctx.fillStyle = '#91adbd'; roundRect(tw / 2 - 0.03, tb + 0.08, 0.12, 0.22, 0.035); ctx.fill();
-    ctx.fillStyle = '#10283b'; roundRect(tw / 2 - 0.005, tb + 0.11, 0.07, 0.15, 0.025); ctx.fill();
-    ctx.fillStyle = MINT; ctx.fillRect(tw / 2 + 0.015, tb + 0.14, 0.03, 0.08);
+    // coiled rope on the left hip
+    ctx.strokeStyle = '#d8c79a'; ctx.lineWidth = 0.03;
+    for (var c = 0; c < 3; c++) { ctx.beginPath(); ctx.ellipse(-tw / 2 - 0.02, tb + 0.12 + c * 0.001, 0.09 - c * 0.012, 0.075 - c * 0.01, 0, 0, 6.3); ctx.stroke(); }
 
     // arms (left behind the pack edge, right with the hook gauntlet)
     arm(-1, -tw / 2 + 0.02, shY - 0.03, armLx, armLy, false, t);
     arm(1, tw / 2 - 0.02, shY - 0.03, armRx, armRy, true, t);
 
-    // Compact powered exo-pack with twin ion vents and a bright EVO core.
+    // backpack with the EVO light
     var pw = tw * 0.78, pb = tb + 0.1, pt = tt - 0.02;
-    ctx.fillStyle = '#6d8b9d'; roundRect(-pw / 2 - 0.045, pb + 0.03, pw + 0.09, pt - pb - 0.02, 0.1); ctx.fill();
-    ctx.fillStyle = PACK_D; roundRect(-pw / 2, pb + 0.06, pw, pt - pb - 0.06, 0.085); ctx.fill();
-    ctx.fillStyle = '#294c63'; roundRect(-pw * 0.36, pb + 0.1, pw * 0.72, pt - pb - 0.16, 0.07); ctx.fill();
-    // twin vertical energy conduits
-    [-1, 1].forEach(function (d) {
-      ctx.fillStyle = '#071827'; roundRect(d * (pw * 0.27) - 0.035, pb + 0.12, 0.07, pt - pb - 0.2, 0.025); ctx.fill();
-      ctx.fillStyle = MINT; ctx.globalAlpha = 0.72 + 0.28 * Math.sin(t / 210 + d); roundRect(d * (pw * 0.27) - 0.012, pb + 0.16, 0.024, pt - pb - 0.28, 0.012); ctx.fill(); ctx.globalAlpha = 1;
-    });
+    ctx.fillStyle = '#8a5a2b'; roundRect(-pw / 2 - 0.03, pt - 0.02, pw + 0.06, 0.12, 0.06); ctx.fill();   // bedroll
+    ctx.fillStyle = '#6e4620'; ctx.fillRect(-pw * 0.2, pt - 0.02, 0.03, 0.12); ctx.fillRect(pw * 0.2 - 0.03, pt - 0.02, 0.03, 0.12);
+    ctx.fillStyle = PACK; roundRect(-pw / 2, pb, pw, pt - pb, 0.1); ctx.fill();
+    ctx.fillStyle = PACK_D; roundRect(-pw / 2, pb, pw * 0.16, pt - pb, 0.07); ctx.fill();
+    ctx.fillStyle = PACK_L; ctx.fillRect(-pw / 2 + pw * 0.2, pb + 0.04, pw * 0.6, 0.03);
+    ctx.fillStyle = PACK_D; roundRect(-pw / 2 - 0.04, pb + 0.06, 0.09, 0.2, 0.04); ctx.fill(); roundRect(pw / 2 - 0.05, pb + 0.06, 0.09, 0.2, 0.04); ctx.fill();   // side pouches
     var gl = 0.7 + 0.3 * Math.sin(t / 260);
-    ctx.fillStyle = 'rgba(84,245,255,' + (0.25 * gl) + ')'; ctx.beginPath(); ctx.arc(0, (pb + pt) / 2, 0.22, 0, 6.3); ctx.fill();
-    ctx.fillStyle = '#d7f7ff'; roundRect(-0.065, (pb + pt) / 2 - 0.11, 0.13, 0.22, 0.045); ctx.fill();
-    ctx.fillStyle = MINT; ctx.globalAlpha = gl; roundRect(-0.035, (pb + pt) / 2 - 0.075, 0.07, 0.15, 0.03); ctx.fill(); ctx.globalAlpha = 1;
-    ctx.fillStyle = '#8eafc0'; roundRect(-pw / 2 - 0.075, pb + 0.12, 0.12, 0.25, 0.04); ctx.fill();
-    roundRect(pw / 2 - 0.045, pb + 0.12, 0.12, 0.25, 0.04); ctx.fill();
+    ctx.fillStyle = 'rgba(124,240,207,' + (0.22 * gl) + ')'; ctx.beginPath(); ctx.arc(0, (pb + pt) / 2 + 0.02, 0.17, 0, 6.3); ctx.fill();
+    ctx.fillStyle = MINT; ctx.globalAlpha = gl; roundRect(-0.045, (pb + pt) / 2 - 0.08, 0.09, 0.2, 0.04); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = STRAP; ctx.fillRect(-pw / 2 + 0.02, pt - 0.14, pw - 0.04, 0.03);                // chest-strap hint
 
-    // Flexible ion-collar fins stream behind the shoulders instead of a cloth scarf.
+    // scarf tails flick in the wind
     var wv = running ? Math.sin(t / 90) * 0.06 + (-leanS) * 0.5 : Math.sin(t / 300) * 0.02;
-    ctx.fillStyle = '#087d9b'; ctx.beginPath(); ctx.moveTo(-0.18, shY + 0.02); ctx.quadraticCurveTo(-0.34 + wv, shY - 0.13, -0.48 + wv * 1.5, shY - 0.31); ctx.lineTo(-0.24 + wv, shY - 0.25); ctx.quadraticCurveTo(-0.12, shY - 0.08, -0.06, shY + 0.02); ctx.fill();
-    ctx.fillStyle = MINT; ctx.globalAlpha = 0.8; ctx.lineWidth = 0.025; ctx.strokeStyle = MINT; ctx.beginPath(); ctx.moveTo(-0.2, shY - 0.04); ctx.lineTo(-0.42 + wv, shY - 0.26); ctx.stroke(); ctx.globalAlpha = 1;
-    ctx.fillStyle = '#087d9b'; ctx.beginPath(); ctx.moveTo(0.18, shY + 0.02); ctx.quadraticCurveTo(0.34 + wv, shY - 0.1, 0.45 + wv * 1.5, shY - 0.27); ctx.lineTo(0.23 + wv, shY - 0.23); ctx.quadraticCurveTo(0.12, shY - 0.08, 0.06, shY + 0.02); ctx.fill();
-    ctx.fillStyle = '#8eb8c9'; roundRect(-0.25, shY - 0.03, 0.5, 0.13, 0.055); ctx.fill();
-    ctx.fillStyle = MINT; ctx.fillRect(-0.16, shY + 0.005, 0.32, 0.025);
+    ctx.fillStyle = SCARF; ctx.beginPath(); ctx.moveTo(-0.17, shY + 0.02); ctx.quadraticCurveTo(-0.3 + wv, shY - 0.15, -0.34 + wv * 1.6, shY - 0.34); ctx.lineTo(-0.2 + wv, shY - 0.3); ctx.quadraticCurveTo(-0.14, shY - 0.1, -0.06, shY + 0.02); ctx.fill();
+    ctx.fillStyle = SCARF_D; ctx.beginPath(); ctx.moveTo(0.17, shY + 0.02); ctx.quadraticCurveTo(0.3 + wv, shY - 0.1, 0.32 + wv * 1.8, shY - 0.26); ctx.lineTo(0.2 + wv, shY - 0.24); ctx.quadraticCurveTo(0.14, shY - 0.08, 0.06, shY + 0.02); ctx.fill();
+    ctx.fillStyle = SCARF; roundRect(-0.24, shY - 0.02, 0.48, 0.1, 0.05); ctx.fill();                    // neck wrap
 
-    // Fully enclosed futuristic helmet: no exposed hair, illuminated rear visor and side modules.
-    var hr = 0.235;
-    ctx.fillStyle = '#7896a8'; roundRect(-0.19, shY + 0.01, 0.38, 0.16, 0.055); ctx.fill(); // neck seal
-    ctx.fillStyle = '#071827'; ctx.beginPath(); ctx.ellipse(0, headY, hr * 1.12, hr * 1.18, 0, 0, 6.3); ctx.fill();
-    ctx.fillStyle = '#24465e'; ctx.beginPath(); ctx.ellipse(0, headY + 0.015, hr * 0.98, hr * 1.02, 0, 0, 6.3); ctx.fill();
-    // segmented crown plates
-    ctx.fillStyle = '#b4d0dc'; ctx.beginPath(); ctx.moveTo(-0.19, headY + 0.09); ctx.quadraticCurveTo(-0.13, headY + 0.29, 0, headY + 0.29); ctx.quadraticCurveTo(0.13, headY + 0.29, 0.19, headY + 0.09); ctx.lineTo(0.12, headY + 0.04); ctx.quadraticCurveTo(0, headY + 0.13, -0.12, headY + 0.04); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#020b18'; roundRect(-0.195, headY - 0.085, 0.39, 0.15, 0.052); ctx.fill();
-    // panoramic polarized visor with a bright cyan edge and a subtle reflected highlight
-    ctx.strokeStyle = '#7beeff'; ctx.lineWidth = 0.018; roundRect(-0.18, headY - 0.073, 0.36, 0.126, 0.045); ctx.stroke();
-    var visor = ctx.createLinearGradient(-0.16, headY - 0.06, 0.16, headY + 0.045); visor.addColorStop(0, '#0b3857'); visor.addColorStop(.48, '#0b1d35'); visor.addColorStop(1, '#146b86');
-    ctx.fillStyle = visor; roundRect(-0.16, headY - 0.06, 0.32, 0.10, 0.035); ctx.fill();
-    ctx.fillStyle = MINT; ctx.globalAlpha = 0.95; roundRect(-0.12, headY - 0.025, 0.24, 0.018, 0.009); ctx.fill(); ctx.globalAlpha = 1;
-    ctx.fillStyle = 'rgba(220,250,255,.7)'; ctx.fillRect(-0.12, headY + 0.025, 0.08, 0.009);
-    // side audio / sensor pods
-    ctx.fillStyle = '#9dbbc9'; roundRect(-0.255, headY - 0.07, 0.075, 0.16, 0.035); ctx.fill();
-    roundRect(0.18, headY - 0.07, 0.075, 0.16, 0.035); ctx.fill();
-    ctx.fillStyle = '#071827'; ctx.beginPath(); ctx.arc(-0.218, headY + 0.01, 0.025, 0, 6.3); ctx.fill(); ctx.beginPath(); ctx.arc(0.218, headY + 0.01, 0.025, 0, 6.3); ctx.fill();
-    ctx.fillStyle = MINT; ctx.beginPath(); ctx.arc(-0.218, headY + 0.01, 0.012, 0, 6.3); ctx.fill(); ctx.beginPath(); ctx.arc(0.218, headY + 0.01, 0.012, 0, 6.3); ctx.fill();
-    // luminous central identity strip
-    ctx.fillStyle = '#d9f7ff'; roundRect(-0.025, headY + 0.12, 0.05, 0.09, 0.018); ctx.fill();
-    ctx.fillStyle = MINT; roundRect(-0.012, headY + 0.135, 0.024, 0.06, 0.01); ctx.fill();
+    // head from behind: hair, headband, goggle strap
+    var hr = 0.215;
+    ctx.fillStyle = SKIN; roundRect(-0.07, shY + 0.02, 0.14, 0.12, 0.04); ctx.fill();                  // neck
+    ctx.fillStyle = HAIR; ctx.beginPath(); ctx.arc(0, headY, hr, 0, 6.3); ctx.fill();
+    ctx.fillStyle = '#3b2a1d'; ctx.beginPath(); ctx.arc(-0.05, headY + 0.07, hr * 0.62, 0.3, 2.5); ctx.fill();   // hair highlight
+    ctx.fillStyle = SKIN; ctx.beginPath(); ctx.ellipse(-hr * 0.96, headY - 0.03, 0.035, 0.06, 0, 0, 6.3); ctx.fill(); ctx.beginPath(); ctx.ellipse(hr * 0.96, headY - 0.03, 0.035, 0.06, 0, 0, 6.3); ctx.fill();   // ears
+    ctx.fillStyle = '#1f4f46'; ctx.fillRect(-hr * 0.99, headY + 0.03, hr * 1.98, 0.07);               // goggle strap
+    ctx.fillStyle = MINT; ctx.fillRect(-0.03, headY + 0.03, 0.06, 0.07);                              // strap buckle
+    ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.beginPath(); ctx.arc(-0.07, headY + 0.1, 0.07, 3.4, 5.2); ctx.fill();
 
     if (stars) {                                                       // dizzy stars after a crash
       for (var q = 0; q < 3; q++) {
@@ -558,15 +514,27 @@
       g2.addColorStop(0, 'rgba(0,0,0,0)'); g2.addColorStop(1, 'rgba(2,0,10,' + Math.min(0.92, dark * 1.6).toFixed(3) + ')');
       ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
     }
-    if (ji.window && ji.choice == null) {
-      var m = Math.min(W, H), s = m * 0.09, y = H * 0.46, a = 0.45 + 0.4 * pulse;
-      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = '#ffe86a'; ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 3;
+    if (ji.dist <= CFG.J_LOCK_DIST + 5 && ji.choice == null) {          // the turn is accepted from here on, so the cue shows from here on
+      var m = Math.min(W, H), s = m * 0.085, y = H * 0.47, a = 0.7 + 0.3 * pulse, kb = !(window.matchMedia && window.matchMedia('(hover: none)').matches);
+      ctx.save(); ctx.globalAlpha = a; ctx.shadowColor = '#2de6ff'; ctx.shadowBlur = 18; ctx.lineJoin = 'round';
       [-1, 1].forEach(function (d) {
         var x = W / 2 + d * W * 0.36;
-        ctx.beginPath(); ctx.moveTo(x + d * s, y); ctx.lineTo(x - d * s * 0.2, y - s * 0.7); ctx.lineTo(x - d * s * 0.2, y + s * 0.7); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.lineWidth = s * 0.24; ctx.strokeStyle = '#2de6ff'; ctx.lineCap = 'round';
+        for (var k = 0; k < 2; k++) {                                   // double chevron pointing the way
+          var ox = d * (k * s * 0.55);
+          ctx.globalAlpha = a * (k ? 0.55 : 1);
+          ctx.beginPath(); ctx.moveTo(x - d * s * 0.5 + ox, y - s * 0.7); ctx.lineTo(x + d * s * 0.2 + ox, y); ctx.lineTo(x - d * s * 0.5 + ox, y + s * 0.7); ctx.stroke();
+        }
+        if (kb) {                                                       // keycap hint on a keyboard
+          ctx.globalAlpha = 0.95; ctx.shadowBlur = 8; var kw = s * 0.9, kx = x - kw / 2 + d * s * 0.2, ky = y + s * 1.05;
+          ctx.fillStyle = 'rgba(4,16,30,.85)'; ctx.strokeStyle = '#ffc45a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.rect(kx, ky, kw, kw); ctx.fill(); ctx.stroke();
+          ctx.shadowBlur = 0; ctx.fillStyle = '#ffe3a0'; ctx.font = '800 ' + Math.round(kw * 0.55) + 'px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(d < 0 ? 'A' : 'D', kx + kw / 2, ky + kw / 2 + 1); ctx.textBaseline = 'alphabetic'; ctx.shadowBlur = 18;
+        }
       });
-      ctx.globalAlpha = 0.85; ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(W * 0.3, H * 0.93, W * 0.4, 5);
-      ctx.fillStyle = '#ffe86a'; ctx.fillRect(W * 0.3, H * 0.93, W * 0.4 * clamp(ji.dist / CFG.J_SLOW_DIST, 0, 1), 5);
+      ctx.shadowBlur = 0; ctx.globalAlpha = 0.9; ctx.font = '800 ' + Math.round(m * 0.04) + 'px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#eaffff';
+      ctx.fillText('TURN NOW', W / 2, H * 0.45);
+      ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(W * 0.3, H * 0.93, W * 0.4, 5);
+      ctx.fillStyle = '#2de6ff'; ctx.shadowColor = '#2de6ff'; ctx.shadowBlur = 8; ctx.fillRect(W * 0.3, H * 0.93, W * 0.4 * clamp(ji.dist / CFG.J_SLOW_DIST, 0, 1), 5);
       ctx.restore();
     }
   }
@@ -602,28 +570,42 @@
 
   function drawHUD(t) {
     var menu = game.state === 'menu', sc = menu ? 0 : game.score(), pts = menu ? 0 : game.points(), m = Math.min(W, H);
-    ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.font = '800 ' + Math.round(m * 0.09) + 'px system-ui, sans-serif';
     var ty = Math.max(48, H * 0.075);
-    ctx.fillText(sc + ' m', W / 2 + 2, ty + 2);
-    ctx.fillStyle = '#fff'; ctx.fillText(sc + ' m', W / 2, ty);
-    // coin counter
-    if (coinBump > 0) coinBump = Math.max(0, coinBump - 0.08);
-    var cy = ty + m * 0.055, cr = m * 0.026 * (1 + coinBump * 0.35);
-    ctx.font = '800 ' + Math.round(m * 0.048) + 'px system-ui, sans-serif';
-    var ctxt = String(menu ? 0 : game.coins), cw = ctx.measureText(ctxt).width, cx0 = W / 2 - (cw + cr * 2.6) / 2 + cr;
-    if (coinImg.complete && coinImg.naturalWidth) ctx.drawImage(coinImg, cx0 - cr * 1.1, cy - cr * 0.35 - cr * 1.1, cr * 2.2, cr * 2.2);
-    else { ctx.fillStyle = '#2a64d8'; ctx.beginPath(); ctx.arc(cx0, cy - cr * 0.35, cr, 0, 6.3); ctx.fill(); }
-    ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillText(ctxt, cx0 + cr * 1.6 + 2, cy + 2); ctx.fillStyle = '#ffe9a0'; ctx.fillText(ctxt, cx0 + cr * 1.6, cy);
-    ctx.font = '700 ' + Math.round(m * 0.034) + 'px system-ui, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.8)';
-    ctx.textAlign = 'left'; ctx.fillText('BEST ' + Math.max(best, pts), 14, ty - 10);
-    // health: two pips; one is lost while wounded (a second hit then ends the run)
-    for (var hp = 0; hp < 2; hp++) {
-      var full = hp === 0 || game.wounded <= 0, hx = 22 + hp * m * 0.06, hy = ty + m * 0.018, hr = m * 0.022;
-      var beat = game.wounded > 0 && hp === 1 ? 0.5 + 0.5 * Math.sin(t / 120) : 1;
-      ctx.fillStyle = full ? '#ff5a5a' : 'rgba(255,255,255,.18)'; ctx.globalAlpha = full ? 1 : beat;
-      ctx.beginPath(); ctx.arc(hx - hr * 0.5, hy, hr * 0.62, Math.PI, 0); ctx.arc(hx + hr * 0.5, hy, hr * 0.62, Math.PI, 0); ctx.lineTo(hx, hy + hr * 1.35); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+    function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+    function glass(x, y, w, h, r, hot) {
+      var g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, 'rgba(14,40,62,.78)'); g.addColorStop(1, 'rgba(4,14,26,.72)');
+      rr(x, y, w, h, r); ctx.fillStyle = g; ctx.fill();
+      ctx.lineWidth = Math.max(1.5, m * 0.004); ctx.strokeStyle = hot ? 'rgba(255,200,90,.9)' : 'rgba(70,230,255,.8)'; ctx.shadowColor = hot ? '#ffc45a' : '#2de6ff'; ctx.shadowBlur = 10; ctx.stroke(); ctx.shadowBlur = 0;
     }
-    ctx.textAlign = 'right'; ctx.fillText('x' + (game.speed / CFG.START_SPEED).toFixed(1), W - 14, ty - 10);
+    // distance: glass plate, glowing cyan digits
+    var dfs = Math.round(m * 0.075); ctx.font = '800 ' + dfs + 'px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var dtxt = String(sc), dw = ctx.measureText(dtxt).width + m * 0.12, dh = dfs * 1.3, dx = W / 2 - dw / 2, dy = ty - dfs * 0.95;
+    glass(dx, dy, dw, dh, dh * 0.32, false);
+    ctx.shadowColor = '#2de6ff'; ctx.shadowBlur = 14; ctx.fillStyle = '#eaffff'; ctx.fillText(dtxt, W / 2 - m * 0.012, dy + dh / 2 + 1); ctx.shadowBlur = 0;
+    ctx.font = '800 ' + Math.round(dfs * 0.4) + 'px system-ui, sans-serif'; ctx.fillStyle = '#58e6ff'; ctx.textAlign = 'left'; ctx.fillText('M', W / 2 + ctx.measureText(dtxt).width * 0 + (dw / 2 - m * 0.05), dy + dh / 2 + dfs * 0.2);
+    // coin chip
+    if (coinBump > 0) coinBump = Math.max(0, coinBump - 0.08);
+    var cfs = Math.round(m * 0.042), cr = m * 0.026 * (1 + coinBump * 0.35); ctx.font = '800 ' + cfs + 'px system-ui, sans-serif';
+    var ctxt = String(menu ? 0 : game.coins), cw = ctx.measureText(ctxt).width, chW = cw + cr * 3.6 + m * 0.03, chH = cr * 2.5, chX = W / 2 - chW / 2, chY = dy + dh + m * 0.012;
+    glass(chX, chY, chW, chH, chH / 2, true);
+    var cx0 = chX + cr * 1.5, cyy = chY + chH / 2;
+    if (coinImg.complete && coinImg.naturalWidth) ctx.drawImage(coinImg, cx0 - cr, cyy - cr, cr * 2, cr * 2);
+    else { ctx.fillStyle = '#f2b73a'; ctx.beginPath(); ctx.arc(cx0, cyy, cr, 0, 6.3); ctx.fill(); }
+    ctx.textAlign = 'left'; ctx.fillStyle = '#ffe9a0'; ctx.fillText(ctxt, cx0 + cr * 1.5, cyy + 1);
+    // best + speed chips
+    ctx.font = '700 ' + Math.round(m * 0.03) + 'px system-ui, sans-serif'; ctx.textBaseline = 'middle';
+    var bt = 'BEST ' + Math.max(best, pts), bw = ctx.measureText(bt).width + m * 0.05, bh = m * 0.052;
+    glass(12, ty - dfs * 0.95, bw, bh, bh / 2, false); ctx.textAlign = 'left'; ctx.fillStyle = '#bfefff'; ctx.fillText(bt, 12 + m * 0.025, ty - dfs * 0.95 + bh / 2 + 1);
+    var st = 'x' + (game.speed / CFG.START_SPEED).toFixed(1), sw = ctx.measureText(st).width + m * 0.05;
+    glass(W - 12 - sw, ty - dfs * 0.95, sw, bh, bh / 2, false); ctx.textAlign = 'right'; ctx.fillStyle = '#ffe9a0'; ctx.fillText(st, W - 12 - m * 0.025, ty - dfs * 0.95 + bh / 2 + 1);
+    // health: two energy cells; one drains while wounded (a second hit then ends the run)
+    for (var hp = 0; hp < 2; hp++) {
+      var full = hp === 0 || game.wounded <= 0, hx = 12 + hp * (m * 0.09), hy = ty - dfs * 0.95 + bh + m * 0.014, hw = m * 0.08, hh = m * 0.026;
+      var beat = game.wounded > 0 && hp === 1 ? 0.5 + 0.5 * Math.sin(t / 120) : 1;
+      ctx.globalAlpha = full ? 1 : 0.25 + 0.4 * beat; rr(hx, hy, hw, hh, hh / 2);
+      ctx.fillStyle = full ? '#2de6ff' : '#ff5a6a'; ctx.shadowColor = full ? '#2de6ff' : '#ff5a6a'; ctx.shadowBlur = full ? 10 : 6; ctx.fill(); ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    }
+    ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'center';
     // contextual hint for the hook
     var near = null, i, o;
@@ -635,11 +617,11 @@
     if (show) {
       ctx.font = '800 ' + Math.round(Math.min(W, H) * 0.06) + 'px system-ui, sans-serif';
       ctx.fillStyle = 'rgba(0,0,0,.4)'; var msg = near.type === 'chasm' ? 'TAP HOOK: SWING!' : 'TAP HOOK: PULL UP!';
-      ctx.fillText(msg, W / 2 + 2, H * 0.2 + 2); ctx.fillStyle = (Math.floor(t / 250) % 2) ? '#ffe86a' : '#fff'; ctx.fillText(msg, W / 2, H * 0.2);
-    } else if (game.state === 'playing' && hintT > 0) {
+      ctx.fillText(msg, W / 2 + 2, H * 0.37 + 2); ctx.fillStyle = (Math.floor(t / 250) % 2) ? '#ffe86a' : '#fff'; ctx.fillText(msg, W / 2, H * 0.37);
+    } else if (game.state === 'playing' && hintT > 0 && !game.junctionInfo()) {
       ctx.font = '700 ' + Math.round(Math.min(W, H) * 0.05) + 'px system-ui, sans-serif';
       ctx.globalAlpha = Math.min(1, hintT); ctx.fillStyle = '#fff';
-      ctx.fillText('Swipe to dodge', W / 2, H * 0.2); ctx.globalAlpha = 1;
+      ctx.fillText("Swipe to dodge", W / 2, H * 0.37); ctx.globalAlpha = 1;
     }
     hookBtn.classList.toggle('hint', show);
 
@@ -681,7 +663,7 @@
       canvas.style.background = 'transparent';
       ctx.clearRect(0, 0, W, H);
       drawPlayerSprite(t);
-      r3.render(game, t, { attract: attract, shake: shake, flash: flash, sprite: spr, spriteInfo: SPR, ropeColor: game.hook && game.hook.kind === 'pull' ? '#ffa33a' : ropeColor() });
+      r3.render(game, t, { attract: attract, shake: shake, flash: flash, sprite: null, spriteInfo: SPR, ropeColor: game.hook && game.hook.kind === 'pull' ? '#ffa33a' : ropeColor() });
       drawHookLine();
       drawHUD(t);
       return;
@@ -834,6 +816,7 @@
   function showOverlay(mode) {
     overlay.hidden = false; hookBtn.hidden = true; pauseBtn.hidden = true; silenceVoice();
     ovStats.hidden = true; ovHelp.hidden = false;
+    var zn = document.getElementById('ov-zones'); if (zn) zn.hidden = mode !== 'menu';
     if (mode === 'menu') { ovTitle.innerHTML = 'EVOLUTION 1<br><span>THE RUNNER</span>'; ovText.textContent = 'A laboratory fell from the sky and became a temple in the jungle. Run toward it.'; ovBtn.textContent = 'START'; }
     else if (mode === 'paused') { ovTitle.innerHTML = 'PAUSED'; ovText.textContent = ''; ovBtn.textContent = 'RESUME'; }
     else {
