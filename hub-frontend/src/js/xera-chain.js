@@ -536,12 +536,14 @@ async function connectBnbWallet() {
         await loadNetworkConfig();
 
         // Preferred: the wallet picker (lists wallets, deep links on mobile, QR on desktop).
+        let pickerProblem = appKitConfigured() ? '' : 'not_configured';
         if (appKitConfigured()) {
             let picked = null;
             try {
                 picked = await connectWithAppKit(state.network && state.network.chain_id);
             } catch (err) {
                 if (err && err.cancelled) { return; }            // user closed the picker — not an error
+                pickerProblem = 'failed';
                 console.warn('Wallet picker unavailable, falling back to browser wallet', err);
             }
             if (picked) {
@@ -552,6 +554,9 @@ async function connectBnbWallet() {
 
         const providers = await discoverProviders();
         if (!providers.length) {
+            if (pickerProblem) console.warn(pickerProblem === 'not_configured'
+                ? 'XERA wallet picker is off: VITE_REOWN_PROJECT_ID was not set when this site was built.'
+                : 'XERA wallet picker failed to open (check the Reown project domain allowlist and the console error above).');
             setError('No browser wallet detected. You can connect a supported wallet (MetaMask, Trust Wallet, Binance Wallet…) or add your BNB wallet address manually. On mobile, open this page inside your wallet app’s browser.');
             return;
         }
@@ -1129,6 +1134,7 @@ async function loadClaimHistory() {
 // ================= INIT =================
 
 async function openChainTab() {
+    if (window.__xeraOnchainEnabled !== true) return; // on-chain claims switched off (onchain_enabled)
     clearMessages();
     await loadNetworkConfig();
     renderNetworkBanner();
