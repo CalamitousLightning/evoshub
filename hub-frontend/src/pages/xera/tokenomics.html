@@ -30,7 +30,7 @@
     /* Ambient multi-color atmosphere behind the whole page — XERA's
        emerald/cyan identity, kept subtle so it doesn't fight content. */
     .tk-atmosphere{
-      position:absolute; top:-140px; left:50%; width:min(1100px,150vw); height:900px;
+      position:absolute; top:-140px; left:50%; width:min(1100px,100vw); height:900px;
       transform:translateX(-50%); pointer-events:none; z-index:-1;
       background:
         radial-gradient(38% 30% at 18% 10%, rgba(44,230,166,.14) 0%, transparent 70%),
@@ -197,9 +197,8 @@
         <span class="badge badge--live" id="heroMiningBadge" style="margin-bottom:12px;"><span class="badge-pulse"></span>Checking status…</span>
         <h1 class="section-title" style="margin-bottom:10px;">XERA</h1>
         <p class="section-desc">
-          XERA is a digital ecosystem asset being developed by EVOXERA TECHNOLOGY as part of the broader EVOS ecosystem.
-          XERA is being introduced in phases. This page explains what is available today and presents the current
-          supply figures pulled directly from the XERA ledger.
+          XERA is a digital asset built by EVOXERA TECHNOLOGY as part of the EVOS ecosystem. It is being introduced in stages.
+          This page explains what is available today and shows the current supply figures from the XERA ledger.
         </p>
         <div class="tk-hero-actions">
           <a class="btn btn--primary" href="/xera" id="heroCta">Start mining</a>
@@ -211,34 +210,32 @@
     <!-- ================= WHAT IS XERA ================= -->
     <section class="tk-section">
       <span class="section-label">What is XERA?</span>
-      <h2 class="section-title" style="font-size:clamp(20px,3vw,28px);">A digital ecosystem asset, still being built in the open</h2>
-      <p class="section-desc" style="margin-bottom:0;">What's live today, and what isn't yet — so you always know where things stand.</p>
+      <h2 class="section-title" style="font-size:clamp(20px,3vw,28px);">A digital asset, still being built in the open</h2>
+      <p class="section-desc" style="margin-bottom:0;">What is live today and what is not yet, so you always know where things stand.</p>
       <div class="tk-cols">
         <div class="tk-col live">
-          <h4>Active in V1</h4>
+          <h4>Live today</h4>
           <ul>
-            <li>XERA account access</li>
-            <li>Wallet</li>
-            <li>24-hour mining sessions managed by the platform</li>
-            <li>XERA token on BNB Smart Chain</li>
+            <li>XERA account and wallet</li>
+            <li>24-hour mining sessions</li>
             <li>Daily claiming</li>
-            <li>Transaction / ledger history</li>
+            <li>Transaction history</li>
             <li>Ecosystem directory</li>
+            <li>XERA token contracts on BNB Smart Chain, verified on BscScan</li>
           </ul>
         </div>
         <div class="tk-col off">
-          <h4>Not active yet</h4>
+          <h4>Not live yet</h4>
           <ul>
-            <li>Buying</li>
-            <li>Selling</li>
-            <li>Exchange trading</li>
-            <li>In-app transfers between users</li>
-            <li>On-chain claims for all users (opening in stages, with KYC and a one-time fee)</li>
+            <li>Moving XERA to your own wallet (opening in stages)</li>
+            <li>Buying and selling</li>
+            <li>Transfers between users</li>
+            <li>Exchange listing</li>
           </ul>
         </div>
       </div>
       <p style="font-size:13px;color:var(--text3);margin-top:16px;">
-        Disabled features are not guaranteed to launch on any timeline — see the <a href="/xera/roadmap.html" style="color:var(--blue);">roadmap</a>
+        Features that are not live have no promised launch date. See the <a href="/xera/roadmap.html" style="color:var(--blue);">roadmap</a>
         and <a href="/xera/disclosure.html" style="color:var(--blue);">disclosure</a> below.
       </p>
     </section>
@@ -248,7 +245,7 @@
       <span class="section-label">Supply model</span>
       <h2 class="section-title" style="font-size:clamp(20px,3vw,28px);">Tokenomics</h2>
       <p class="section-desc" style="margin-bottom:6px;">
-        Read directly from the live allocation ledger — the same numbers the admin console uses — so you see the same figures we do.
+        These figures come from the live allocation ledger, the same source the admin console uses.
       </p>
 
       <div class="tk-progress-track"><div class="tk-progress-fill" id="miningProgressBar"></div></div>
@@ -289,7 +286,7 @@
       </div>
 
       <p style="font-size:13px;color:var(--text2);margin-top:20px;line-height:1.7;">
-        XERA has a planned total supply of 500,000,000 tokens, including a 75,000,000 XERA allocation for mining. Mining rewards are limited by the published allocation. Figures shown here may update as the project progresses.
+        The total supply is fixed at 500,000,000 XERA, of which 75,000,000 XERA is allocated to mining. Mining rewards can never exceed that allocation. Allocation figures may be updated as the project progresses.
       </p>
       <p id="tokenomicsError"></p>
     </section>
@@ -298,7 +295,7 @@
     <section class="tk-section">
       <span class="section-label">Current status</span>
       <h2 class="section-title" style="font-size:clamp(20px,3vw,28px);">Market status</h2>
-      <p class="section-desc" style="margin-bottom:0;">A transparent snapshot — nothing below is aspirational.</p>
+      <p class="section-desc" style="margin-bottom:0;">A plain snapshot of where things stand today.</p>
       <div class="tk-status-grid">
         <div class="tk-status-card">
           <div class="label">Token status</div>
@@ -318,7 +315,7 @@
         </div>
       </div>
       <p style="font-size:13px;color:var(--text3);margin-top:16px;">
-        XERA is not currently listed on any exchange and cannot currently be bought or sold through us. On-chain claims are opening in stages and need KYC and a one-time processing fee.
+        XERA is not listed on any exchange and cannot currently be bought or sold through EVOXERA TECHNOLOGY. On-chain claims to your own wallet are opening in stages.
         See the full <a href="/xera/disclosure.html" style="color:var(--blue);">disclosure</a> for details.
       </p>
     </section>
@@ -343,30 +340,30 @@
     <section class="tk-section">
       <span class="section-label">What's next</span>
       <h2 class="section-title" style="font-size:clamp(20px,3vw,28px);">Roadmap</h2>
-      <p class="section-desc" style="margin-bottom:0;">We only list something as live once it's actually live — nothing below is a promised date.</p>
+      <p class="section-desc" style="margin-bottom:0;">We list something as live only when it is live. Nothing below is a promised date.</p>
       <div class="tk-roadmap-grid">
         <div class="tk-roadmap-col">
           <h4 style="color:var(--green);"><span class="badge badge--live"><span class="badge-pulse"></span></span>Live now</h4>
           <ul>
-            <li>XERA account access</li>
-            <li>Wallet, mining &amp; daily claiming</li>
-            <li>Transaction / ledger history</li>
-            <li>XERA contracts on BNB Smart Chain</li>
+            <li>XERA account and wallet</li>
+            <li>Mining and daily claiming</li>
+            <li>Transaction history</li>
+            <li>Token contracts live on BNB Smart Chain</li>
           </ul>
         </div>
         <div class="tk-roadmap-col">
           <h4 style="color:var(--blue);"><span class="badge" style="border-color:var(--blue-dim);color:var(--blue);">In development</span></h4>
           <ul>
             <li>On-chain claims, opening in stages</li>
-            <li>Expanded public transparency pages</li>
+            <li>Public transparency pages</li>
             <li>New ecosystem integrations as products launch</li>
           </ul>
         </div>
         <div class="tk-roadmap-col">
           <h4 style="color:var(--text3);"><span class="badge badge--soon">Under consideration</span></h4>
           <ul>
-            <li>Buying / selling XERA</li>
-            <li>In-app transfers between users</li>
+            <li>Buying and selling XERA</li>
+            <li>Transfers between users</li>
             <li>Exchange or marketplace listing</li>
           </ul>
         </div>
@@ -394,11 +391,11 @@
 <section class="xera-gallery" aria-label="XERA by EVOXERA technology visuals">
   <article class="xera-gallery-card feature">
     <img src="/assets/images/xera-gallery/xera-planet.svg" alt="Futuristic digital planet representing the XERA ecosystem" loading="lazy">
-    <div class="xera-gallery-caption"><strong>XERA by EVOXERA</strong><span>A digital ecosystem built to evolve.</span></div>
+    <div class="xera-gallery-caption"><strong>XERA by EVOXERA</strong><span>A digital ecosystem built to grow.</span></div>
   </article>
   <article class="xera-gallery-card">
     <img src="/assets/images/xera-gallery/xera-coin-tech.svg" alt="Futuristic XERA technology coin" loading="lazy">
-    <div class="xera-gallery-caption"><strong>Digital Asset</strong><span>XERA identity and on-chain infrastructure.</span></div>
+    <div class="xera-gallery-caption"><strong>Digital Asset</strong><span>The XERA token and its identity.</span></div>
   </article>
   <article class="xera-gallery-card">
     <img src="/assets/images/xera-gallery/xera-network.svg" alt="Connected digital network" loading="lazy">
@@ -410,11 +407,11 @@
   </article>
   <article class="xera-gallery-card">
     <img src="/assets/images/xera-gallery/xera-data-core.svg" alt="Digital data core" loading="lazy">
-    <div class="xera-gallery-caption"><strong>Data Core</strong><span>Data, compute and ecosystem infrastructure.</span></div>
+    <div class="xera-gallery-caption"><strong>Data Core</strong><span>Data and computing for the ecosystem.</span></div>
   </article>
   <article class="xera-gallery-card">
     <img src="/assets/images/xera-gallery/xera-mining.svg" alt="Digital mining network" loading="lazy">
-    <div class="xera-gallery-caption"><strong>Mining Layer</strong><span>Participation that powers the early ecosystem.</span></div>
+    <div class="xera-gallery-caption"><strong>Mining Layer</strong><span>Mining that powers the early ecosystem.</span></div>
   </article>
 </section>
 

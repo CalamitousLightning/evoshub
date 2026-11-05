@@ -75,3 +75,26 @@ a{color:inherit;text-decoration:none}
 .ah-bar-mid svg{width:26px;height:26px}
 .ah-bar-mid.is-mining{background:linear-gradient(135deg,#7a8bff,#8b6bff);box-shadow:0 10px 26px -6px rgba(110,120,255,.6),0 0 0 6px var(--bg)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---- Tablet and PC layouts for the app home (/appevoxera) ----
+   Phones keep the single-column layout above. From 700px the home becomes a
+   two-column grid; from 1100px it widens further. Only .ah--home is affected. */
+@media(min-width:700px){
+  .ah--home{max-width:780px;padding-left:28px;padding-right:28px}
+  .ah--home .ah-main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px;align-items:start}
+  .ah--home .ah-greet,.ah--home .ah-title,.ah--home .ah-grid,.ah--home .ah-activity,.ah--home .ah-links,.ah--home .ah-copy{grid-column:1/-1}
+  .ah--home .ah-xera,.ah--home .ah-updates{margin:0 0 28px;align-self:stretch}
+  .ah--home .ah-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:22px 10px}
+  .ah--home .ah-tile{width:76px;height:76px;border-radius:22px}
+  .ah--home .ah-bar{width:min(560px,calc(100% - 48px))}
+}
+@media(min-width:1100px){
+  .ah--home{max-width:1120px;padding-left:40px;padding-right:40px}
+  .ah--home .ah-main{column-gap:28px}
+  .ah--home .ah-greet-name{font-size:40px}
+  .ah--home .ah-tile{width:88px;height:88px;border-radius:25px}
+  .ah--home .ah-tile svg{width:36px;height:36px}
+  .ah--home .ah-app{max-width:128px}
+  .ah--home .ah-app-name{font-size:13.5px}
+  .ah--home .ah-bar{width:min(520px,calc(100% - 48px))}
+}
