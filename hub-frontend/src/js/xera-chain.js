@@ -894,6 +894,44 @@ async function getEthers() {
     return import('ethers');
 }
 
+// Plain-English text for each first-transfer requirement (codes come from the server, python/xera/readiness.py).
+const REQ_TEXT = {
+    kyc_not_verified: 'Identity verification (KYC) is not complete.',
+    fee_not_paid: 'The one-time first-transfer processing fee has not been paid.',
+};
+
+// Asks the server what is still missing BEFORE any wallet is touched or any balance reserved, so a user who
+// can't move XERA yet is told exactly why instead of hitting a wallet error. The server re-checks on signing.
+// Returns true when the user may continue. If the check itself can't be read, don't block: the server decides.
+async function checkTransferReady(errEl) {
+    let d;
+    try { d = await req('/api/xera/readiness'); } catch (_e) { return true; }
+    const missing = Array.isArray(d.missing) ? d.missing : [];
+    if (!missing.length) return true;
+    errEl.textContent = 'Before you can move XERA to your wallet: ' + missing.map((c) => REQ_TEXT[c] || c).join(' ');
+    if (window.XeraReadiness) window.XeraReadiness.showRequirements(missing);
+    return false;
+}
+
+// The linked wallet is verified, but this visit has no live connection to it (page reloaded, or the
+// WalletConnect session expired, or this browser has no wallet extension). Open the wallet picker so the
+// user can reconnect it, and make sure it is the SAME wallet that is linked to the account.
+async function reconnectLinkedWallet(wallet) {
+    if (!appKitConfigured()) return null;
+    let picked;
+    try {
+        picked = await connectWithAppKit(state.network && state.network.chain_id);
+    } catch (err) {
+        if (err && err.cancelled) throw userError('Wallet connection was cancelled. Nothing was changed, and no XERA was reserved.');
+        throw err;
+    }
+    if (!picked || !picked.address) return null;
+    if (picked.address.toLowerCase() !== wallet.address.toLowerCase()) {
+        throw userError(`That wallet (${shorten(picked.address)}) is not the one linked to your account (${shorten(wallet.address)}). Connect the linked wallet, or use “Change wallet” above to link this one.`);
+    }
+    return { info: { uuid: 'appkit', name: 'WalletConnect', icon: '' }, provider: picked.provider, appkit: true, chainId: picked.chainId };
+}
+
 // Settlement, in order:
 //   1. cheap local checks (chain supported, wallet connected & verified)
 //   2. wallet on the right network (checked BEFORE the backend reserves anything)
@@ -924,9 +962,18 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
     let referenceId = knownRef;
 
     try {
+        // 0. Requirements first (KYC / one-time fee): explain what is missing before anything else happens.
+        if (!CFG.relay && !(await checkTransferReady(errEl))) return;
+
         await loadNetworkConfig();
-        const providers = await activeProviders();
-        if (!providers.length) throw userError('No browser wallet detected. Open this page in a wallet-enabled browser to confirm the transaction.');
+        let providers = await activeProviders();
+        if (!providers.length) {
+            // No live wallet connection: reconnect the linked wallet through the picker instead of dead-ending.
+            if (button) button.textContent = 'Connect your wallet…';
+            const again = await reconnectLinkedWallet(wallet);
+            if (again) providers = [again];
+        }
+        if (!providers.length) throw userError('Your wallet is linked, but this browser can’t reach it right now. Tap “Change wallet” above to reconnect it, or open this page inside your wallet app’s browser (Trust Wallet, MetaMask, Binance…), then try again. Nothing was reserved.');
         let entry = providers.length === 1 ? providers[0] : null;
         if (!entry) {
             // Several wallets installed: prefer the one that already exposes the linked address.
