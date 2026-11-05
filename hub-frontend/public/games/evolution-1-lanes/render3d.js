@@ -28,7 +28,7 @@ import * as THREE from './vendor/three.module.min.js';
   function hash(n) { n = Math.sin(n * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); }
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function col(hex) { return new THREE.Color(hex); }
-  var HORIZON = col(0x8fcaa9);
+  var HORIZON = col(0x315b72);
 
   // ------------------------------------------------------------------ STAGES: jungle -> temple ruins (600 m) -> falling laboratory (1200 m), blended over 90 m
   var STAGE_T = 600, STAGE_L = 1200, STAGE_BLEND = 90;
@@ -38,9 +38,9 @@ import * as THREE from './vendor/three.module.min.js';
   }
   var curW = { j: 1, t: 0, l: 0 }, tmpW = { j: 1, t: 0, l: 0 }, swO = { j: 1, t: 0, l: 0 }, sceneTime = 0;
   var THEMES = {
-    j: { hor: col(0x8fcaa9), top: col(0x08222f), mid: col(0x1f6670), hs: col(0xdff5e6), hg: col(0x4a5a3a), sun: col(0xfff0cc), tA: col(0xffffff), tB: col(0xd9c8aa), ray: col(0xfff0b0), fogN: 38, fogF: 138, hi: 1.15, si: 1.6 },
-    t: { hor: col(0xf0b07a), top: col(0x2a1b3d), mid: col(0xb8605a), hs: col(0xffe1b8), hg: col(0x6a4a30), sun: col(0xffc27a), tA: col(0xf3e0c2), tB: col(0xd2b48c), ray: col(0xffd08a), fogN: 34, fogF: 124, hi: 1.1, si: 1.7 },
-    l: { hor: col(0xa6d8ee), top: col(0x050b18), mid: col(0x1b4f80), hs: col(0xbfe6ff), hg: col(0x2a3a4a), sun: col(0xcfe8ff), tA: col(0xd4e4f0), tB: col(0x9db4c8), ray: col(0x9fe8ff), fogN: 30, fogF: 108, hi: 1.2, si: 1.5 }
+    j: { hor: col(0x315b72), top: col(0x030d1c), mid: col(0x0d5368), hs: col(0xc8f4ff), hg: col(0x183c39), sun: col(0x9deaff), tA: col(0x8eb4c8), tB: col(0x54748c), ray: col(0x70eaff), fogN: 42, fogF: 150, hi: 1.25, si: 1.8 },
+    t: { hor: col(0x6c526b), top: col(0x100d25), mid: col(0x704b5f), hs: col(0xffdfc4), hg: col(0x342b3b), sun: col(0xffc27a), tA: col(0xb4a4a0), tB: col(0x796c76), ray: col(0xffbd7c), fogN: 38, fogF: 138, hi: 1.2, si: 1.75 },
+    l: { hor: col(0x315b80), top: col(0x020713), mid: col(0x104c78), hs: col(0xc5efff), hg: col(0x172b42), sun: col(0x9edfff), tA: col(0x9db9d0), tB: col(0x54728f), ray: col(0x63dcff), fogN: 34, fogF: 124, hi: 1.3, si: 1.65 }
   };
   var theme = { hor: col(0), top: col(0), mid: col(0), hs: col(0), hg: col(0), sun: col(0), tA: col(0), tB: col(0), ray: col(0), fogN: 38, fogF: 138, hi: 1.15, si: 1.6 };
   var CK = ['hor', 'top', 'mid', 'hs', 'hg', 'sun', 'tA', 'tB', 'ray'], NK = ['fogN', 'fogF', 'hi', 'si'], tmpC = col(0);
@@ -63,8 +63,10 @@ import * as THREE from './vendor/three.module.min.js';
   scene.fog = new THREE.Fog(HORIZON.getHex(), 38, 138);
   var camera = new THREE.PerspectiveCamera(62, 1, 0.1, 400);
 
-  var hemi = new THREE.HemisphereLight(0xdff5e6, 0x4a5a3a, 1.15); scene.add(hemi);
-  var sun = new THREE.DirectionalLight(0xfff0cc, 1.6); scene.add(sun); scene.add(sun.target);
+  var hemi = new THREE.HemisphereLight(0xc9f3ff, 0x172c3b, 1.3); scene.add(hemi);
+  var sun = new THREE.DirectionalLight(0xb9eaff, 1.8); scene.add(sun); scene.add(sun.target);
+  var cyanFill = new THREE.PointLight(0x24cfff, 1.15, 42, 2); scene.add(cyanFill);
+  var warmFill = new THREE.PointLight(0xffb66e, 0.55, 34, 2); scene.add(warmFill);
 
   // ------------------------------------------------------------------ materials
   function lambert(c, o) { var m = new THREE.MeshLambertMaterial(Object.assign({ color: c }, o || {})); return m; }
@@ -80,12 +82,16 @@ import * as THREE from './vendor/three.module.min.js';
     gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.4, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   });
-  var pathTex = canvasTex(128, 128, function (g, w, h) {            // packed earth with lane markings
-    g.fillStyle = '#9a7040'; g.fillRect(0, 0, w, h);
-    for (var i = 0; i < 260; i++) { g.fillStyle = 'rgba(' + (60 + (i * 37) % 60) + ',' + (40 + (i * 53) % 40) + ',20,' + (0.08 + (i % 5) * 0.03) + ')'; g.fillRect((i * 97) % w, (i * 61) % h, 2 + (i % 4), 2 + (i % 3)); }
-    g.fillStyle = 'rgba(70,46,22,.65)';
+  var pathTex = canvasTex(128, 128, function (g, w, h) {            // obsidian composite track with cyan lane guides
+    g.fillStyle = '#101d2b'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#172a3c'; g.fillRect(5, 5, w - 10, h - 10);
+    g.strokeStyle = 'rgba(98,170,205,.28)'; g.lineWidth = 1;
+    for (var y = 0; y <= h; y += 16) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+    for (var x = 0; x <= w; x += 16) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+    g.fillStyle = 'rgba(3,10,20,.9)'; g.fillRect(7, 7, 4, 4); g.fillRect(w - 11, 7, 4, 4); g.fillRect(7, h - 11, 4, 4); g.fillRect(w - 11, h - 11, 4, 4);
     var u1 = w * (0.5 - (CFG.LANE_W / 2) / PATH_W), u2 = w * (0.5 + (CFG.LANE_W / 2) / PATH_W);
-    g.fillRect(u1 - 1.5, h * 0.12, 3, h * 0.62); g.fillRect(u2 - 1.5, h * 0.12, 3, h * 0.62);
+    [u1,u2].forEach(function(u){ g.shadowColor='#3edfff'; g.shadowBlur=9; g.fillStyle='rgba(55,220,255,.95)'; g.fillRect(u-1.8, 0, 3.6, h); g.shadowBlur=0; g.fillStyle='rgba(180,250,255,.45)'; g.fillRect(u-.45, 0, .9, h); });
+    g.fillStyle='rgba(255,197,105,.65)'; for(var q=0;q<12;q++){var px=(q*37)%w,py=(q*53)%h;g.fillRect(px,py,3,2);}
   });
   pathTex.anisotropy = 4;
   var grassTex = canvasTex(64, 64, function (g, w, h) {
@@ -103,19 +109,25 @@ import * as THREE from './vendor/three.module.min.js';
     g.fillStyle = 'rgba(160,220,255,.45)'; for (var i = 0; i < 8; i++) g.fillRect(6 + (i % 4) * 16, 6 + Math.floor(i / 4) * 40, 2, 2);
   });
   sandTex.wrapS = sandTex.wrapT = metalTex.wrapS = metalTex.wrapT = THREE.RepeatWrapping; sandTex.repeat.set(SIDE_W / 4, 18); metalTex.repeat.set(SIDE_W / 4, 18);
-  var flagTex = canvasTex(128, 128, function (g, w, h) {            // temple stage path: worn flagstones
-    g.fillStyle = '#b79b72'; g.fillRect(0, 0, w, h);
-    g.strokeStyle = 'rgba(80,60,36,.75)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3); g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.moveTo(w * 0.33, 0); g.lineTo(w * 0.33, h / 2); g.moveTo(w * 0.7, h / 2); g.lineTo(w * 0.7, h); g.stroke();
-    for (var i = 0; i < 90; i++) { g.fillStyle = 'rgba(90,64,36,' + (0.05 + (i % 4) * 0.03) + ')'; g.fillRect((i * 97) % w, (i * 61) % h, 2 + i % 4, 2 + i % 3); }
-    g.fillStyle = 'rgba(70,46,22,.55)'; var a1 = w * (0.5 - (CFG.LANE_W / 2) / PATH_W), a2 = w * (0.5 + (CFG.LANE_W / 2) / PATH_W);
-    g.fillRect(a1 - 1.5, h * 0.12, 3, h * 0.62); g.fillRect(a2 - 1.5, h * 0.12, 3, h * 0.62);
+  var flagTex = canvasTex(128, 128, function (g, w, h) {           // precision-cut ancient alloy / stone hybrid
+    g.fillStyle = '#394452'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#596474'; g.fillRect(3, 3, w-6, h-6);
+    g.strokeStyle = 'rgba(13,29,44,.85)'; g.lineWidth = 3; g.strokeRect(2,2,w-4,h-4);
+    g.strokeStyle = 'rgba(145,218,232,.35)'; g.lineWidth = 1; for(var y=16;y<h;y+=32){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+    for(var x=16;x<w;x+=32){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
+    var a1=w*(0.5-(CFG.LANE_W/2)/PATH_W),a2=w*(0.5+(CFG.LANE_W/2)/PATH_W);
+    [a1,a2].forEach(function(u){g.shadowColor='#ffc66e';g.shadowBlur=7;g.fillStyle='rgba(255,194,100,.9)';g.fillRect(u-1.5,0,3,h);g.shadowBlur=0;});
+    g.fillStyle='rgba(255,214,150,.7)'; for(var i=0;i<12;i++){g.fillRect(8+(i%4)*30,8+Math.floor(i/4)*38,3,3);}
   });
-  var plateTex = canvasTex(128, 128, function (g, w, h) {           // lab stage path: metal plates with glowing lane lines
-    g.fillStyle = '#42607a'; g.fillRect(0, 0, w, h);
-    g.strokeStyle = 'rgba(12,24,36,.85)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3); g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
-    g.fillStyle = 'rgba(190,235,255,.5)'; [[8, 8], [w - 10, 8], [8, h - 10], [w - 10, h - 10], [8, h / 2 + 6], [w - 10, h / 2 + 6]].forEach(function (p) { g.fillRect(p[0], p[1], 3, 3); });
-    g.fillStyle = 'rgba(120,240,255,.85)'; var b1 = w * (0.5 - (CFG.LANE_W / 2) / PATH_W), b2 = w * (0.5 + (CFG.LANE_W / 2) / PATH_W);
-    g.fillRect(b1 - 1.5, h * 0.12, 3, h * 0.62); g.fillRect(b2 - 1.5, h * 0.12, 3, h * 0.62);
+  var plateTex = canvasTex(128, 128, function (g, w, h) {           // futuristic lab deck with illuminated panel seams
+    g.fillStyle = '#132a40'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#203e59'; g.fillRect(3,3,w-6,h-6);
+    g.strokeStyle='rgba(4,15,29,.95)';g.lineWidth=3;g.strokeRect(2,2,w-4,h-4);
+    g.strokeStyle='rgba(104,206,245,.38)';g.lineWidth=1;for(var y=16;y<h;y+=32){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+    for(var x=16;x<w;x+=32){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
+    var b1=w*(0.5-(CFG.LANE_W/2)/PATH_W),b2=w*(0.5+(CFG.LANE_W/2)/PATH_W);
+    [b1,b2].forEach(function(u){g.shadowColor='#4bdfff';g.shadowBlur=10;g.fillStyle='rgba(75,224,255,.95)';g.fillRect(u-2,0,4,h);g.shadowBlur=0;});
+    g.fillStyle='rgba(180,240,255,.8)';[[8,8],[w-11,8],[8,h-11],[w-11,h-11],[8,h/2],[w-11,h/2]].forEach(function(p){g.fillRect(p[0],p[1],3,3);});
   });
   flagTex.anisotropy = plateTex.anisotropy = 4;
 
@@ -744,7 +756,7 @@ import * as THREE from './vendor/three.module.min.js';
   // decor: the square where the track turns, the dead-end wall, torches, and (T-junction) the two themed corridors that lead away
   var fillMat = new THREE.MeshLambertMaterial({ map: null }), fillTexs = sideTexs.map(function (t) { var c = t.clone(); c.needsUpdate = true; c.wrapS = c.wrapT = THREE.RepeatWrapping; c.repeat.set(36, 36); return c; });
   fillMat.map = fillTexs[0];
-  var wallMat2 = lambert(0x39452f, { flatShading: true }), postMat2 = lambert(0x6a6450, { flatShading: true }), darkMat = new THREE.MeshBasicMaterial({ color: 0x02030a }), fireMat = new THREE.MeshBasicMaterial({ color: 0xff9a2a });
+  var wallMat2 = lambert(0x26394b, { flatShading: true }), postMat2 = lambert(0x6e8294, { flatShading: true }), darkMat = new THREE.MeshBasicMaterial({ color: 0x020713 }), fireMat = new THREE.MeshBasicMaterial({ color: 0x48dcff });
   var plazaGeo = new THREE.PlaneGeometry(PATH_W, PATH_W); plazaGeo.rotateX(-Math.PI / 2);
   var fillGeo = new THREE.PlaneGeometry(150, 150); fillGeo.rotateX(-Math.PI / 2);
   var stubGeo = new THREE.PlaneGeometry(PATH_W, STUB_L); stubGeo.rotateX(-Math.PI / 2);
@@ -759,17 +771,17 @@ import * as THREE from './vendor/three.module.min.js';
   }
   function buildStub() {
     var g = new THREE.Group(), u = g.userData, k, sg;
-    u.floorMat = new THREE.MeshLambertMaterial({ map: stubTex.vine }); u.lintMat = lambert(0xffffff, { flatShading: true }); u.glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); u.vines = [];
+    u.floorMat = new THREE.MeshLambertMaterial({ map: stubTex.vine }); u.lintMat = lambert(0x8ca9bb, { flatShading: true }); u.glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); u.vines = [];
     // Use a shallow solid floor under the textured plane as well. The old plane-only
     // corridor could disappear on some desktop GPU / depth-buffer combinations at
     // the T-junction, making the 90-degree exits look like empty space.
     var fl = new THREE.Mesh(stubGeo, u.floorMat); fl.rotation.y = Math.PI / 2; fl.position.set(PLAZA + STUB_L / 2, -0.035, 0); g.add(fl);
     var corridorBed = mesh(boxGeo, wallMat2, PLAZA + STUB_L / 2, -0.16, 0, STUB_L, 0.24, PATH_W);
     corridorBed.material = lambert(0x6b6248); g.add(corridorBed);
-    var edgeGlowMat = new THREE.MeshBasicMaterial({ color: 0x72e9c4, transparent: true, opacity: 0.78, fog: false });
+    var edgeGlowMat = new THREE.MeshBasicMaterial({ color: 0x42dcff, transparent: true, opacity: 0.96, fog: false, toneMapped: false });
     for (sg = -1; sg <= 1; sg += 2) {
       g.add(mesh(boxGeo, wallMat2, PLAZA + STUB_L / 2, 0.8, sg * (PATH_W / 2 + 0.25), STUB_L, 1.6, 0.5));
-      g.add(mesh(boxGeo, edgeGlowMat, PLAZA + STUB_L / 2, 0.035, sg * (PATH_W / 2 - 0.12), STUB_L, 0.055, 0.09));
+      g.add(mesh(boxGeo, edgeGlowMat, PLAZA + STUB_L / 2, 0.035, sg * (PATH_W / 2 - 0.12), STUB_L, 0.075, 0.12));
     }
     for (k = 0; k < 3; k++) {
       var xk = PLAZA + 7 + k * 10;
@@ -850,7 +862,8 @@ import * as THREE from './vendor/three.module.min.js';
     }
 
     // lights follow the runner (no shadow maps: cheap)
-    sun.position.set(vz * 0 - 8, 16, vz - 6); sun.target.position.set(0, 0, vz + 4); sun.target.updateMatrixWorld();
+    sun.position.set(-8, 18, vz - 6); sun.target.position.set(0, 0, vz + 4); sun.target.updateMatrixWorld();
+    cyanFill.position.set(-5.5, 3.2, vz + 8); warmFill.position.set(5.5, 2.6, vz + 20);
 
     // chase camera: lateral follow, rises with the runner, speed-based field of view, shake after a hit
     var py = clamp(game.y, -1, 4.5), want = game.hook ? 6.0 : 5.3 + Math.max(0, py) * 0.55;
