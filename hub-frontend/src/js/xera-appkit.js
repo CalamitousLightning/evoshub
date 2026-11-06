@@ -101,7 +101,7 @@ export async function restoredAppKitProvider(expectedChainId) {
     try {
         const modal = await getModal(expectedChainId);
         // Session restore is async — wait briefly for it.
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 25; i++) {
             if (modal.getIsConnectedState() && modal.getWalletProvider()) break;
             await new Promise((r) => setTimeout(r, 200));
         }

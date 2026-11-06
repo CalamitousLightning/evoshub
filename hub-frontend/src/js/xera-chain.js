@@ -340,9 +340,25 @@ async function addXeraToWallet(btn, msgEl) {
             }
             entry = entry || list[0] || null;
         }
+        if (!entry) {
+            // No live connection (the tab reloaded while the wallet app was open, or the session expired):
+            // open the wallet picker right here instead of sending the user off to find "Change wallet".
+            const w = state.wallets.BNB;
+            if (w && w.verified) {
+                say('Reconnecting your wallet…');
+                entry = await reconnectLinkedWallet(w);
+                if (entry) {
+                    state.provider = entry;
+                    attachProviderListeners(entry);
+                    state.providerChainId = entry.chainId || state.providerChainId;
+                    renderNetworkBanner();
+                    say('Connected. Approve “Add XERA” in your wallet app…');
+                }
+            }
+        }
         const provider = entry && entry.provider;
         if (!provider || typeof provider.request !== 'function') {
-            await copyFallback('No connected wallet found in this browser. Tap “Change wallet” above to reconnect it, then try again.');
+            await copyFallback('Could not reach a wallet from this browser. For one-tap adding, open this page inside your wallet app’s browser (Trust Wallet, MetaMask, Binance…).');
             return;
         }
         const walletChain = await readChainId(provider, entry.chainId || null);
@@ -357,6 +373,7 @@ async function addXeraToWallet(btn, msgEl) {
         say(ok ? 'XERA added to your wallet.' : 'Not added — you can tap again any time.');
     } catch (err) {
         if (err && (err.code === 4001 || err.code === 'ACTION_REJECTED')) { say('Cancelled in your wallet.'); return; }
+        if (err && err.userFacing) { say(err.message); return; }
         console.warn('wallet_watchAsset failed', err);
         // Tell the user WHY, in short, so "can't add automatically" isn't a dead end.
         const why = err && err.message ? ` (${String(err.message).slice(0, 80)})` : '';
