@@ -313,15 +313,34 @@ const XERA_TOKEN_SYMBOL = 'XERA';
 const XERA_TOKEN_DECIMALS = 18;
 const XERA_TOKEN_LOGO = 'https://evoshub.xyz/assets/images/xera-token-logo-1024.png';
 
-async function addXeraToWallet(btn, msgEl) {
+// When a wallet refuses the automatic add, make the manual route one tap per field. Public token info only.
+function renderManualToken(box, addr) {
+    if (!box) return;
+    const row = (label, value) => {
+        const b = h('button', { type: 'button', class: 'chain-copy', text: 'Copy' });
+        b.addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(value); b.textContent = 'Copied'; } catch (_e) { b.textContent = 'Press and hold to copy'; }
+            setTimeout(() => { b.textContent = 'Copy'; }, 1500);
+        });
+        return h('div', { class: 'chain-addr-row' }, h('span', { class: 'chain-wallet-addr', text: `${label}: ${value}` }), b);
+    };
+    box.replaceChildren(
+        h('p', { class: 'chain-manual-hint', text: 'Add it by hand: in your wallet tap Add / Import token, choose BNB Smart Chain, then paste these.' }),
+        row('Contract', addr), row('Symbol', XERA_TOKEN_SYMBOL), row('Decimals', String(XERA_TOKEN_DECIMALS)),
+    );
+}
+
+async function addXeraToWallet(btn, msgEl, extraEl) {
     const net = state.network;
     const addr = net && net.xera_token_address;
     const say = (t) => { msgEl.textContent = t; };
     if (!addr) { say('The XERA token address is not published yet.'); return; }
     const copyFallback = async (reason) => {
-        try { await navigator.clipboard.writeText(addr); say(`${reason} Contract address copied — in your wallet choose “Add custom token”, paste it, symbol ${XERA_TOKEN_SYMBOL}, decimals ${XERA_TOKEN_DECIMALS}.`); }
-        catch (_e) { say(`${reason} Add a custom token manually: ${addr} · symbol ${XERA_TOKEN_SYMBOL} · decimals ${XERA_TOKEN_DECIMALS}.`); }
+        try { await navigator.clipboard.writeText(addr); say(`${reason} The contract address is copied.`); }
+        catch (_e) { say(reason); }
+        renderManualToken(extraEl, addr);
     };
+    if (extraEl) extraEl.replaceChildren();
     btn.disabled = true;
     say('Opening your wallet…');
     try {
@@ -366,10 +385,17 @@ async function addXeraToWallet(btn, msgEl) {
             say(`Switch your wallet to ${net.name} first, then tap again.`);
             return;
         }
-        const ok = await provider.request({
+        const watch = (withImage) => provider.request({
             method: 'wallet_watchAsset',
-            params: { type: 'ERC20', options: { address: addr, symbol: XERA_TOKEN_SYMBOL, decimals: XERA_TOKEN_DECIMALS, image: XERA_TOKEN_LOGO } },
+            params: { type: 'ERC20', options: { address: addr, symbol: XERA_TOKEN_SYMBOL, decimals: XERA_TOKEN_DECIMALS, ...(withImage ? { image: XERA_TOKEN_LOGO } : {}) } },
         });
+        let ok;
+        try { ok = await watch(true); }
+        catch (first) {
+            // Some wallets refuse the whole request over the logo (size/host). Try once more without it.
+            if (first && (first.code === 4001 || first.code === 'ACTION_REJECTED')) throw first;
+            ok = await watch(false);
+        }
         say(ok ? 'XERA added to your wallet.' : 'Not added — you can tap again any time.');
     } catch (err) {
         if (err && (err.code === 4001 || err.code === 'ACTION_REJECTED')) { say('Cancelled in your wallet.'); return; }
@@ -387,9 +413,10 @@ function xeraTokenRow() {
     const net = state.network;
     if (!net || !net.xera_token_address) return null;
     const msg = h('p', { class: 'chain-token-msg', role: 'status', 'aria-live': 'polite' });
+    const extra = h('div', { class: 'chain-token-manual' });
     const btn = h('button', { type: 'button', class: 'btn btn-sm chain-addtoken', text: 'Add XERA to my wallet' });
-    btn.addEventListener('click', () => addXeraToWallet(btn, msg));
-    return h('div', { class: 'chain-token-row' }, btn, msg);
+    btn.addEventListener('click', () => addXeraToWallet(btn, msg, extra));
+    return h('div', { class: 'chain-token-row' }, btn, msg, extra);
 }
 
 // ---------------------------------------------------------------- wallet cards
