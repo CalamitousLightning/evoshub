@@ -114,7 +114,15 @@ async function confirmClaimOnServer(referenceId, txHash) {
     throw lastErr;
 }
 
+// After a redeploy, a tab opened earlier (or a cached page) points at script files that no longer exist, so the
+// lazy-loaded wallet code fails to load. That is the app being out of date, not the wallet refusing anything.
+const STALE_APP_MSG = 'The app was just updated and this page is out of date. Close it fully and reopen it (or pull down to refresh), then try again.';
+function isStaleChunk(err) {
+    return /dynamically imported module|Importing a module script failed|Loading chunk|Loading CSS chunk/i.test(String((err && err.message) || ''));
+}
+
 function userMessage(err, fallback) {
+    if (isStaleChunk(err)) return STALE_APP_MSG;
     // EIP-1193 user rejection
     if (err && (err.code === 4001 || err.code === 'ACTION_REJECTED')) return 'You declined the request in your wallet. Nothing was changed.';
     if (err && err.code === -32002) return 'Your wallet already has a pending request — open it to continue.';
@@ -400,6 +408,7 @@ async function addXeraToWallet(btn, msgEl, extraEl) {
     } catch (err) {
         if (err && (err.code === 4001 || err.code === 'ACTION_REJECTED')) { say('Cancelled in your wallet.'); return; }
         if (err && err.userFacing) { say(err.message); return; }
+        if (isStaleChunk(err)) { say(STALE_APP_MSG); return; }
         console.warn('wallet_watchAsset failed', err);
         // Tell the user WHY, in short, so "can't add automatically" isn't a dead end.
         const why = err && err.message ? ` (${String(err.message).slice(0, 80)})` : '';
@@ -612,6 +621,7 @@ async function connectBnbWallet() {
             } catch (err) {
                 if (err && err.cancelled) { return; }            // user closed the picker — not an error
                 pickerProblem = 'failed';
+                if (isStaleChunk(err)) { setError(STALE_APP_MSG); return; }
                 console.warn('Wallet picker unavailable, falling back to browser wallet', err);
             }
             if (picked) {
