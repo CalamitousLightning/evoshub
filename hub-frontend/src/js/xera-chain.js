@@ -318,25 +318,49 @@ async function addXeraToWallet(btn, msgEl) {
     const addr = net && net.xera_token_address;
     const say = (t) => { msgEl.textContent = t; };
     if (!addr) { say('The XERA token address is not published yet.'); return; }
-    const provider = (state.provider && state.provider.provider) || (typeof window !== 'undefined' && window.ethereum) || null;
     const copyFallback = async (reason) => {
         try { await navigator.clipboard.writeText(addr); say(`${reason} Contract address copied — in your wallet choose “Add custom token”, paste it, symbol ${XERA_TOKEN_SYMBOL}, decimals ${XERA_TOKEN_DECIMALS}.`); }
         catch (_e) { say(`${reason} Add a custom token manually: ${addr} · symbol ${XERA_TOKEN_SYMBOL} · decimals ${XERA_TOKEN_DECIMALS}.`); }
     };
-    if (!provider || typeof provider.request !== 'function') { await copyFallback('Your wallet can’t add tokens automatically.'); return; }
-    if (state.providerChainId && net.chain_id && Number(state.providerChainId) !== Number(net.chain_id)) {
-        say(`Switch your wallet to ${net.name} first, then tap again.`); return;
-    }
     btn.disabled = true;
+    say('Opening your wallet…');
     try {
+        // Same wallet connection the claim uses: the one picked this visit, else the restored WalletConnect
+        // session, else an installed browser wallet. (Before, only window.ethereum was tried, so a wallet
+        // connected through the picker was never asked.)
+        let entry = state.provider;
+        if (!entry) {
+            const list = await activeProviders();
+            const linked = state.wallets.BNB && state.wallets.BNB.address ? state.wallets.BNB.address.toLowerCase() : '';
+            for (const p of list) {
+                try {
+                    const accts = await p.provider.request({ method: 'eth_accounts' });
+                    if (linked && accts.some((a) => a.toLowerCase() === linked)) { entry = p; break; }
+                } catch (_e) { /* wallet locked */ }
+            }
+            entry = entry || list[0] || null;
+        }
+        const provider = entry && entry.provider;
+        if (!provider || typeof provider.request !== 'function') {
+            await copyFallback('No connected wallet found in this browser. Tap “Change wallet” above to reconnect it, then try again.');
+            return;
+        }
+        const walletChain = await readChainId(provider, entry.chainId || null);
+        if (walletChain && net.chain_id && Number(walletChain) !== Number(net.chain_id)) {
+            say(`Switch your wallet to ${net.name} first, then tap again.`);
+            return;
+        }
         const ok = await provider.request({
             method: 'wallet_watchAsset',
             params: { type: 'ERC20', options: { address: addr, symbol: XERA_TOKEN_SYMBOL, decimals: XERA_TOKEN_DECIMALS, image: XERA_TOKEN_LOGO } },
         });
         say(ok ? 'XERA added to your wallet.' : 'Not added — you can tap again any time.');
     } catch (err) {
-        if (err && err.code === 4001) say('Cancelled in your wallet.');
-        else await copyFallback('Your wallet couldn’t add it automatically.');
+        if (err && (err.code === 4001 || err.code === 'ACTION_REJECTED')) { say('Cancelled in your wallet.'); return; }
+        console.warn('wallet_watchAsset failed', err);
+        // Tell the user WHY, in short, so "can't add automatically" isn't a dead end.
+        const why = err && err.message ? ` (${String(err.message).slice(0, 80)})` : '';
+        await copyFallback(`Your wallet didn’t accept the automatic add${why}.`);
     } finally {
         btn.disabled = false;
     }
