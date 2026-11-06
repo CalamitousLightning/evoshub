@@ -1,0 +1,382 @@
+<!--
+EVOXERA TECHNOLOGY — MASTER ROADMAP
+Frontend integration file.
+Copy the <section id="evoxera-master-roadmap">...</section> into the relevant EVOS Hub page.
+Copy the <style> block into that page's stylesheet or keep it in the page.
+All classes are scoped with "ex-roadmap-" to reduce CSS conflicts.
+-->
+
+<style>
+  .ex-roadmap {
+    --ex-bg: #07111f;
+    --ex-panel: rgba(17, 32, 54, .78);
+    --ex-panel-2: rgba(24, 43, 69, .72);
+    --ex-line: rgba(148, 180, 218, .19);
+    --ex-text: #edf5ff;
+    --ex-muted: #a9bad0;
+    --ex-blue: #68b5ff;
+    --ex-cyan: #62e3dc;
+    --ex-violet: #b69aff;
+    color: var(--ex-text);
+    background:
+      radial-gradient(ellipse at 12% 0%, rgba(45, 116, 190, .20), transparent 36rem),
+      radial-gradient(ellipse at 90% 18%, rgba(121, 81, 205, .16), transparent 34rem),
+      linear-gradient(180deg, #081525 0%, #07111f 58%, #091625 100%);
+    border: 1px solid var(--ex-line);
+    border-radius: 26px;
+    padding: clamp(18px, 4vw, 46px);
+    overflow: hidden;
+    font-family: inherit;
+  }
+  .ex-roadmap * { box-sizing: border-box; }
+  .ex-roadmap a { color: #9bd2ff; text-decoration: underline; text-underline-offset: 3px; }
+  .ex-roadmap a:hover { color: #fff; }
+  .ex-roadmap .ex-roadmap-kicker {
+    color: var(--ex-cyan); font-size: .76rem; letter-spacing: .18em;
+    text-transform: uppercase; font-weight: 800;
+  }
+  .ex-roadmap h1, .ex-roadmap h2, .ex-roadmap h3 { color: #f4f8ff; line-height: 1.13; }
+  .ex-roadmap h1 { font-size: clamp(2.1rem, 5vw, 4.3rem); margin: 12px 0; letter-spacing: -.045em; }
+  .ex-roadmap h2 { font-size: clamp(1.55rem, 3vw, 2.25rem); margin: 0 0 12px; letter-spacing: -.025em; }
+  .ex-roadmap h3 { font-size: 1.12rem; margin: 0 0 9px; }
+  .ex-roadmap p { color: var(--ex-muted); line-height: 1.72; margin: 0 0 12px; }
+  .ex-roadmap .ex-roadmap-lead { max-width: 850px; font-size: clamp(1rem, 1.6vw, 1.18rem); }
+  .ex-roadmap .ex-roadmap-hero {
+    position: relative; padding: clamp(22px, 5vw, 54px); border-radius: 22px;
+    border: 1px solid rgba(123, 185, 255, .25);
+    background:
+      linear-gradient(120deg, rgba(16, 47, 79, .92), rgba(20, 28, 57, .88)),
+      radial-gradient(circle at 80% 20%, rgba(91, 218, 224, .2), transparent 22rem);
+    overflow: hidden;
+  }
+  .ex-roadmap .ex-roadmap-hero:after {
+    content: ""; position: absolute; width: 300px; height: 300px; border-radius: 50%;
+    right: -90px; top: -120px; border: 1px solid rgba(111, 211, 255, .25);
+    box-shadow: 0 0 0 28px rgba(111, 211, 255, .035), 0 0 0 58px rgba(111, 211, 255, .025);
+    pointer-events: none;
+  }
+  .ex-roadmap .ex-roadmap-hero > * { position: relative; z-index: 1; }
+  .ex-roadmap .ex-roadmap-tagline { color: #d6e9ff; font-weight: 700; letter-spacing: .04em; }
+  .ex-roadmap .ex-roadmap-section { margin-top: clamp(36px, 6vw, 66px); }
+  .ex-roadmap .ex-roadmap-section-intro { max-width: 850px; margin-bottom: 20px; }
+  .ex-roadmap .ex-roadmap-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .ex-roadmap .ex-roadmap-card {
+    min-width: 0; padding: 20px; border: 1px solid var(--ex-line); border-radius: 18px;
+    background: linear-gradient(145deg, var(--ex-panel), rgba(11, 23, 40, .78));
+    box-shadow: 0 12px 34px rgba(0,0,0,.13);
+  }
+  .ex-roadmap .ex-roadmap-card p:last-child { margin-bottom: 0; }
+  .ex-roadmap .ex-roadmap-card ul, .ex-roadmap .ex-roadmap-list {
+    padding-left: 19px; margin: 10px 0 0; color: var(--ex-muted); line-height: 1.75;
+  }
+  .ex-roadmap .ex-roadmap-card li, .ex-roadmap .ex-roadmap-list li { padding-left: 3px; margin: 3px 0; }
+  .ex-roadmap .ex-roadmap-status {
+    display: inline-flex; align-items: center; gap: 7px; border-radius: 99px;
+    padding: 5px 10px; font-size: .69rem; font-weight: 800; letter-spacing: .08em;
+    text-transform: uppercase; margin-bottom: 12px; border: 1px solid transparent;
+  }
+  .ex-roadmap .ex-roadmap-status:before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .ex-roadmap .ex-roadmap-active { color: #80e6b3; background: rgba(42, 166, 112, .12); border-color: rgba(87, 218, 155, .25); }
+  .ex-roadmap .ex-roadmap-dev { color: #83c9ff; background: rgba(63, 148, 222, .13); border-color: rgba(103, 184, 255, .25); }
+  .ex-roadmap .ex-roadmap-planned { color: #d1b7ff; background: rgba(142, 104, 211, .14); border-color: rgba(177, 143, 255, .25); }
+  .ex-roadmap .ex-roadmap-research { color: #ffd18c; background: rgba(211, 145, 54, .12); border-color: rgba(255, 195, 106, .25); }
+  .ex-roadmap .ex-roadmap-vision { color: #8ce5e3; background: rgba(64, 171, 174, .12); border-color: rgba(103, 222, 221, .24); }
+  .ex-roadmap .ex-roadmap-diagram {
+    display: grid; gap: 10px; max-width: 850px; margin: 22px auto 0; text-align: center;
+  }
+  .ex-roadmap .ex-roadmap-node {
+    padding: 17px; border: 1px solid rgba(121, 187, 255, .28); border-radius: 15px;
+    background: linear-gradient(110deg, rgba(26, 64, 103, .72), rgba(37, 42, 83, .65));
+  }
+  .ex-roadmap .ex-roadmap-node strong { display: block; color: #f3f8ff; font-size: 1.08rem; }
+  .ex-roadmap .ex-roadmap-node small { display: block; color: #b6c9df; margin-top: 5px; line-height: 1.5; }
+  .ex-roadmap .ex-roadmap-arrow { color: var(--ex-cyan); font-size: 1.25rem; line-height: 1; }
+  .ex-roadmap .ex-roadmap-subgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 9px; }
+  .ex-roadmap .ex-roadmap-mini {
+    padding: 13px 10px; border-radius: 12px; background: rgba(17, 35, 58, .85);
+    border: 1px solid var(--ex-line); color: #dcecff; font-size: .88rem; font-weight: 700;
+  }
+  .ex-roadmap .ex-roadmap-mini span { display: block; color: var(--ex-muted); font-size: .76rem; font-weight: 400; margin-top: 4px; }
+  .ex-roadmap .ex-roadmap-timeline { display: grid; gap: 12px; }
+  .ex-roadmap .ex-roadmap-era {
+    display: grid; grid-template-columns: 150px 1fr; gap: 18px; padding: 19px;
+    border-radius: 16px; border: 1px solid var(--ex-line); background: var(--ex-panel);
+  }
+  .ex-roadmap .ex-roadmap-era time { color: var(--ex-cyan); font-weight: 800; }
+  .ex-roadmap .ex-roadmap-era p { margin: 5px 0 0; }
+  .ex-roadmap .ex-roadmap-note {
+    border-left: 3px solid var(--ex-cyan); padding: 13px 16px; margin-top: 16px;
+    background: rgba(65, 177, 177, .075); border-radius: 0 12px 12px 0;
+  }
+  .ex-roadmap .ex-roadmap-note p { margin: 0; }
+  .ex-roadmap .ex-roadmap-footer {
+    margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--ex-line);
+    color: #9fb2c9; font-size: .86rem; line-height: 1.65;
+  }
+  @media (max-width: 720px) {
+    .ex-roadmap .ex-roadmap-grid { grid-template-columns: 1fr; }
+    .ex-roadmap .ex-roadmap-subgrid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .ex-roadmap .ex-roadmap-era { grid-template-columns: 1fr; gap: 7px; }
+    .ex-roadmap { border-radius: 18px; }
+  }
+</style>
+
+<section class="ex-roadmap" id="evoxera-master-roadmap" aria-labelledby="ex-roadmap-title">
+  <header class="ex-roadmap-hero">
+    <div class="ex-roadmap-kicker">EVOXERA TECHNOLOGY • MASTER ROADMAP</div>
+    <h1 id="ex-roadmap-title">Creating Evolution for the Future.</h1>
+    <p class="ex-roadmap-lead">
+      EVOXERA TECHNOLOGY is building an interconnected technology ecosystem through EVOS.
+      Its long-term direction spans digital services, artificial intelligence, blockchain,
+      operating-system research, distributed computing, mobile technologies and connectivity infrastructure.
+    </p>
+    <div class="ex-roadmap-tagline">One ecosystem. Multiple technologies. A long-term vision.</div>
+  </header>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-structure">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">01 • THE BIG PICTURE</div>
+      <h2 id="ex-roadmap-structure">One company. An interconnected ecosystem.</h2>
+      <p>EVOXERA TECHNOLOGY is the parent company. EVOS is the digital ecosystem through which products and services are developed and connected. S.O.E. represents a longer-term technology and operating-system vision.</p>
+    </div>
+    <div class="ex-roadmap-diagram">
+      <div class="ex-roadmap-node">
+        <strong>EVOXERA TECHNOLOGY</strong>
+        <small>Parent technology company • Research • Development • Innovation</small>
+      </div>
+      <div class="ex-roadmap-arrow" aria-hidden="true">↓</div>
+      <div class="ex-roadmap-node">
+        <strong>EVOS — The Digital Ecosystem</strong>
+        <small>Connected products, services, platforms and future technologies</small>
+      </div>
+      <div class="ex-roadmap-arrow" aria-hidden="true">↓</div>
+      <div class="ex-roadmap-subgrid">
+        <div class="ex-roadmap-mini">EVOS Hub<span>Central platform</span></div>
+        <div class="ex-roadmap-mini">EVOS Data<span>Connectivity services</span></div>
+        <div class="ex-roadmap-mini">EVOSGPT<span>Artificial intelligence</span></div>
+        <div class="ex-roadmap-mini">XERA<span>Blockchain ecosystem</span></div>
+      </div>
+      <div class="ex-roadmap-arrow" aria-hidden="true">↓</div>
+      <div class="ex-roadmap-node">
+        <strong>Future EVOS Technologies</strong>
+        <small>Business tools • Marketplace • Digital Institute • AI Grid • Mobile systems</small>
+      </div>
+      <div class="ex-roadmap-arrow" aria-hidden="true">↓</div>
+      <div class="ex-roadmap-node">
+        <strong>S.O.E. — System Order of Evolution</strong>
+        <small>Long-term integrated operating-system, intelligence, security and device vision</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-products">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">02 • THE EVOS ECOSYSTEM</div>
+      <h2 id="ex-roadmap-products">Products and platforms</h2>
+      <p>The foundation is to strengthen useful digital products, connect them through EVOS and expand their capabilities over time.</p>
+    </div>
+    <div class="ex-roadmap-grid">
+      <article class="ex-roadmap-card">
+        <span class="ex-roadmap-status ex-roadmap-active">Active platform</span>
+        <h3>EVOS Business Hub</h3>
+        <p>The central gateway to the EVOS ecosystem.</p>
+        <ul>
+          <li>Unified account experience and product access.</li>
+          <li>Business dashboards and service discovery.</li>
+          <li>Connected product experiences and integrations.</li>
+          <li>Future application-launcher capabilities.</li>
+        </ul>
+      </article>
+      <article class="ex-roadmap-card">
+        <span class="ex-roadmap-status ex-roadmap-active">Operating product</span>
+        <h3>EVOS Data Services</h3>
+        <p>Digital connectivity services with room to expand.</p>
+        <ul>
+          <li>Mobile data services and fulfilment.</li>
+          <li>Agent and reseller infrastructure.</li>
+          <li>Automated ordering and customer support.</li>
+          <li>Future connectivity partnerships and services.</li>
+        </ul>
+      </article>
+      <article class="ex-roadmap-card">
+        <span class="ex-roadmap-status ex-roadmap-dev">Development and expansion</span>
+        <h3>EVOSGPT</h3>
+        <p>An AI assistant and intelligence platform for the EVOS ecosystem.</p>
+        <ul>
+          <li>Research, productivity and problem-solving tools.</li>
+          <li>Shared EVOS account integration.</li>
+          <li>UserCore and DefenseCore architecture exploration.</li>
+          <li>Experimental DarkEvo research.</li>
+          <li>Long-term integration with S.O.E. and AI infrastructure.</li>
+        </ul>
+      </article>
+      <article class="ex-roadmap-card">
+        <span class="ex-roadmap-status ex-roadmap-dev">Development / pre-launch</span>
+        <h3>XERA Ecosystem</h3>
+        <p>A blockchain-based token and planned digital utility layer for participating EVOS services.</p>
+        <ul>
+          <li>Mining and rewards experience.</li>
+          <li>Wallet and transaction history.</li>
+          <li>Blockchain integration and on-chain settlement.</li>
+          <li>Future utility, services and ecosystem partnerships.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-xera">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">03 • BLOCKCHAIN AND DIGITAL UTILITY</div>
+      <h2 id="ex-roadmap-xera">The XERA ecosystem</h2>
+      <p>XERA is intended to develop beyond a mining experience into a digital utility and participation layer for supported services across the EVOS ecosystem.</p>
+    </div>
+    <div class="ex-roadmap-grid">
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-dev">Development</span><h3>XERA Mining</h3><p>Participation and reward distribution through the XERA application.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-dev">Development</span><h3>XERA Wallet</h3><p>Wallet experience, balances, transaction records and supported external-wallet connectivity.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned</span><h3>XERA Utility</h3><p>Potential use of XERA for eligible services within the EVOS ecosystem, subject to technical, legal and economic review.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned</span><h3>XERA Marketplace</h3><p>A possible marketplace for participating digital products, services and ecosystem providers.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned</span><h3>XERA Digital Institute</h3><p>A future technology and digital-learning initiative exploring blockchain, digital skills and emerging technologies. It is not yet an operational education platform.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Token utility and ecosystem economics</h3><p>Research into transparent service-utility models, partner participation and possible token-burn mechanisms. No future mechanism is represented as currently active.</p></article>
+    </div>
+    <div class="ex-roadmap-note"><p><strong>Accuracy note:</strong> Future XERA payment, marketplace, burn and partner features are plans, not guarantees. Availability will depend on implementation, token design, compliance and participating services.</p></div>
+  </section>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-soe">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">04 • THE LONG-TERM SYSTEM VISION</div>
+      <h2 id="ex-roadmap-soe">S.O.E. — System Order of Evolution</h2>
+      <p>S.O.E. is envisioned as an integrated operating-system and technology architecture connecting intelligent software, user identity, cybersecurity, cloud services, mobile computing and EVOS applications.</p>
+    </div>
+    <div class="ex-roadmap-grid">
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Architecture vision</span><h3>S.O.E. Core</h3><p>The proposed operating-system foundation, beginning with compatible platform research and prototypes.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Architecture vision</span><h3>UserCore</h3><p>Identity, user profiles, personalization and account-level experiences.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Architecture vision</span><h3>DefenseCore</h3><p>Security, protection, access control and system integrity.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Experimental research</span><h3>DarkEvo</h3><p>An experimental research direction for advanced intelligence and emerging AI capabilities.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned integration</span><h3>EVOSGPT</h3><p>The AI assistant and intelligence layer that could support users across compatible S.O.E. experiences.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned integration</span><h3>EVOS Connect</h3><p>Potential integration between S.O.E., EVOS products, cloud services and supported connectivity systems.</p></article>
+    </div>
+    <h3 style="margin-top:24px">Proposed development generations</h3>
+    <div class="ex-roadmap-timeline">
+      <div class="ex-roadmap-era"><time>Version 1</time><div><h3>Foundation and prototype</h3><p>Platform research, Android/AOSP-compatible experimentation, interface foundations and initial service integration.</p></div></div>
+      <div class="ex-roadmap-era"><time>Version 2</time><div><h3>Intelligent integration</h3><p>Deeper AI integration, personalization and connected EVOS experiences.</p></div></div>
+      <div class="ex-roadmap-era"><time>Version 3</time><div><h3>Security and cloud</h3><p>Identity controls, security architecture, synchronization and cloud-connected services.</p></div></div>
+      <div class="ex-roadmap-era"><time>Version 4</time><div><h3>Hardware adaptation</h3><p>Device compatibility, system optimization and hardware research.</p></div></div>
+      <div class="ex-roadmap-era"><time>Version 5</time><div><h3>Intelligent device ecosystem</h3><p>Deeper integration across mobile devices, AI services and connected applications.</p></div></div>
+      <div class="ex-roadmap-era"><time>Version 6</time><div><h3>Integrated S.O.E. vision</h3><p>A mature ecosystem combining operating-system capabilities, intelligence, security, connectivity and compatible devices.</p></div></div>
+    </div>
+  </section>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-grid">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">05 • DISTRIBUTED INTELLIGENCE</div>
+      <h2 id="ex-roadmap-grid">EVOXERA AI Grid</h2>
+      <p>A long-term research and infrastructure vision for coordinating computing resources that could support EVOSGPT, S.O.E. and future digital services.</p>
+    </div>
+    <div class="ex-roadmap-grid">
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>AI orchestration</h3><p>Explore how AI tasks could be coordinated across available computing resources.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Cloud computing</h3><p>Investigate scalable compute, storage and service infrastructure.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Distributed and edge processing</h3><p>Explore processing selected workloads closer to users and connected devices.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Resource management</h3><p>Investigate workload allocation, monitoring, reliability and efficient resource use.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Data and storage</h3><p>Explore secure data storage, retrieval, processing and service continuity.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Security and access</h3><p>Design principles for authentication, authorization, privacy and infrastructure integrity.</p></article>
+    </div>
+    <div class="ex-roadmap-note"><p><strong>Long-term possibility:</strong> The AI Grid could connect cloud infrastructure, distributed nodes, edge systems and compatible devices. EVOXERA does not currently claim to operate a distributed AI grid or its own AI data-centre network.</p></div>
+  </section>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-mobile">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">06 • MOBILE COMPUTING</div>
+      <h2 id="ex-roadmap-mobile">Mobile systems and future devices</h2>
+      <p>The long-term ambition is to explore how EVOXERA software and services could extend from applications on existing devices to potential purpose-built mobile experiences and hardware.</p>
+    </div>
+    <div class="ex-roadmap-grid">
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned</span><h3>S.O.E. mobile experience</h3><p>Explore a mobile operating-system experience built around S.O.E. principles and compatible platform foundations.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-vision">Long-term vision</span><h3>EVOXERA-branded devices</h3><p>Research the feasibility of smartphones and other devices, potentially through design and manufacturing partnerships.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>AI-integrated experiences</h3><p>Investigate mobile AI assistance, personalization and on-device or connected intelligence.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Connected device ecosystem</h3><p>Explore secure device identity, cloud synchronization, EVOS integration and future smart devices.</p></article>
+    </div>
+    <div class="ex-roadmap-note"><p>Software research and prototypes should precede any commitment to manufacturing. No EVOXERA smartphone is represented as currently available.</p></div>
+  </section>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-connectivity">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">07 • CONNECTIVITY INFRASTRUCTURE</div>
+      <h2 id="ex-roadmap-connectivity">EVOXERA Connectivity and Telecommunications</h2>
+      <p>A long-term ambition to explore connectivity infrastructure and partnerships, extending the company's experience in digital data services toward broader network technologies.</p>
+    </div>
+    <div class="ex-roadmap-grid">
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Telecommunications partnerships</h3><p>Explore relationships with licensed operators, infrastructure providers and connectivity partners.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-vision">Long-term vision</span><h3>Cellular tower infrastructure</h3><p>Study the feasibility of participating in tower, site and network infrastructure projects through appropriate partners and approvals.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Wireless connectivity</h3><p>Investigate wireless technologies and future connectivity services that complement EVOS Data Services.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>AI-assisted network operations</h3><p>Explore network monitoring, performance analysis and operational optimization using AI.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Edge computing locations</h3><p>Investigate whether suitable network locations could host edge-computing resources for selected services.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-vision">Long-term vision</span><h3>Future network infrastructure</h3><p>Assess the feasibility of independently operated or co-developed infrastructure, subject to licensing, capital and regulatory requirements.</p></article>
+    </div>
+    <div class="ex-roadmap-note"><p><strong>AI Grid connection:</strong> In a possible future model, network locations could provide connectivity and selected edge-computing capacity, while AI Grid orchestration coordinates supported workloads. This is a research direction, not an existing tower or network operation.</p></div>
+  </section>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-business">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">08 • DIGITAL SERVICES AND PARTNERS</div>
+      <h2 id="ex-roadmap-business">EVOS business and digital expansion</h2>
+      <p>Expand the ecosystem through practical services for individuals, businesses, developers and participating partners.</p>
+    </div>
+    <div class="ex-roadmap-grid">
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned</span><h3>EVOS Website Creation</h3><p>Website design, development and related hosting or maintenance services.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned</span><h3>EVOS Business Tools</h3><p>Digital tools for business operations, productivity and online presence.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned</span><h3>EVOS Marketplace</h3><p>A discovery and commerce environment for eligible digital products and services.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned</span><h3>XERA Digital Institute</h3><p>Future learning initiatives focused on technology, blockchain and digital skills.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-vision">Long-term vision</span><h3>EVOS Developer Ecosystem</h3><p>Potential developer tools, integrations, APIs and partner-built experiences.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Financial technology</h3><p>Explore compliant payment and digital transaction tools. This does not imply that EVOXERA currently offers banking, lending, investment or DeFi products.</p></article>
+    </div>
+  </section>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-research">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">09 • EMERGING TECHNOLOGIES</div>
+      <h2 id="ex-roadmap-research">Research and future technology directions</h2>
+      <p>Maintain a research pipeline for technologies that may complement the EVOS ecosystem as resources, expertise and partnerships develop.</p>
+    </div>
+    <div class="ex-roadmap-grid">
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Intelligent automation and robotics</h3><p>Explore AI-assisted automation, robotics concepts and intelligent systems.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Advanced cybersecurity</h3><p>Research threat detection, identity protection, privacy and secure system design.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><h3>Cloud and data infrastructure</h3><p>Explore hosting, storage, distributed services and reliable computing foundations.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-vision">Long-term vision</span><h3>Smart infrastructure</h3><p>Investigate connected systems and intelligent infrastructure that may support digital transformation.</p></article>
+    </div>
+  </section>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-timeline">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">10 • STRATEGIC HORIZONS</div>
+      <h2 id="ex-roadmap-timeline">The long-term journey</h2>
+      <p>These horizons communicate strategic direction. They are not guaranteed launch dates or delivery commitments.</p>
+    </div>
+    <div class="ex-roadmap-timeline">
+      <div class="ex-roadmap-era"><time>2026–2027</time><div><h3>Strengthen the foundation</h3><p>Improve EVOS Hub, grow Data Services, advance EVOSGPT, continue XERA development and establish reliable product operations.</p></div></div>
+      <div class="ex-roadmap-era"><time>2027–2028</time><div><h3>Expand digital services</h3><p>Develop business tools, website services, marketplace foundations, XERA utility research and broader AI capabilities.</p></div></div>
+      <div class="ex-roadmap-era"><time>2028–2030</time><div><h3>Build advanced technology foundations</h3><p>Explore S.O.E. prototypes, AI Grid research, cloud infrastructure and distributed-computing concepts.</p></div></div>
+      <div class="ex-roadmap-era"><time>2030–2033</time><div><h3>Explore devices and infrastructure</h3><p>Investigate mobile technology prototypes, edge computing, hardware partnerships and telecommunications collaborations.</p></div></div>
+      <div class="ex-roadmap-era"><time>2033 onward</time><div><h3>Advance the integrated vision</h3><p>Continue research toward integrated operating systems, intelligent devices, distributed computing and broader connectivity infrastructure.</p></div></div>
+    </div>
+  </section>
+
+  <section class="ex-roadmap-section" aria-labelledby="ex-roadmap-status-guide">
+    <div class="ex-roadmap-section-intro">
+      <div class="ex-roadmap-kicker">11 • TRANSPARENCY</div>
+      <h2 id="ex-roadmap-status-guide">How to read our roadmap</h2>
+      <p>Roadmap labels distinguish what exists today from what is being developed, planned or explored.</p>
+    </div>
+    <div class="ex-roadmap-grid">
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-active">Active</span><p>Operational products or services.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-dev">In development</span><p>Work currently underway.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-planned">Planned</span><p>Future initiatives intended for development but not yet operational.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-research">Research</span><p>Concepts being investigated for feasibility and potential value.</p></article>
+      <article class="ex-roadmap-card"><span class="ex-roadmap-status ex-roadmap-vision">Long-term vision</span><p>Distant ambitions dependent on resources, technical progress, partnerships and approvals.</p></article>
+    </div>
+  </section>
+
+  <footer class="ex-roadmap-footer">
+    <strong>EVOXERA TECHNOLOGY</strong> — Creating Evolution for the Future.<br>
+    This roadmap describes current activities and future strategic ambitions. Planned initiatives may change, be delayed or not proceed. All future products, token utilities, infrastructure and partnerships are subject to feasibility, funding, technical development, applicable laws and regulatory approvals.
+  </footer>
+</section>
