@@ -229,7 +229,14 @@ async function activeProviders() {
     return discoverProviders();
 }
 
-function hexToInt(hex) { return parseInt(hex, 16); }
+// Wallets report the chain id as a hex string ("0x38"), but WalletConnect sessions often give a plain number
+// (56) or a decimal string ("56"). parseInt("56", 16) is 86, which made a correct BNB wallet look like it was
+// on the wrong network. Accept all three.
+function hexToInt(v) {
+    if (typeof v === 'number') return v;
+    const t = String(v).trim();
+    return /^0x/i.test(t) ? parseInt(t, 16) : parseInt(t, 10);
+}
 
 async function readChainId(provider, fallback = null) {
     try { return hexToInt(await provider.request({ method: 'eth_chainId' })); } catch (_e) { return fallback; }
