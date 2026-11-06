@@ -36,6 +36,7 @@ export default defineConfig({
         home:              'src/pages/home.html',
         appEvoxera:        'src/pages/appevoxera.html',
         about:             'src/pages/about.html',
+        roadmap:           'src/pages/evoxera_master_roadmap_frontend.html',
         services:          'src/pages/services.html',
         contact:           'src/pages/contact.html',
         websiteCreation:   'src/pages/website-creation.html',
