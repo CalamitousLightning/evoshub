@@ -114,15 +114,7 @@ async function confirmClaimOnServer(referenceId, txHash) {
     throw lastErr;
 }
 
-// After a redeploy, a tab opened earlier (or a cached page) points at script files that no longer exist, so the
-// lazy-loaded wallet code fails to load. That is the app being out of date, not the wallet refusing anything.
-const STALE_APP_MSG = 'The app was just updated and this page is out of date. Close it fully and reopen it (or pull down to refresh), then try again.';
-function isStaleChunk(err) {
-    return /dynamically imported module|Importing a module script failed|Loading chunk|Loading CSS chunk/i.test(String((err && err.message) || ''));
-}
-
 function userMessage(err, fallback) {
-    if (isStaleChunk(err)) return STALE_APP_MSG;
     // EIP-1193 user rejection
     if (err && (err.code === 4001 || err.code === 'ACTION_REJECTED')) return 'You declined the request in your wallet. Nothing was changed.';
     if (err && err.code === -32002) return 'Your wallet already has a pending request — open it to continue.';
@@ -229,14 +221,7 @@ async function activeProviders() {
     return discoverProviders();
 }
 
-// Wallets report the chain id as a hex string ("0x38"), but WalletConnect sessions often give a plain number
-// (56) or a decimal string ("56"). parseInt("56", 16) is 86, which made a correct BNB wallet look like it was
-// on the wrong network. Accept all three.
-function hexToInt(v) {
-    if (typeof v === 'number') return v;
-    const t = String(v).trim();
-    return /^0x/i.test(t) ? parseInt(t, 16) : parseInt(t, 10);
-}
+function hexToInt(hex) { return parseInt(hex, 16); }
 
 async function readChainId(provider, fallback = null) {
     try { return hexToInt(await provider.request({ method: 'eth_chainId' })); } catch (_e) { return fallback; }
@@ -328,98 +313,30 @@ const XERA_TOKEN_SYMBOL = 'XERA';
 const XERA_TOKEN_DECIMALS = 18;
 const XERA_TOKEN_LOGO = 'https://evoshub.xyz/assets/images/xera-token-logo-1024.png';
 
-// When a wallet refuses the automatic add, make the manual route one tap per field. Public token info only.
-function renderManualToken(box, addr) {
-    if (!box) return;
-    const row = (label, value) => {
-        const b = h('button', { type: 'button', class: 'chain-copy', text: 'Copy' });
-        b.addEventListener('click', async () => {
-            try { await navigator.clipboard.writeText(value); b.textContent = 'Copied'; } catch (_e) { b.textContent = 'Press and hold to copy'; }
-            setTimeout(() => { b.textContent = 'Copy'; }, 1500);
-        });
-        return h('div', { class: 'chain-addr-row' }, h('span', { class: 'chain-wallet-addr', text: `${label}: ${value}` }), b);
-    };
-    box.replaceChildren(
-        h('p', { class: 'chain-manual-hint', text: 'Add it by hand: in your wallet tap Add / Import token, choose BNB Smart Chain, then paste these.' }),
-        row('Contract', addr), row('Symbol', XERA_TOKEN_SYMBOL), row('Decimals', String(XERA_TOKEN_DECIMALS)),
-    );
-}
-
-async function addXeraToWallet(btn, msgEl, extraEl) {
+async function addXeraToWallet(btn, msgEl) {
     const net = state.network;
     const addr = net && net.xera_token_address;
     const say = (t) => { msgEl.textContent = t; };
     if (!addr) { say('The XERA token address is not published yet.'); return; }
+    const provider = (state.provider && state.provider.provider) || (typeof window !== 'undefined' && window.ethereum) || null;
     const copyFallback = async (reason) => {
-        try { await navigator.clipboard.writeText(addr); say(`${reason} The contract address is copied.`); }
-        catch (_e) { say(reason); }
-        renderManualToken(extraEl, addr);
+        try { await navigator.clipboard.writeText(addr); say(`${reason} Contract address copied — in your wallet choose “Add custom token”, paste it, symbol ${XERA_TOKEN_SYMBOL}, decimals ${XERA_TOKEN_DECIMALS}.`); }
+        catch (_e) { say(`${reason} Add a custom token manually: ${addr} · symbol ${XERA_TOKEN_SYMBOL} · decimals ${XERA_TOKEN_DECIMALS}.`); }
     };
-    if (extraEl) extraEl.replaceChildren();
+    if (!provider || typeof provider.request !== 'function') { await copyFallback('Your wallet can’t add tokens automatically.'); return; }
+    if (state.providerChainId && net.chain_id && Number(state.providerChainId) !== Number(net.chain_id)) {
+        say(`Switch your wallet to ${net.name} first, then tap again.`); return;
+    }
     btn.disabled = true;
-    say('Opening your wallet…');
     try {
-        // Same wallet connection the claim uses: the one picked this visit, else the restored WalletConnect
-        // session, else an installed browser wallet. (Before, only window.ethereum was tried, so a wallet
-        // connected through the picker was never asked.)
-        let entry = state.provider;
-        if (!entry) {
-            const list = await activeProviders();
-            const linked = state.wallets.BNB && state.wallets.BNB.address ? state.wallets.BNB.address.toLowerCase() : '';
-            for (const p of list) {
-                try {
-                    const accts = await p.provider.request({ method: 'eth_accounts' });
-                    if (linked && accts.some((a) => a.toLowerCase() === linked)) { entry = p; break; }
-                } catch (_e) { /* wallet locked */ }
-            }
-            entry = entry || list[0] || null;
-        }
-        if (!entry) {
-            // No live connection (the tab reloaded while the wallet app was open, or the session expired):
-            // open the wallet picker right here instead of sending the user off to find "Change wallet".
-            const w = state.wallets.BNB;
-            if (w && w.verified) {
-                say('Reconnecting your wallet…');
-                entry = await reconnectLinkedWallet(w);
-                if (entry) {
-                    state.provider = entry;
-                    attachProviderListeners(entry);
-                    state.providerChainId = entry.chainId || state.providerChainId;
-                    renderNetworkBanner();
-                    say('Connected. Approve “Add XERA” in your wallet app…');
-                }
-            }
-        }
-        const provider = entry && entry.provider;
-        if (!provider || typeof provider.request !== 'function') {
-            await copyFallback('Could not reach a wallet from this browser. For one-tap adding, open this page inside your wallet app’s browser (Trust Wallet, MetaMask, Binance…).');
-            return;
-        }
-        const walletChain = await readChainId(provider, entry.chainId || null);
-        if (walletChain && net.chain_id && Number(walletChain) !== Number(net.chain_id)) {
-            say(`Switch your wallet to ${net.name} first, then tap again.`);
-            return;
-        }
-        const watch = (withImage) => provider.request({
+        const ok = await provider.request({
             method: 'wallet_watchAsset',
-            params: { type: 'ERC20', options: { address: addr, symbol: XERA_TOKEN_SYMBOL, decimals: XERA_TOKEN_DECIMALS, ...(withImage ? { image: XERA_TOKEN_LOGO } : {}) } },
+            params: { type: 'ERC20', options: { address: addr, symbol: XERA_TOKEN_SYMBOL, decimals: XERA_TOKEN_DECIMALS, image: XERA_TOKEN_LOGO } },
         });
-        let ok;
-        try { ok = await watch(true); }
-        catch (first) {
-            // Some wallets refuse the whole request over the logo (size/host). Try once more without it.
-            if (first && (first.code === 4001 || first.code === 'ACTION_REJECTED')) throw first;
-            ok = await watch(false);
-        }
         say(ok ? 'XERA added to your wallet.' : 'Not added — you can tap again any time.');
     } catch (err) {
-        if (err && (err.code === 4001 || err.code === 'ACTION_REJECTED')) { say('Cancelled in your wallet.'); return; }
-        if (err && err.userFacing) { say(err.message); return; }
-        if (isStaleChunk(err)) { say(STALE_APP_MSG); return; }
-        console.warn('wallet_watchAsset failed', err);
-        // Tell the user WHY, in short, so "can't add automatically" isn't a dead end.
-        const why = err && err.message ? ` (${String(err.message).slice(0, 80)})` : '';
-        await copyFallback(`Your wallet didn’t accept the automatic add${why}.`);
+        if (err && err.code === 4001) say('Cancelled in your wallet.');
+        else await copyFallback('Your wallet couldn’t add it automatically.');
     } finally {
         btn.disabled = false;
     }
@@ -429,10 +346,9 @@ function xeraTokenRow() {
     const net = state.network;
     if (!net || !net.xera_token_address) return null;
     const msg = h('p', { class: 'chain-token-msg', role: 'status', 'aria-live': 'polite' });
-    const extra = h('div', { class: 'chain-token-manual' });
     const btn = h('button', { type: 'button', class: 'btn btn-sm chain-addtoken', text: 'Add XERA to my wallet' });
-    btn.addEventListener('click', () => addXeraToWallet(btn, msg, extra));
-    return h('div', { class: 'chain-token-row' }, btn, msg, extra);
+    btn.addEventListener('click', () => addXeraToWallet(btn, msg));
+    return h('div', { class: 'chain-token-row' }, btn, msg);
 }
 
 // ---------------------------------------------------------------- wallet cards
@@ -623,18 +539,15 @@ async function connectBnbWallet() {
         let pickerProblem = appKitConfigured() ? '' : 'not_configured';
         if (appKitConfigured()) {
             let picked = null;
-            markLinkPending();
             try {
                 picked = await connectWithAppKit(state.network && state.network.chain_id);
             } catch (err) {
                 if (err && err.cancelled) { return; }            // user closed the picker — not an error
                 pickerProblem = 'failed';
-                if (isStaleChunk(err)) { setError(STALE_APP_MSG); return; }
                 console.warn('Wallet picker unavailable, falling back to browser wallet', err);
             }
             if (picked) {
                 await linkWithProvider({ info: { uuid: 'appkit', name: 'WalletConnect', icon: '' }, provider: picked.provider, appkit: true, chainId: picked.chainId }, picked.address, picked.chainId);
-                clearLinkPending();
                 return;
             }
         }
@@ -657,36 +570,9 @@ async function connectBnbWallet() {
             return;
         }
     } catch (err) {
-        clearLinkPending();
         setError(userMessage(err, 'Could not connect your BNB wallet. Please try again.'));
     } finally {
         if (!state.pickerOpen) { state.busy.BNB = false; await refreshWallets(); }
-    }
-}
-
-// Finish a wallet link that was interrupted by the redirect to the wallet app and back (page reloaded or
-// the tab was frozen). Uses the WalletConnect session AppKit restored, then runs the normal sign + verify.
-let resumingLink = false;
-async function resumePendingBnbLink() {
-    if (resumingLink || state.busy.BNB || !linkPendingFresh() || !appKitConfigured()) return;
-    resumingLink = true;
-    setBusy('BNB', true);
-    try {
-        await loadNetworkConfig();
-        const restored = await restoredAppKitProvider(state.network && state.network.chain_id);
-        if (!restored || !restored.address) { clearLinkPending(); return; }   // nothing was connected — not an error
-        const linked = state.wallets.BNB;
-        if (linked && linked.verified && linked.address && linked.address.toLowerCase() === restored.address.toLowerCase()) { clearLinkPending(); return; }  // already saved
-        setNotice('Finishing connecting your wallet…');
-        await linkWithProvider({ info: { uuid: 'appkit', name: 'WalletConnect', icon: '' }, provider: restored.provider, appkit: true, chainId: restored.chainId }, restored.address, restored.chainId);
-        clearLinkPending();
-    } catch (err) {
-        clearLinkPending();
-        setError(userMessage(err, 'Could not finish connecting your wallet. Tap “Change wallet” and try again.'));
-    } finally {
-        resumingLink = false;
-        state.busy.BNB = false;
-        await refreshWallets();
     }
 }
 
@@ -820,17 +706,6 @@ async function connectTonWallet() {
 // `reference_id` (for mining rewards, the mining session id) — NOT by the
 // ledger row's own `id`. Always send reference_id.
 
-// A BNB wallet link that was started but not finished. On a phone the browser tab is often reloaded while the
-// user is in the wallet app, which killed the in-progress link (the wallet connected, but nothing was ever
-// verified/saved, so the old wallet showed again). We remember it here and finish it when the page comes back.
-const LINK_PENDING_KEY = 'xera_bnb_link_pending';
-const LINK_PENDING_TTL_MS = 10 * 60 * 1000;
-function markLinkPending() { try { localStorage.setItem(LINK_PENDING_KEY, String(Date.now())); } catch (_e) { /* storage blocked */ } }
-function clearLinkPending() { try { localStorage.removeItem(LINK_PENDING_KEY); } catch (_e) { /* ignore */ } }
-function linkPendingFresh() {
-    try { const t = Number(localStorage.getItem(LINK_PENDING_KEY) || 0); return t > 0 && Date.now() - t < LINK_PENDING_TTL_MS; }
-    catch (_e) { return false; }
-}
 const PENDING_KEY = 'xera_pending_claim_txs'; // { [reference_id]: txHash } — survives a failed confirm call
 function pendingTxs() { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '{}'); } catch (_e) { return {}; } }
 function rememberPendingTx(ref, hash) { const m = pendingTxs(); m[ref] = hash; try { localStorage.setItem(PENDING_KEY, JSON.stringify(m)); } catch (_e) { /* storage full/blocked */ } }
@@ -1311,7 +1186,6 @@ async function openChainTab() {
     await loadNetworkConfig();
     renderNetworkBanner();
     await refreshWallets();
-    resumePendingBnbLink();
     loadClaimables();
     loadVestingStatus();
     loadMigrationStatus();
@@ -1348,9 +1222,6 @@ function initChainPanel() {
         btn.addEventListener('click', () => { openChainTab(); });
     });
     if (CFG.autoOpen) openChainTab();
-    // Coming back from the wallet app (tab was backgrounded, not reloaded): finish the link if one was started.
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && linkPendingFresh()) resumePendingBnbLink(); });
-    window.addEventListener('pageshow', (e) => { if (e.persisted && linkPendingFresh()) resumePendingBnbLink(); });
 }
 
 if (document.readyState === 'loading') {
