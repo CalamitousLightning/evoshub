@@ -539,15 +539,17 @@ async function connectBnbWallet() {
         let pickerProblem = appKitConfigured() ? '' : 'not_configured';
         if (appKitConfigured()) {
             let picked = null;
+            markLinkPending();
             try {
                 picked = await connectWithAppKit(state.network && state.network.chain_id);
             } catch (err) {
-                if (err && err.cancelled) { return; }            // user closed the picker — not an error
+                if (err && err.cancelled) { clearLinkPending(); return; }            // user closed the picker — not an error
                 pickerProblem = 'failed';
                 console.warn('Wallet picker unavailable, falling back to browser wallet', err);
             }
             if (picked) {
                 await linkWithProvider({ info: { uuid: 'appkit', name: 'WalletConnect', icon: '' }, provider: picked.provider, appkit: true, chainId: picked.chainId }, picked.address, picked.chainId);
+                clearLinkPending();
                 return;
             }
         }
@@ -570,10 +572,53 @@ async function connectBnbWallet() {
             return;
         }
     } catch (err) {
+        clearLinkPending();
         setError(userMessage(err, 'Could not connect your BNB wallet. Please try again.'));
     } finally {
         if (!state.pickerOpen) { state.busy.BNB = false; await refreshWallets(); }
     }
+}
+
+// Finish a wallet link interrupted by the trip to the wallet app: take the WalletConnect session AppKit
+// restored and run the normal sign + verify, then save. Does nothing if no link was started.
+let resumingLink = false;
+async function resumePendingBnbLink() {
+    if (resumingLink || state.busy.BNB || !linkPendingFresh() || !appKitConfigured()) return;
+    resumingLink = true;
+    setBusy('BNB', true);
+    try {
+        await loadNetworkConfig();
+        const restored = await restoredAppKitProvider(state.network && state.network.chain_id);
+        if (!restored || !restored.address) { clearLinkPending(); return; }   // nothing connected: not an error
+        const linked = state.wallets.BNB;
+        if (linked && linked.verified && linked.address && linked.address.toLowerCase() === restored.address.toLowerCase()) { clearLinkPending(); return; }  // already saved
+        setNotice('Finishing connecting your wallet… approve the signature in your wallet app.');
+        await linkWithProvider({ info: { uuid: 'appkit', name: 'WalletConnect', icon: '' }, provider: restored.provider, appkit: true, chainId: restored.chainId }, restored.address, restored.chainId);
+        clearLinkPending();
+    } catch (err) {
+        clearLinkPending();
+        setError(userMessage(err, 'Could not finish connecting your wallet. Tap “Change wallet” and try again.'));
+    } finally {
+        resumingLink = false;
+        state.busy.BNB = false;
+        await refreshWallets();
+    }
+}
+
+// The page came back on the home screen. If a wallet link is waiting, open the wallet screen for the user
+// (the on-chain switch loads asynchronously, so wait for it) and let openChainTab finish the link.
+function returnToWalletScreen() {
+    if (!linkPendingFresh() || CFG.autoOpen) return;
+    let tries = 0;
+    const timer = setInterval(() => {
+        tries += 1;
+        if (!linkPendingFresh() || tries > 40) { clearInterval(timer); return; }       // ~12 s
+        if (window.__xeraOnchainEnabled === true && token()) {
+            clearInterval(timer);
+            const btn = $('openChainClaim');
+            if (btn) btn.click();
+        }
+    }, 300);
 }
 
 function renderProviderPicker(providers) {
@@ -706,6 +751,17 @@ async function connectTonWallet() {
 // `reference_id` (for mining rewards, the mining session id) — NOT by the
 // ledger row's own `id`. Always send reference_id.
 
+// A BNB wallet link that was started but not finished. On a phone, approving in the wallet app can reload the
+// XERA page (it comes back on the home screen), which killed the in-progress link: the wallet connected but
+// was never verified/saved, so the old wallet kept showing. We remember the link and finish it on return.
+const LINK_PENDING_KEY = 'xera_bnb_link_pending';
+const LINK_PENDING_TTL_MS = 10 * 60 * 1000;
+function markLinkPending() { try { localStorage.setItem(LINK_PENDING_KEY, String(Date.now())); } catch (_e) { /* storage blocked */ } }
+function clearLinkPending() { try { localStorage.removeItem(LINK_PENDING_KEY); } catch (_e) { /* ignore */ } }
+function linkPendingFresh() {
+    try { const t = Number(localStorage.getItem(LINK_PENDING_KEY) || 0); return t > 0 && Date.now() - t < LINK_PENDING_TTL_MS; }
+    catch (_e) { return false; }
+}
 const PENDING_KEY = 'xera_pending_claim_txs'; // { [reference_id]: txHash } — survives a failed confirm call
 function pendingTxs() { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '{}'); } catch (_e) { return {}; } }
 function rememberPendingTx(ref, hash) { const m = pendingTxs(); m[ref] = hash; try { localStorage.setItem(PENDING_KEY, JSON.stringify(m)); } catch (_e) { /* storage full/blocked */ } }
@@ -1186,6 +1242,7 @@ async function openChainTab() {
     await loadNetworkConfig();
     renderNetworkBanner();
     await refreshWallets();
+    resumePendingBnbLink();
     loadClaimables();
     loadVestingStatus();
     loadMigrationStatus();
@@ -1222,6 +1279,9 @@ function initChainPanel() {
         btn.addEventListener('click', () => { openChainTab(); });
     });
     if (CFG.autoOpen) openChainTab();
+    returnToWalletScreen();
+    // Back from the wallet app without a reload (tab was only in the background): finish the link too.
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && linkPendingFresh()) resumePendingBnbLink(); });
 }
 
 if (document.readyState === 'loading') {

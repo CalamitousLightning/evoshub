@@ -84,10 +84,15 @@ export async function connectWithAppKit(expectedChainId) {
         });
         const unsubState = modal.subscribeState((s) => {
             // Closed without a connection -> stop showing "Working…".
+            // On a phone the modal also hides while the user approves inside the wallet app, so only call it a
+            // cancel when the page stayed visible and still nothing is connected after a grace period.
             if (s && s.open === false) {
+                const hiddenAtClose = document.visibilityState !== 'visible';
                 setTimeout(() => {
-                    if (!settled && !modal.getIsConnectedState()) finish(reject, Object.assign(new Error('Wallet connection was cancelled.'), { cancelled: true }));
-                }, 400);
+                    if (settled || modal.getIsConnectedState()) return;
+                    if (hiddenAtClose || document.visibilityState !== 'visible') return;
+                    finish(reject, Object.assign(new Error('Wallet connection was cancelled.'), { cancelled: true }));
+                }, 2500);
             }
         });
         modal.open({ view: 'Connect', namespace: 'eip155' }).catch((e) => finish(reject, e));
@@ -101,7 +106,7 @@ export async function restoredAppKitProvider(expectedChainId) {
     try {
         const modal = await getModal(expectedChainId);
         // Session restore is async — wait briefly for it.
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 25; i++) {
             if (modal.getIsConnectedState() && modal.getWalletProvider()) break;
             await new Promise((r) => setTimeout(r, 200));
         }
