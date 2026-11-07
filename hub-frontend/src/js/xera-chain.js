@@ -541,9 +541,12 @@ async function connectBnbWallet() {
             let picked = null;
             markLinkPending();
             try {
-                picked = await connectWithAppKit(state.network && state.network.chain_id);
+                const linkedNow = state.wallets.BNB && state.wallets.BNB.verified ? state.wallets.BNB.address : '';
+                picked = await connectWithAppKit(state.network && state.network.chain_id, linkedNow);
             } catch (err) {
-                if (err && err.cancelled) { clearLinkPending(); return; }            // user closed the picker — not an error
+                if (err && err.cancelled) { clearLinkPending(); return; }
+                if (err && err.userFacing) { clearLinkPending(); throw err; }   // e.g. "that's the wallet already linked"
+                console.warn('Wallet picker error', err);            // user closed the picker — not an error
                 pickerProblem = 'failed';
                 console.warn('Wallet picker unavailable, falling back to browser wallet', err);
             }

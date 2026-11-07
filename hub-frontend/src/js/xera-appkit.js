@@ -56,8 +56,18 @@ async function getModal(expectedChainId) {
 
 // Opens the picker and resolves once the user has connected a wallet.
 // Resolves { provider, address, chainId } or throws if they close it without connecting.
-export async function connectWithAppKit(expectedChainId) {
+// `currentAddress` = the wallet already linked to the account (when changing wallets). A saved WalletConnect
+// session for that same wallet must never be mistaken for the new one the user is picking.
+export async function connectWithAppKit(expectedChainId, currentAddress) {
     const modal = await getModal(expectedChainId);
+    const current = currentAddress ? String(currentAddress).toLowerCase() : '';
+
+    // AppKit restores the previous visit's session ASYNCHRONOUSLY. The old code checked "connected?" before that
+    // finished, skipped the disconnect, and then the restored OLD wallet fired as if it were the newly picked
+    // one, so "Change wallet" quietly re-linked the same address. When changing, give the restore time to land.
+    if (current) {
+        for (let i = 0; i < 15 && !modal.getIsConnectedState(); i++) await new Promise((r) => setTimeout(r, 200));
+    }
 
     // Start from a clean session so the address we sign for is the one the user
     // picks NOW, not a leftover session from an earlier visit.
@@ -74,6 +84,13 @@ export async function connectWithAppKit(expectedChainId) {
         };
         const unsubAccount = modal.subscribeAccount((acct) => {
             if (acct && acct.isConnected && acct.address) {
+                if (current && String(acct.address).toLowerCase() === current) {
+                    // The wallet app handed back the wallet that is already linked.
+                    try { modal.disconnect(); } catch (_e) { /* ignore */ }
+                    try { modal.close(); } catch (_e) { /* ignore */ }
+                    finish(reject, Object.assign(new Error(`That is the wallet already linked to your account (${current.slice(0, 6)}…${current.slice(-4)}). In your wallet app, switch to the account you want to link, then tap Change wallet again.`), { userFacing: true }));
+                    return;
+                }
                 const provider = modal.getWalletProvider();
                 if (!provider) return;
                 const cid = Number(modal.getChainId());
