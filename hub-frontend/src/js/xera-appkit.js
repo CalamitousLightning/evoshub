@@ -15,6 +15,7 @@
 
 const PROJECT_ID = (import.meta.env && import.meta.env.VITE_REOWN_PROJECT_ID) || '';
 
+const say = (m) => { try { window.dispatchEvent(new CustomEvent('xera-link-trace', { detail: m })); } catch (_e) { /* ignore */ } };
 let modalPromise = null;
 let modalRef = null;
 
@@ -83,6 +84,7 @@ export async function connectWithAppKit(expectedChainId, currentAddress) {
             fn(value);
         };
         const unsubAccount = modal.subscribeAccount((acct) => {
+            if (acct && acct.address) say(`Wallet app reported ${String(acct.address).slice(0, 6)}…${String(acct.address).slice(-4)} (connected: ${!!acct.isConnected})`);
             if (acct && acct.isConnected && acct.address) {
                 if (current && String(acct.address).toLowerCase() === current) {
                     // The wallet app handed back the wallet that is already linked.
@@ -104,6 +106,7 @@ export async function connectWithAppKit(expectedChainId, currentAddress) {
             // On a phone the modal also hides while the user approves inside the wallet app, so only call it a
             // cancel when the page stayed visible and still nothing is connected after a grace period.
             if (s && s.open === false) {
+                say(`Picker closed (page ${document.visibilityState})`);
                 const hiddenAtClose = document.visibilityState !== 'visible';
                 setTimeout(() => {
                     if (settled || modal.getIsConnectedState()) return;

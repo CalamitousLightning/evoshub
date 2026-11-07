@@ -79,6 +79,10 @@
   to = "/admin-xera-wallet.html"
   status = 200
 [[redirects]]
+  from = "/xera-wallet"
+  to = "/xera-wallet.html"
+  status = 200
+[[redirects]]
   from = "/xera"
   to = "/xera/index.html"
   status = 200

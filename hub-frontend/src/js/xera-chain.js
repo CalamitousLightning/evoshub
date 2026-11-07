@@ -540,17 +540,19 @@ async function connectBnbWallet() {
         if (appKitConfigured()) {
             let picked = null;
             markLinkPending();
+            trace('Tapped Change wallet: opening the wallet picker');
             try {
                 const linkedNow = state.wallets.BNB && state.wallets.BNB.verified ? state.wallets.BNB.address : '';
                 picked = await connectWithAppKit(state.network && state.network.chain_id, linkedNow);
             } catch (err) {
-                if (err && err.cancelled) { clearLinkPending(); return; }
-                if (err && err.userFacing) { clearLinkPending(); throw err; }   // e.g. "that's the wallet already linked"
+                if (err && err.cancelled) { trace('Picker closed without connecting'); clearLinkPending(); return; }
+                if (err && err.userFacing) { trace('Stopped: ' + err.message); clearLinkPending(); throw err; }   // e.g. "that's the wallet already linked"
                 console.warn('Wallet picker error', err);            // user closed the picker — not an error
                 pickerProblem = 'failed';
                 console.warn('Wallet picker unavailable, falling back to browser wallet', err);
             }
             if (picked) {
+                trace(`Wallet connected: ${shorten(picked.address)}`);
                 await linkWithProvider({ info: { uuid: 'appkit', name: 'WalletConnect', icon: '' }, provider: picked.provider, appkit: true, chainId: picked.chainId }, picked.address, picked.chainId);
                 clearLinkPending();
                 return;
@@ -575,6 +577,7 @@ async function connectBnbWallet() {
             return;
         }
     } catch (err) {
+        trace('Failed: ' + ((err && err.message) || err));
         clearLinkPending();
         setError(userMessage(err, 'Could not connect your BNB wallet. Please try again.'));
     } finally {
@@ -603,6 +606,7 @@ function offerFinishLink(restored) {
 async function resumePendingBnbLink() {
     if (resumingLink || state.busy.BNB || !linkPendingFresh() || !appKitConfigured()) return;
     resumingLink = true;
+    trace('Page reloaded while a wallet link was in progress');
     try {
         // 1. A signature was already collected: just send it. No second signing request.
         const st = readStash();
@@ -620,7 +624,8 @@ async function resumePendingBnbLink() {
         // 2. A wallet connected in this browser session, but the link is not saved.
         await loadNetworkConfig();
         const restored = await restoredAppKitProvider(state.network && state.network.chain_id);
-        if (!restored || !restored.address) { clearLinkPending(); return; }          // nothing connected: not an error
+        if (!restored || !restored.address) { trace('No connected wallet session found after reload'); clearLinkPending(); return; }          // nothing connected: not an error
+        trace(`Found connected session: ${shorten(restored.address)}`);
         const same = (w) => w && w.verified && w.address && w.address.toLowerCase() === restored.address.toLowerCase();
         if (same(state.wallets.BNB)) { clearLinkPending(); return; }                  // already saved
         // The wallet app may have reopened the site in a second tab that is still finishing the link: wait for it.
@@ -629,7 +634,7 @@ async function resumePendingBnbLink() {
             await refreshWallets();
             if (same(state.wallets.BNB)) { clearLinkPending(); return; }
         }
-        if (linkPendingFresh()) offerFinishLink(restored);
+        if (linkPendingFresh()) { trace('Not saved yet: showing the Finish connecting button'); offerFinishLink(restored); }
     } finally {
         resumingLink = false;
     }
@@ -690,12 +695,16 @@ async function linkWithProvider(entry, knownAddress, knownChainId) {
     // Linking proves ownership of the ADDRESS by signing a message — it moves no
     // funds and doesn't depend on the network, so a wrong network doesn't block it.
     // (It does block settling a claim; see settleClaim.)
+    trace(`Asking the server for a sign-in code for ${shorten(address)}`);
     const nonceRes = await req(PFX + '/wallet/link/nonce', { method: 'POST', body: JSON.stringify({ chain: 'BNB', address }) });
+    trace('Waiting for you to sign in your wallet app');
     const signature = await provider.request({ method: 'personal_sign', params: [utf8ToHex(nonceRes.message_to_sign), address] });
+    trace('Signed. Saving to your account');
     stashSignature({ address: nonceRes.address || address, nonce: nonceRes.nonce, signature });
     try {
         await req(PFX + '/wallet/link/verify', { method: 'POST', body: JSON.stringify({ chain: 'BNB', address: nonceRes.address || address, nonce: nonceRes.nonce, signature }) });
     } finally { clearStash(); }
+    trace('Saved: wallet verified');
     setNotice('BNB wallet connected and verified.');
 }
 
@@ -801,6 +810,28 @@ const LINK_SIG_KEY = 'xera_bnb_link_sig';
 function stashSignature(o) { try { localStorage.setItem(LINK_SIG_KEY, JSON.stringify({ ...o, t: Date.now() })); } catch (_e) { /* ignore */ } }
 function readStash() { try { const o = JSON.parse(localStorage.getItem(LINK_SIG_KEY) || 'null'); return o && Date.now() - o.t < 4 * 60 * 1000 ? o : null; } catch (_e) { return null; } }
 function clearStash() { try { localStorage.removeItem(LINK_SIG_KEY); } catch (_e) { /* ignore */ } }
+// Step log for the wallet link. Kept in localStorage so it survives the page reload that happens when the wallet
+// app sends the user back, and shown under the wallet card so a failure shows exactly which step was the last.
+const TRACE_KEY = 'xera_link_trace';
+function renderTrace() {
+    const host = $('chainWalletNotice');
+    if (!host || !host.parentNode) return;
+    let el = $('chainLinkTrace');
+    let rows = [];
+    try { rows = JSON.parse(localStorage.getItem(TRACE_KEY) || '[]').filter((x) => Date.now() - x.t < 20 * 60 * 1000); } catch (_e) { rows = []; }
+    if (!rows.length) { if (el) el.remove(); return; }
+    if (!el) { el = h('pre', { id: 'chainLinkTrace', style: 'font-size:.68rem;opacity:.75;white-space:pre-wrap;margin:8px 0;word-break:break-word' }); host.parentNode.insertBefore(el, host.nextSibling); }
+    el.textContent = 'Wallet link steps (send me this if it fails):\n' + rows.map((x) => `${new Date(x.t).toLocaleTimeString()}  ${x.m}`).join('\n');
+}
+function trace(msg) {
+    try {
+        const a = JSON.parse(localStorage.getItem(TRACE_KEY) || '[]');
+        a.push({ t: Date.now(), m: String(msg).slice(0, 160) });
+        localStorage.setItem(TRACE_KEY, JSON.stringify(a.slice(-16)));
+    } catch (_e) { /* storage blocked */ }
+    renderTrace();
+}
+window.addEventListener('xera-link-trace', (e) => trace(e.detail));
 const PENDING_KEY = 'xera_pending_claim_txs'; // { [reference_id]: txHash } — survives a failed confirm call
 function pendingTxs() { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '{}'); } catch (_e) { return {}; } }
 function rememberPendingTx(ref, hash) { const m = pendingTxs(); m[ref] = hash; try { localStorage.setItem(PENDING_KEY, JSON.stringify(m)); } catch (_e) { /* storage full/blocked */ } }
@@ -1281,6 +1312,7 @@ async function openChainTab() {
     await loadNetworkConfig();
     renderNetworkBanner();
     await refreshWallets();
+    renderTrace();
     resumePendingBnbLink();
     loadClaimables();
     loadVestingStatus();
