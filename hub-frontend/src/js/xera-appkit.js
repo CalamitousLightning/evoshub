@@ -84,10 +84,17 @@ export async function connectWithAppKit(expectedChainId) {
         });
         const unsubState = modal.subscribeState((s) => {
             // Closed without a connection -> stop showing "Working…".
+            // BUT: on a phone the modal also closes/hides while the user is in the wallet app approving the
+            // connection. Treating that as "cancelled" dropped the wallet silently (the connection arrived
+            // after we had stopped listening and nothing ever linked it). So only call it a cancel when the
+            // page has stayed visible and still nothing is connected after a grace period.
             if (s && s.open === false) {
+                const hiddenAtClose = document.visibilityState !== 'visible';
                 setTimeout(() => {
-                    if (!settled && !modal.getIsConnectedState()) finish(reject, Object.assign(new Error('Wallet connection was cancelled.'), { cancelled: true }));
-                }, 400);
+                    if (settled || modal.getIsConnectedState()) return;
+                    if (hiddenAtClose || document.visibilityState !== 'visible') return;   // user is in the wallet app
+                    finish(reject, Object.assign(new Error('Wallet connection was cancelled.'), { cancelled: true }));
+                }, 2500);
             }
         });
         modal.open({ view: 'Connect', namespace: 'eip155' }).catch((e) => finish(reject, e));
