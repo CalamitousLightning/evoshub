@@ -1,27 +1,33 @@
-// BNB wallet picker (Reown AppKit / WalletConnect).
+// BNB wallet connection layer (Reown AppKit / WalletConnect). Rewritten.
 //
-// Gives the BNB card the same experience TonConnect gives TON: one button opens
-// a modal listing wallets (MetaMask, Trust, Binance, …) with deep links on
-// mobile and a QR code on desktop. Installed browser wallets show up in it too.
+// One job: get an EIP-1193 provider + the account the user picked. Ownership is still proven
+// by the nonce + personal_sign flow in xera-chain.js; nothing about the backend changes. No
+// seed phrase or private key is ever requested.
 //
-// This module only OBTAINS an EIP-1193 provider. Ownership is still proven by
-// the existing nonce + personal_sign flow in xera-chain.js — nothing about the
-// backend or the verification rules changes. No seed phrase / private key is
-// ever requested.
+// Why it was rewritten: on a phone the wallet picker closes the moment you tap a wallet, and the
+// wallet app (SafePal, Trust, ...) can take several seconds to open and approve. The old code
+// treated "picker closed + page still visible" as the user cancelling, stopped listening, and
+// then ignored the connection when it finally arrived. This version NEVER decides the user
+// cancelled. It waits until a wallet connects, the user taps Cancel, or 10 minutes pass.
 //
-// Loaded lazily (dynamic import) so the large AppKit bundle is not part of the
-// initial page weight. If VITE_REOWN_PROJECT_ID is unset or AppKit fails to
-// load, xera-chain.js falls back to the browser-injected wallet flow.
+// Loaded lazily so the large AppKit bundle is not part of the first page load. If
+// VITE_REOWN_PROJECT_ID is unset, xera-chain.js falls back to the browser-injected wallet flow.
 
 const PROJECT_ID = (import.meta.env && import.meta.env.VITE_REOWN_PROJECT_ID) || '';
+const WAIT_MS = 10 * 60 * 1000;          // how long one connect attempt may wait for the wallet
+const PROVIDER_WAIT_MS = 8000;           // account connected but provider not ready yet
 
 const say = (m) => { try { window.dispatchEvent(new CustomEvent('xera-link-trace', { detail: m })); } catch (_e) { /* ignore */ } };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const short = (a) => `${String(a).slice(0, 6)}…${String(a).slice(-4)}`;
+
 let modalPromise = null;
 let modalRef = null;
+let attempt = null;                      // the connect attempt that is currently waiting, if any
 
 export function appKitConfigured() { return Boolean(PROJECT_ID); }
 
-// `expectedChainId` is the chain id the backend expects (56 mainnet / 97 testnet).
+// `expectedChainId`: the chain id the backend expects (56 mainnet / 97 testnet).
 async function getModal(expectedChainId) {
     if (modalPromise) return modalPromise;
     modalPromise = (async () => {
@@ -43,7 +49,7 @@ async function getModal(expectedChainId) {
                 url: location.origin,
                 icons: [`${location.origin}/assets/icons/xera-icon-192.png`],
             },
-            // Wallet connection only — no email/social login, on-ramp, swaps or analytics.
+            // Wallet connection only: no email/social login, on-ramp, swaps or analytics.
             features: { analytics: false, email: false, socials: false, onramp: false, swaps: false, send: false, receive: false, history: false },
             themeMode: 'dark',
             allWallets: 'SHOW',
@@ -55,87 +61,117 @@ async function getModal(expectedChainId) {
     return modalPromise;
 }
 
-// Opens the picker and resolves once the user has connected a wallet.
-// Resolves { provider, address, chainId } or throws if they close it without connecting.
-// `currentAddress` = the wallet already linked to the account (when changing wallets). A saved WalletConnect
-// session for that same wallet must never be mistaken for the new one the user is picking.
-export async function connectWithAppKit(expectedChainId, currentAddress) {
-    const modal = await getModal(expectedChainId);
-    const current = currentAddress ? String(currentAddress).toLowerCase() : '';
-
-    // AppKit restores the previous visit's session ASYNCHRONOUSLY. The old code checked "connected?" before that
-    // finished, skipped the disconnect, and then the restored OLD wallet fired as if it were the newly picked
-    // one, so "Change wallet" quietly re-linked the same address. When changing, give the restore time to land.
-    if (current) {
-        for (let i = 0; i < 15 && !modal.getIsConnectedState(); i++) await new Promise((r) => setTimeout(r, 200));
-    }
-
-    // Start from a clean session so the address we sign for is the one the user
-    // picks NOW, not a leftover session from an earlier visit.
-    try { if (modal.getIsConnectedState()) await modal.disconnect(); } catch (_e) { /* nothing to disconnect */ }
-
-    return new Promise((resolve, reject) => {
-        let settled = false;
-        const finish = (fn, value) => {
-            if (settled) return;
-            settled = true;
-            try { unsubAccount(); } catch (_e) { /* ignore */ }
-            try { unsubState(); } catch (_e) { /* ignore */ }
-            fn(value);
-        };
-        const unsubAccount = modal.subscribeAccount((acct) => {
-            if (acct && acct.address) say(`Wallet app reported ${String(acct.address).slice(0, 6)}…${String(acct.address).slice(-4)} (connected: ${!!acct.isConnected})`);
-            if (acct && acct.isConnected && acct.address) {
-                if (current && String(acct.address).toLowerCase() === current) {
-                    // The wallet app handed back the wallet that is already linked.
-                    try { modal.disconnect(); } catch (_e) { /* ignore */ }
-                    try { modal.close(); } catch (_e) { /* ignore */ }
-                    finish(reject, Object.assign(new Error(`That is the wallet already linked to your account (${current.slice(0, 6)}…${current.slice(-4)}). In your wallet app, switch to the account you want to link, then tap Change wallet again.`), { userFacing: true }));
-                    return;
-                }
-                const provider = modal.getWalletProvider();
-                if (!provider) return;
-                const cid = Number(modal.getChainId());
-                // Give the modal a beat to close itself, then hand control back.
-                setTimeout(() => { try { modal.close(); } catch (_e) { /* already closed */ } }, 150);
-                finish(resolve, { provider, address: acct.address, chainId: Number.isFinite(cid) ? cid : null });
-            }
-        });
-        const unsubState = modal.subscribeState((s) => {
-            // Closed without a connection -> stop showing "Working…".
-            // On a phone the modal also hides while the user approves inside the wallet app, so only call it a
-            // cancel when the page stayed visible and still nothing is connected after a grace period.
-            if (s && s.open === false) {
-                say(`Picker closed (page ${document.visibilityState})`);
-                const hiddenAtClose = document.visibilityState !== 'visible';
-                setTimeout(() => {
-                    if (settled || modal.getIsConnectedState()) return;
-                    if (hiddenAtClose || document.visibilityState !== 'visible') return;
-                    finish(reject, Object.assign(new Error('Wallet connection was cancelled.'), { cancelled: true }));
-                }, 2500);
-            }
-        });
-        modal.open({ view: 'Connect', namespace: 'eip155' }).catch((e) => finish(reject, e));
-    });
-}
-
-// A WalletConnect session from an earlier visit (AppKit persists it). Used by
-// claim settlement after a page reload so the user isn't forced to reconnect.
-export async function restoredAppKitProvider(expectedChainId) {
-    if (!PROJECT_ID) return null;
+// The wallet session AppKit currently holds, or null.
+function currentSession(modal) {
     try {
-        const modal = await getModal(expectedChainId);
-        // Session restore is async — wait briefly for it.
-        for (let i = 0; i < 25; i++) {
-            if (modal.getIsConnectedState() && modal.getWalletProvider()) break;
-            await new Promise((r) => setTimeout(r, 200));
-        }
         if (!modal.getIsConnectedState()) return null;
         const provider = modal.getWalletProvider();
         const address = modal.getAddress('eip155');
         if (!provider || !address) return null;
         const cid = Number(modal.getChainId());
         return { provider, address, chainId: Number.isFinite(cid) ? cid : null };
+    } catch (_e) { return null; }
+}
+
+// Waits (up to `ms`) for a session. Used right after a page load / return from the wallet app,
+// because AppKit restores the saved WalletConnect session asynchronously.
+async function waitForSession(modal, ms) {
+    const end = Date.now() + ms;
+    for (;;) {
+        const s = currentSession(modal);
+        if (s) return s;
+        if (Date.now() >= end) return null;
+        await sleep(250);
+    }
+}
+
+// Opens the wallet picker and resolves { provider, address, chainId } once a wallet connects.
+//
+//   currentAddress  the wallet already linked to the account (when changing wallets): if the wallet
+//                   app hands that same one back, we say so instead of silently re-linking it.
+//   hooks.onPickerClosed({ pageHidden })
+//                   called when the picker closes (on a phone this is normal: it closes while the
+//                   wallet app opens). The caller shows a "waiting for your wallet" state; we keep waiting.
+//
+// Rejects with { cancelled: true } only when cancelAppKitConnect() is called or the wait times out.
+export async function connectWithAppKit(expectedChainId, currentAddress, hooks = {}) {
+    const modal = await getModal(expectedChainId);
+    const current = currentAddress ? String(currentAddress).toLowerCase() : '';
+    if (attempt) attempt.cancel('replaced');
+
+    // AppKit restores the previous visit's session in the background. When changing wallets, give that restore
+    // time to land, then drop it, so the account we sign for is the one picked NOW and not an old session.
+    if (current) await waitForSession(modal, 3000);
+    try { if (modal.getIsConnectedState()) await modal.disconnect(); } catch (_e) { /* nothing to disconnect */ }
+
+    return new Promise((resolve, reject) => {
+        let done = false;
+        let unsubAccount = () => {};
+        let unsubState = () => {};
+        let timer = null;
+
+        const finish = (fn, value) => {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            try { unsubAccount(); } catch (_e) { /* ignore */ }
+            try { unsubState(); } catch (_e) { /* ignore */ }
+            if (attempt === me) attempt = null;
+            fn(value);
+        };
+        const me = {
+            cancel: (why) => {
+                try { modal.close(); } catch (_e) { /* already closed */ }
+                finish(reject, Object.assign(new Error(why === 'timeout' ? 'The wallet did not answer in time.' : 'Wallet connection was cancelled.'), { cancelled: true, why }));
+            },
+            reopen: () => { try { modal.open({ view: 'Connect', namespace: 'eip155' }); } catch (_e) { /* ignore */ } },
+        };
+        attempt = me;
+        timer = setTimeout(() => me.cancel('timeout'), WAIT_MS);
+
+        let handling = false;
+        unsubAccount = modal.subscribeAccount(async (acct) => {
+            if (done || handling || !acct || !acct.isConnected || !acct.address) return;
+            handling = true;
+            say(`Wallet app reported ${short(acct.address)}`);
+            try {
+                if (current && String(acct.address).toLowerCase() === current) {
+                    // The wallet app handed back the wallet that is already linked.
+                    try { await modal.disconnect(); } catch (_e) { /* ignore */ }
+                    try { modal.close(); } catch (_e) { /* ignore */ }
+                    finish(reject, Object.assign(new Error(`That is the wallet already linked to your account (${short(current)}). In your wallet app, switch to the account you want to link, then tap Change wallet again.`), { userFacing: true }));
+                    return;
+                }
+                // The account can be reported a moment before the provider is usable: wait for it, don't skip it.
+                const session = await waitForSession(modal, PROVIDER_WAIT_MS);
+                if (done) return;
+                if (!session) { handling = false; say('Wallet connected but not ready yet, still waiting'); return; }
+                setTimeout(() => { try { modal.close(); } catch (_e) { /* already closed */ } }, 150);
+                finish(resolve, session);
+            } catch (e) { handling = false; say(`Connect error: ${(e && e.message) || e}`); }
+        });
+
+        unsubState = modal.subscribeState((s) => {
+            if (done || !s || s.open !== false) return;
+            say(`Picker closed (page ${document.visibilityState}); waiting for your wallet`);
+            try { if (hooks.onPickerClosed) hooks.onPickerClosed({ pageHidden: document.visibilityState !== 'visible' }); } catch (_e) { /* ignore */ }
+        });
+
+        modal.open({ view: 'Connect', namespace: 'eip155' }).catch((e) => finish(reject, e));
+    });
+}
+
+export function cancelAppKitConnect() { if (attempt) attempt.cancel('user'); }
+export function reopenAppKitPicker() { if (attempt) attempt.reopen(); }
+export function appKitWaiting() { return Boolean(attempt); }
+
+// A WalletConnect session from earlier (AppKit persists it). Used to finish a link after the wallet app
+// sent the user back (the page may have reloaded) and by claim settlement. Waits up to `ms` for the restore.
+export async function restoredAppKitProvider(expectedChainId, ms = 6000) {
+    if (!PROJECT_ID) return null;
+    try {
+        const modal = await getModal(expectedChainId);
+        return await waitForSession(modal, ms);
     } catch (_e) { return null; }
 }
 
