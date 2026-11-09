@@ -12,7 +12,7 @@ import { fetchPublicJson } from './xera-public.js'
 import { resolveEcosystemLink } from './internal-links.js'
 import { fetchUpdates, getSeen, ago as updatesAgo } from './updates-core.js'
 
-initInstallButton(document.getElementById('install-btn'))
+initInstallButton(document.getElementById('install-btn'), { alwaysShow: true, hint: document.getElementById('install-hint') })
 
 const $ = (id) => document.getElementById(id)
 const signedIn = isLoggedIn()

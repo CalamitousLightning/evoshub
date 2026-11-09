@@ -28,10 +28,18 @@
         <span>EVOXERA</span>
       </a>
       <div class="ah-actions ehub__actions">
-        <button type="button" class="ah-install" id="install-btn">Install</button>
         <!-- hub-auth.js puts Log in / Sign up or the account menu here -->
       </div>
     </header>
+
+    <!-- Install the app: sits directly under the Log in / profile button. -->
+    <div class="ah-install-row">
+      <button type="button" class="ah-install" id="install-btn" aria-describedby="install-hint">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14"/></svg>
+        <span>Install app</span>
+      </button>
+    </div>
+    <p class="ah-install-hint" id="install-hint" role="status" hidden></p>
 
     <!-- Shown only to active admin agents (appevoxera.js checks /api/updates/agent-status). Opens website tools. -->
     <button type="button" class="adm" id="admStrip" hidden aria-haspopup="dialog">
