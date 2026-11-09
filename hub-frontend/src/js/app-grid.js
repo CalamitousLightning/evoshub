@@ -2,7 +2,7 @@
 // load, and (on the Ecosystem page) append admin-curated links as extra icons.
 import './nav.js'
 import { fetchPublicJson } from './xera-public.js'
-import { resolveEcosystemLink } from './internal-links.js'
+import { resolveEcosystemLink, makeEcosystemDeduper } from './internal-links.js'
 
 function wireImages(root) {
   root.querySelectorAll('.appicon__tile img').forEach((img) => {
@@ -19,8 +19,10 @@ if (grid) {
   wireImages(grid)
   if (grid.dataset.curated === 'true') {
     fetchPublicJson('/api/xera/ecosystem').then((d) => {
-      (d.links || []).forEach((l) => {
+      const isDuplicate = makeEcosystemDeduper(grid, '.appicon__name')
+      ;(d.links || []).forEach((l) => {
         const dest = resolveEcosystemLink(l.url)
+        if (isDuplicate(l, dest)) return   // already has a built-in tile (e.g. EVOS GPT)
         const a = document.createElement('a')
         a.className = 'appicon'
         a.href = dest.href

@@ -9,7 +9,7 @@ import { isLoggedIn, getUser } from './evos-session.js'
 import { apiFetch as api } from './hub-api.js'
 import { requireAuthFor } from './guest-access.js'
 import { fetchPublicJson } from './xera-public.js'
-import { resolveEcosystemLink } from './internal-links.js'
+import { resolveEcosystemLink, makeEcosystemDeduper } from './internal-links.js'
 import { fetchUpdates, getSeen, ago as updatesAgo } from './updates-core.js'
 
 initInstallButton(document.getElementById('install-btn'), { alwaysShow: true, hint: document.getElementById('install-hint') })
@@ -30,8 +30,10 @@ function wireTiles(root) {
 const grid = $('appGrid')
 wireTiles(grid)
 fetchPublicJson('/api/xera/ecosystem').then((d) => {
-  (d.links || []).forEach((l) => {
+  const isDuplicate = makeEcosystemDeduper(grid, '.ah-app-name')
+  ;(d.links || []).forEach((l) => {
     const dest = resolveEcosystemLink(l.url)
+    if (isDuplicate(l, dest)) return   // already has a built-in tile (e.g. EVOS GPT)
     const a = document.createElement('a')
     a.className = 'ah-app'
     a.href = dest.href

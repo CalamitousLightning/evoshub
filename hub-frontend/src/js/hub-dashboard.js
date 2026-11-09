@@ -4,7 +4,7 @@ import { getUser } from './evos-session.js';
 import { apiFetch as api } from './hub-api.js';
 import { mountHubShell } from './hub-shell.js';
 import { guestGate } from './guest-access.js';
-import { resolveEcosystemLink } from './internal-links.js';
+import { resolveEcosystemLink, makeEcosystemDeduper } from './internal-links.js';
 import { XERA_API } from './xera-public.js';
 
 initTheme();
@@ -198,8 +198,10 @@ async function loadEcosystemLinks() {
     try {
         const res = await fetch(`${XERA_API}/api/xera/ecosystem`).then((r) => r.json());
         const links = res.status === 'ok' ? (res.links || []) : [];
+        const isDuplicate = makeEcosystemDeduper(grid, '.hh-app-name');
         links.forEach((link) => {
             const dest = resolveEcosystemLink(link.url);
+            if (isDuplicate(link, dest)) return;   // already has a built-in tile (e.g. EVOS GPT)
             const a = document.createElement('a');
             a.className = 'hh-app';
             a.href = dest.href;
