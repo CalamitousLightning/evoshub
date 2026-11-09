@@ -3,6 +3,7 @@
 // and are fetched only when signed in. Nothing here starts or claims mining — the card opens XERA.
 import './theme.js'
 import './hub-auth.js'
+import './evosdata-gate.js'
 import { initInstallButton } from './pwa.js'
 import { isLoggedIn, getUser } from './evos-session.js'
 import { apiFetch as api } from './hub-api.js'

@@ -1,4 +1,5 @@
 import { initTheme } from './hub-theme.js';
+import './evosdata-gate.js'
 import { getUser } from './evos-session.js';
 import { apiFetch as api } from './hub-api.js';
 import { mountHubShell } from './hub-shell.js';
