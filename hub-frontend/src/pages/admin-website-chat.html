@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Agent Inbox — EVOS Business Hub</title>
+  <title>Admin dashboard — EVOS Business Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/global.css">
@@ -64,6 +64,8 @@
     .td-msg { font-size:13px; margin-top:8px; min-height:16px; }
     .td-msg.error { color:#ff6b6b; }
     .td-msg.ok { color:#2ce6a6; }
+    .admin-tabs { overflow-x:auto; white-space:nowrap; }
+    .admin-frame { width:100%; height:calc(100vh - 230px); min-height:520px; border:1px solid var(--border); border-radius:var(--radius-lg,20px); background:var(--bg2); }
     @media (max-width: 760px) {
       .ecosystem-form { grid-template-columns:1fr; }
     }
@@ -78,14 +80,14 @@
 
   <main class="section" style="padding-top:120px; max-width:1200px;">
     <span class="section-label">Agent Console</span>
-    <h1 class="section-title" style="font-size:28px;margin-bottom:14px;">EvosHub admin</h1>
+    <h1 class="section-title" style="font-size:28px;margin-bottom:14px;">Admin dashboard</h1>
 
-    <div class="admin-tabs">
-      <button class="admin-tab active" id="tab-requests" type="button">Website requests</button>
-      <button class="admin-tab" id="tab-token" type="button">Token dashboard</button>
-      <a class="admin-tab" id="tab-xera-wallet" href="/admin-xera-wallet.html" style="text-decoration:none">XERA wallet (pilot)</a>
-      <a class="admin-tab" id="tab-xera-kyc" href="/admin-xera-kyc.html" style="text-decoration:none">XERA KYC review</a>
-      <a class="admin-tab" id="tab-updates" href="/admin-updates.html" style="text-decoration:none">App updates</a>
+    <div class="admin-tabs" role="tablist">
+      <button class="admin-tab active" id="tab-requests" data-tab="requests" type="button" role="tab">Website requests</button>
+      <button class="admin-tab" id="tab-token" data-tab="token" type="button" role="tab">Token dashboard</button>
+      <button class="admin-tab" id="tab-xera-wallet" data-tab="wallet" type="button" role="tab">XERA wallet (pilot)</button>
+      <button class="admin-tab" id="tab-xera-kyc" data-tab="kyc" type="button" role="tab">XERA KYC review</button>
+      <button class="admin-tab" id="tab-updates" data-tab="updates" type="button" role="tab">App updates</button>
     </div>
 
     <div id="panel-requests">
@@ -154,6 +156,11 @@
         </table>
       </div>
     </div>
+
+    <!-- The other admin tools keep their own pages; they load here (same origin) the first time their tab opens. -->
+    <div id="panel-wallet" hidden><iframe class="admin-frame" data-src="/admin-xera-wallet.html?embed=1" title="XERA wallet (pilot)"></iframe></div>
+    <div id="panel-kyc" hidden><iframe class="admin-frame" data-src="/admin-xera-kyc.html?embed=1" title="XERA KYC review"></iframe></div>
+    <div id="panel-updates" hidden><iframe class="admin-frame" data-src="/admin-updates.html?embed=1" title="App updates"></iframe></div>
   </main>
 
   <script type="module" src="../js/admin-website-chat.js"></script>

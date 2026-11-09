@@ -7,10 +7,12 @@ import './xera-chain.js';
 const API_BASE = import.meta.env.VITE_API_BASE_URL ||
   ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.evoshub.xyz');
 const TOKEN_KEY = 'evoshub_admin_token';
+if (new URLSearchParams(location.search).has('embed')) document.documentElement.classList.add('embed');
+
 const $ = (id) => document.getElementById(id);
 
 const token = () => { try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
-const toLogin = () => { try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ } location.href = '/admin-login.html'; };
+const toLogin = () => { try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ } (window.top || window).location.href = '/admin-login.html'; };
 const get = (path) => fetch(API_BASE + path, { headers: { Authorization: `Bearer ${token()}` } });
 
 $('pilotSignout').addEventListener('click', toLogin);

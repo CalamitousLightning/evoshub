@@ -6,6 +6,8 @@ import { fetchUpdates, renderPost, toast } from './updates-core.js'
 const API_BASE = import.meta.env.VITE_API_BASE_URL ||
   ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.evoshub.xyz')
 const TOKEN_KEY = 'evoshub_admin_token'
+if (new URLSearchParams(location.search).has('embed')) document.documentElement.classList.add('embed')
+
 const MAX_IMAGES = 4
 const MAX_SIDE = 1600
 

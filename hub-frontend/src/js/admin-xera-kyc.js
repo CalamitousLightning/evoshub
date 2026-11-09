@@ -4,6 +4,8 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ||
   ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.evoshub.xyz');
 const TOKEN_KEY = 'evoshub_admin_token';
+if (new URLSearchParams(location.search).has('embed')) document.documentElement.classList.add('embed');
+
 const $ = (id) => document.getElementById(id);
 const STATUSES = [['PENDING', 'Pending'], ['PROVIDER_DECLINED', 'Provider rejected'], ['MORE_INFO', 'More info'], ['FAILED', 'Failed'], ['VERIFIED', 'Verified']];
 let declinedCount = null;
@@ -11,7 +13,7 @@ let adminLabel = '';
 let current = 'PENDING';
 
 const token = () => { try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
-const toLogin = () => { try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ } location.href = '/admin-login.html'; };
+const toLogin = () => { try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ } (window.top || window).location.href = '/admin-login.html'; };
 async function call(path, opts = {}) {
   const r = await fetch(API_BASE + path, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}`, ...(opts.headers || {}) } });
   if (r.status === 401 || r.status === 403) { toLogin(); throw new Error('signed out'); }

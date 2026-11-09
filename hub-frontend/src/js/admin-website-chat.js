@@ -290,10 +290,6 @@ inputEl.addEventListener('keydown', (e) => {
 })
 
 // --- Token dashboard (XERA) --------------------------------------------------------
-const tabRequestsBtn = document.getElementById('tab-requests')
-const tabTokenBtn    = document.getElementById('tab-token')
-const panelRequests  = document.getElementById('panel-requests')
-const panelToken     = document.getElementById('panel-token')
 
 let tokenDashboardLoaded = false
 
@@ -492,27 +488,29 @@ document.getElementById('eco-add').addEventListener('click', async () => {
   }
 })
 
-async function openTokenDashboard() {
-  tabRequestsBtn.classList.remove('active')
-  tabTokenBtn.classList.add('active')
-  panelRequests.hidden = true
-  panelToken.hidden = false
+const TABS = ['requests', 'token', 'wallet', 'kyc', 'updates']
 
-  if (!tokenDashboardLoaded) {
+function openTab(name) {
+  if (!TABS.includes(name)) name = 'requests'
+  TABS.forEach((t) => {
+    const btn = document.querySelector(`.admin-tab[data-tab="${t}"]`)
+    const panel = document.getElementById(`panel-${t}`)
+    if (btn) { btn.classList.toggle('active', t === name); btn.setAttribute('aria-selected', String(t === name)) }
+    if (panel) panel.hidden = t !== name
+  })
+  if (name === 'token' && !tokenDashboardLoaded) {
     tokenDashboardLoaded = true
-    await Promise.all([loadTokenStats(), loadDailyConfig(), loadEcosystemLinks()])
+    Promise.all([loadTokenStats(), loadDailyConfig(), loadEcosystemLinks()])
   }
+  // Embedded tools load the first time they are opened, not all at once.
+  const frame = document.querySelector(`#panel-${name} iframe[data-src]`)
+  if (frame && !frame.src) frame.src = frame.dataset.src
+  try { history.replaceState(null, '', name === 'requests' ? location.pathname : `#${name}`) } catch { /* ignore */ }
 }
 
-function openRequestsTab() {
-  tabTokenBtn.classList.remove('active')
-  tabRequestsBtn.classList.add('active')
-  panelToken.hidden = true
-  panelRequests.hidden = false
-}
-
-tabTokenBtn.addEventListener('click', openTokenDashboard)
-tabRequestsBtn.addEventListener('click', openRequestsTab)
+document.querySelectorAll('.admin-tab[data-tab]').forEach((btn) => {
+  btn.addEventListener('click', () => openTab(btn.dataset.tab))
+})
 
 // --- Boot -----------------------------------------------------------------------
 ;(async function init() {
@@ -520,4 +518,5 @@ tabRequestsBtn.addEventListener('click', openRequestsTab)
   if (!user) return
   await loadRequests()
   startRequestsPolling()
+  openTab(location.hash.slice(1))
 })()
