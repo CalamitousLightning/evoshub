@@ -616,7 +616,7 @@
     var show = !!near;
     if (show) {
       ctx.font = '800 ' + Math.round(Math.min(W, H) * 0.06) + 'px system-ui, sans-serif';
-      ctx.fillStyle = 'rgba(0,0,0,.4)'; var msg = near.type === 'chasm' ? 'TAP HOOK: SWING!' : 'TAP HOOK: PULL UP!';
+      ctx.fillStyle = 'rgba(0,0,0,.4)'; var msg = near.type === 'chasm' ? 'FIRE GRAPPLE: SWING!' : 'FIRE GRAPPLE: PULL UP!';
       ctx.fillText(msg, W / 2 + 2, H * 0.37 + 2); ctx.fillStyle = (Math.floor(t / 250) % 2) ? '#ffe86a' : '#fff'; ctx.fillText(msg, W / 2, H * 0.37);
     } else if (game.state === 'playing' && hintT > 0 && !game.junctionInfo()) {
       ctx.font = '700 ' + Math.round(Math.min(W, H) * 0.05) + 'px system-ui, sans-serif';

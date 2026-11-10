@@ -1,0 +1,15 @@
+EVOLUTION 1: THE RUNNER — GRAPPLING CHASM UPDATE
+
+Included:
+- Added a monumental mountain chasm set piece to the Three.js renderer.
+- Added broken cliff walls and rock formations descending into the abyss.
+- Added a colossal guardian statue on the far side, with illuminated eyes and a glowing chest grapple sigil.
+- Reworked the right forearm device into a visible grappling launcher with barrel, muzzle ring, receiver, grip and energy core.
+- Added a visible grappling dart effect while the hook is armed, followed by the existing physical swing/pull rope.
+- Updated gameplay prompts and on-screen help to say FIRE GRAPPLE / GRAPPLE.
+- Preserved the existing core physics, lane controls, chasm timing, swing/release behavior, coins, store, XERA coin image and fallback runner folder.
+
+Notes:
+- The existing core.js remains the authority for hook timing and swing physics. The new projectile is a visual firing effect; it does not replace the established physics/latch rules.
+- The new statue and chasm environment are procedural Three.js geometry, not imported photorealistic asset packs.
+- Test in the Hub on both desktop and mobile before production release.

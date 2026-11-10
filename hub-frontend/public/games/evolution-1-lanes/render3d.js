@@ -518,6 +518,38 @@ import * as THREE from './vendor/three.module.min.js';
   }
 
   var obsMap = new Map();
+  // A monumental cliff-and-statue set piece replaces the ordinary floating ring
+  // over major chasms. The anchor remains at the physics-authored point.
+  var cliffMat = std(0x394653, { roughness: 0.96 }), cliffLight = std(0x59636a, { roughness: 0.92 }), statueMat = std(0x777b79, { roughness: 0.88 }), statueDark = std(0x414d50, { roughness: 0.9 }), runeStone = glow(0x8cecff);
+  function buildChasmMonument(o) {
+    var g = new THREE.Group(), end = o.z + o.len + 1.5;
+    // Broken mountain walls descend into the abyss on both sides of the crossing.
+    [-1, 1].forEach(function (side) {
+      for (var i = 0; i < 5; i++) {
+        var z = o.z + o.len * (i / 4), x = side * (5.2 + (i % 2) * 0.55);
+        var crag = mesh(rockGeo, i % 2 ? cliffMat : cliffLight, x, -1.1 - (i % 3) * 0.35, z, 2.1 + (i % 2) * 0.6, 3.4 + (i % 3), 3.4);
+        crag.rotation.set((hash(o.z+i)*0.18), side * 0.12, (hash(i+o.z)*0.2)); g.add(crag);
+        var strata = mesh(boxGeo, cliffMat, x, -2.6, z, 3.2, 0.16, 3.8); strata.rotation.z = side * -0.08; g.add(strata);
+      }
+    });
+    // Far-side mountain plinth and monumental guardian carved into the cliff.
+    var plinth = mesh(boxGeo, cliffMat, 0, 2.0, end + 1.0, 8.8, 4.0, 3.2); g.add(plinth);
+    var body = mesh(sphGeo, statueMat, 0, 6.1, end + 1.0, 1.65, 2.8, 0.95); g.add(body);
+    var chest = mesh(boxGeo, statueDark, 0, 6.2, end + 0.28, 1.75, 1.05, 0.34); g.add(chest);
+    var head = mesh(sphGeo, statueMat, 0, 9.25, end + 0.9, 0.88, 1.05, 0.78); g.add(head);
+    var crown = mesh(rockGeo, cliffLight, 0, 10.35, end + 1.0, 1.0, 0.34, 0.9); g.add(crown);
+    [-1,1].forEach(function(side){
+      var arm = mesh(cylGeo, statueMat, side*1.85, 7.15, end+0.95, 0.48, 3.15, 0.52); arm.rotation.z = side * -0.48; g.add(arm);
+      var fist = mesh(sphGeo, statueDark, side*2.55, 5.85, end+0.95, 0.62, 0.62, 0.62); g.add(fist);
+      var eye = mesh(sphGeo, runeStone, side*0.31, 9.38, end+0.18, 0.11, 0.09, 0.06); g.add(eye);
+    });
+    // A huge engraved chest sigil gives the grapple target a readable silhouette.
+    var sigil = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.09, 10, 28), ringYellow); sigil.position.set(0, 7.05, end+0.06); g.add(sigil);
+    var vertical = mesh(boxGeo, runeStone, 0, 7.05, end-0.015, 0.09, 1.2, 0.06); g.add(vertical);
+    // Broken rock teeth at the lip make the gap read as a deep, dangerous gorge.
+    for (var j=0;j<7;j++) { var tooth=mesh(rockGeo,cliffMat,(j-3)*1.25,0.1,end-0.2,0.65,1.0+(j%3)*0.55,0.8); tooth.rotation.z=(hash(j+o.z)-0.5)*0.35; g.add(tooth); }
+    return g;
+  }
   function buildObstacle(o) {
     var g = new THREE.Group(), anchorG = null;
     if (o.type === 'rock') o.lanes.forEach(function (l) { g.add(buildRock(o, l)); });
@@ -525,7 +557,7 @@ import * as THREE from './vendor/three.module.min.js';
     else if (o.type === 'wall') o.lanes.forEach(function (l) { g.add(buildWall(o, l)); });
     else if (o.type === 'branch') g.add(buildBranch(o));
     else if (o.type === 'ledge') { g.add(buildLedge(o)); anchorG = buildAnchor(o.anchor, true); g.add(anchorG); }
-    else if (o.type === 'chasm') { anchorG = buildAnchor(o.anchor, false); g.add(anchorG); }
+    else if (o.type === 'chasm') { g.add(buildChasmMonument(o)); anchorG = buildAnchor(o.anchor, false); g.add(anchorG); }
     g.userData.anchor = anchorG;
     return g;
   }
@@ -660,7 +692,15 @@ import * as THREE from './vendor/three.module.min.js';
       el.add(bevel(0.14,0.18,0.11,M.plate,0,-0.19,0.035,0.035));
       var glove=ball(0.075,M.leather,1,1,1.1); glove.position.y=-0.36; el.add(glove);
       var tip=new THREE.Object3D(); tip.position.y=-0.39; el.add(tip);
-      if(gaunt){el.add(bevel(0.16,0.12,0.09,M.plate,0,-0.20,0.09,0.025));el.add(box(0.08,0.045,0.018,M.cyan,0,-0.20,0.14);}
+      if(gaunt){
+        // Forearm-mounted grappling gun: armored receiver, forward barrel, grip and energized muzzle.
+        el.add(bevel(0.19,0.15,0.13,M.plate,0,-0.20,0.075,0.025));
+        el.add(box(0.085,0.12,0.11,M.leather,0,-0.30,0.035));
+        var barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.065,0.34,12), M.plate); barrel.rotation.x=Math.PI/2; barrel.position.set(0,-0.19,0.22); el.add(barrel);
+        var muzzle = new THREE.Mesh(new THREE.TorusGeometry(0.055,0.018,8,16), M.cyan); muzzle.position.set(0,-0.19,0.39); el.add(muzzle);
+        var core = ball(0.047,M.cyan,1,1,0.55); core.position.set(0,-0.19,0.405); el.add(core);
+        var sight = box(0.12,0.025,0.12,M.cyan,0,-0.105,0.11); el.add(sight);
+      }
       return {sh:sh,el:el,tip:tip};
     }
     P.armL=arm(-1,false); P.armR=arm(1,true);
@@ -684,6 +724,8 @@ import * as THREE from './vendor/three.module.min.js';
   var shadow = new THREE.Mesh(new THREE.CircleGeometry(0.75, 20), new THREE.MeshBasicMaterial({ map: radialTex, color: 0x000000, transparent: true, opacity: 0.55, depthWrite: false, fog: false }));
   shadow.rotation.x = -Math.PI / 2; fxRoot.add(shadow);
   var rope = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1, 6), new THREE.MeshBasicMaterial({ color: 0xffe86a, fog: false })); rope.visible = false; fxRoot.add(rope);
+  var shot = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.055, 1, 8), new THREE.MeshBasicMaterial({ color: 0x8dfaff, emissive: 0x24dfff, emissiveIntensity: 2.2, fog: false })); shot.visible=false; fxRoot.add(shot);
+  var shotGlow = new THREE.Sprite(new THREE.SpriteMaterial({map:radialTex,color:0x55eaff,transparent:true,opacity:0.95,blending:THREE.AdditiveBlending,depthWrite:false,fog:false})); shotGlow.scale.set(0.8,0.8,1); shotGlow.visible=false; fxRoot.add(shotGlow);
 
   var ropeCol = '#ffe86a', ropeA = new THREE.Vector3(), ropeB = new THREE.Vector3(), _v = new THREE.Vector3();
   var lastPx = 0, lean = 0, crashAt = 0, _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quaternion(), DOWN = new THREE.Vector3(0, -1, 0);
@@ -745,6 +787,15 @@ import * as THREE from './vendor/three.module.min.js';
       P.armR.tip.getWorldPosition(ropeA); _b.copy(ropeA); aimRope(_b, rapeAnchor); rope.visible = true;
       rope.material.color.set(ropeCol); ropeB.copy(rapeAnchor);
     } else { rope.visible = false; api.rope = null; }
+    // Visible grappling dart shot from the forearm launcher before the cable catches.
+    if (!hooked && game.hookArmed > 0 && game.state === 'playing') {
+      var muzzleWorld = new THREE.Vector3(); P.armR.tip.getWorldPosition(muzzleWorld);
+      var flight = clamp(1 - game.hookArmed / (CFG.ARM_TIME + 1.2), 0, 1);
+      var dartEnd = new THREE.Vector3(game.px, Math.max(2.8, CFG.HAND_H + 1.5), vz + 3 + flight * 11);
+      var dartDir = _b.copy(dartEnd).sub(muzzleWorld), dartLen = dartDir.length();
+      shot.visible = true; shot.position.copy(muzzleWorld).addScaledVector(dartDir,0.5); shot.scale.set(1,dartLen,1); shot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dartDir.normalize());
+      shotGlow.visible=true; shotGlow.position.copy(dartEnd); shotGlow.scale.setScalar(0.8 + 0.25*Math.sin(t/35));
+    } else { shot.visible=false; shotGlow.visible=false; }
 
     // blob shadow on whatever is below
     var floor = (game.y >= CFG.LEDGE_H - 0.2) ? CFG.LEDGE_H : 0, hgt = Math.max(0, game.y - floor), over0 = game.y > -0.3;
