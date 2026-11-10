@@ -575,82 +575,100 @@ import * as THREE from './vendor/three.module.min.js';
     }
   }
 
-  // ------------------------------------------------------------------ the explorer (low-poly, built from capsules and boxes)
-  // ---- SCI-FI EXPLORER: armoured suit, helmet with glowing visor, energy backpack, magnetic boots (all procedural, no assets)
-  function armor(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.42, metalness: 0.55 }, o || {})); }
-  function emis(c, k) { return new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: k || 1.6, roughness: 0.3, metalness: 0 }); }
+  // ------------------------------------------------------------------ HUMAN EXPLORER: detailed procedural adventurer
+  // Asset-free model so the game remains self-contained and browser deployable.
+  function armor(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.72, metalness: 0.08 }, o || {})); }
+  function emis(c, k) { return new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: k || 1.1, roughness: 0.38, metalness: 0.05 }); }
   var M = {
-    plate: armor(0x8ea6bd, { roughness: 0.38, metalness: 0.5 }), plateL: armor(0xf4f8fc, { roughness: 0.35, metalness: 0.4 }), suit: armor(0x2b3d5a, { roughness: 0.6, metalness: 0.2 }),
-    gold: armor(0xf2b73a, { roughness: 0.3, metalness: 0.8 }), cyan: emis(0x2de6ff, 1.9), cyanD: emis(0x1aa9c9, 1.2), glass: emis(0x7cf6ff, 1.1),
-    skin: armor(0xc68a5a, { roughness: 0.8, metalness: 0 })
+    plate: armor(0x35465a), plateL: armor(0x8d9baa), suit: armor(0x26384a),
+    gold: armor(0x9b7542), cyan: emis(0x38c9d7, 1.25), cyanD: emis(0x167d91, 0.8), glass: armor(0x172b3b, { roughness: 0.18, metalness: 0.65 }),
+    skin: armor(0x986344, { roughness: 0.88 }), cloth: armor(0x59634b, { roughness: 0.95 }),
+    clothDark: armor(0x303b35, { roughness: 0.95 }), leather: armor(0x493326, { roughness: 0.9 }),
+    hair: armor(0x171a1c, { roughness: 0.96 }), eye: armor(0xe8e2d4, { roughness: 0.35 }),
+    iris: armor(0x392b20, { roughness: 0.28 }), metal: armor(0x9aa8ad, { metalness: 0.72, roughness: 0.28 })
   };
-  function caps(r, len, m) { return new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 6, 14), m); }
-  function ball(r, m, sx, sy, sz) { var b = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), m); b.scale.set(r * (sx || 1), r * (sy || 1), r * (sz || 1)); return b; }
+  function caps(r, len, m) { return new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 7, 16), m); }
+  function ball(r, m, sx, sy, sz) { var b = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 18), m); b.scale.set(r * (sx || 1), r * (sy || 1), r * (sz || 1)); return b; }
   function box(w, h, d, m, x, y, z) { var b = new THREE.Mesh(boxGeo, m); b.scale.set(w, h, d); b.position.set(x, y, z); return b; }
-  function bevel(w, h, d, m, x, y, z, r) {                       // rounded armour plate
+  function bevel(w, h, d, m, x, y, z, r) {
     var sh = new THREE.Shape(), hw = w / 2, hh = h / 2; r = Math.min(r || 0.03, hw, hh);
-    sh.moveTo(-hw + r, -hh); sh.lineTo(hw - r, -hh); sh.quadraticCurveTo(hw, -hh, hw, -hh + r); sh.lineTo(hw, hh - r); sh.quadraticCurveTo(hw, hh, hw - r, hh);
-    sh.lineTo(-hw + r, hh); sh.quadraticCurveTo(-hw, hh, -hw, hh - r); sh.lineTo(-hw, -hh + r); sh.quadraticCurveTo(-hw, -hh, -hw + r, -hh);
-    var g = new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.012, bevelSegments: 2, curveSegments: 6 }); g.translate(0, 0, -d / 2);
-    var m2 = new THREE.Mesh(g, m); m2.position.set(x, y, z); return m2;
+    sh.moveTo(-hw+r,-hh); sh.lineTo(hw-r,-hh); sh.quadraticCurveTo(hw,-hh,hw,-hh+r); sh.lineTo(hw,hh-r); sh.quadraticCurveTo(hw,hh,hw-r,hh);
+    sh.lineTo(-hw+r,hh); sh.quadraticCurveTo(-hw,hh,-hw,hh-r); sh.lineTo(-hw,-hh+r); sh.quadraticCurveTo(-hw,-hh,-hw+r,-hh);
+    var g = new THREE.ExtrudeGeometry(sh,{depth:d,bevelEnabled:true,bevelSize:0.014,bevelThickness:0.012,bevelSegments:2,curveSegments:8}); g.translate(0,0,-d/2);
+    var m2 = new THREE.Mesh(g,m); m2.position.set(x,y,z); return m2;
   }
-
-  var P = {};
-  var player = new THREE.Group(), hip = new THREE.Group();
+  var P = {}, player = new THREE.Group(), hip = new THREE.Group();
   (function () {
     hip.position.y = 0.95; player.add(hip);
+    // Rugged field trousers, articulated knees and leather boots.
     function leg(side) {
-      var th = new THREE.Group(); th.position.set(side * 0.13, 0, 0);
-      var up = caps(0.098, 0.26, M.suit); up.position.y = -0.24; th.add(up);
-      var thPlate = bevel(0.13, 0.22, 0.06, M.plate, 0, -0.2, 0.09, 0.04); th.add(thPlate);
-      th.add(box(0.025, 0.2, 0.02, M.cyan, side * 0.07, -0.22, 0.095));
-      var sh = new THREE.Group(); sh.position.y = -0.46; th.add(sh);
-      var lo = caps(0.085, 0.26, M.suit); lo.position.y = -0.22; sh.add(lo);
-      var greave = bevel(0.15, 0.26, 0.07, M.plate, 0, -0.2, 0.08, 0.04); sh.add(greave);
-      var knee = ball(0.09, M.gold, 1, 0.8, 0.8); knee.position.set(0, 0.0, 0.09); sh.add(knee);
-      var boot = bevel(0.21, 0.17, 0.36, M.plate, 0, -0.43, 0.05, 0.05); sh.add(boot);
-      sh.add(box(0.22, 0.04, 0.37, M.cyan, 0, -0.52, 0.05));          // glowing magnetic sole
-      sh.add(box(0.18, 0.05, 0.02, M.gold, 0, -0.42, 0.24));
-      hip.add(th); return { th: th, sh: sh };
+      var th = new THREE.Group(); th.position.set(side * 0.145, 0, 0);
+      var thigh = caps(0.115,0.30,M.cloth); thigh.position.y=-0.23; th.add(thigh);
+      var cargo = bevel(0.19,0.22,0.17,M.clothDark,side*0.035,-0.22,-0.015,0.045); th.add(cargo);
+      th.add(box(0.12,0.035,0.025,M.leather,side*0.035,-0.17,0.085));
+      var sh = new THREE.Group(); sh.position.y=-0.46; th.add(sh);
+      var calf = caps(0.09,0.28,M.clothDark); calf.position.y=-0.21; sh.add(calf);
+      var knee = ball(0.105,M.plate,1,0.8,0.55); knee.position.set(0,0.005,0.055); sh.add(knee);
+      sh.add(bevel(0.13,0.19,0.055,M.plate,0,-0.20,0.08,0.035));
+      var boot = new THREE.Group(); boot.position.set(0,-0.39,0.075); sh.add(boot);
+      boot.add(ball(0.12,M.leather,1,0.7,1.45));
+      boot.add(box(0.19,0.11,0.32,M.plate,0,-0.035,0.075));
+      boot.add(box(0.20,0.035,0.34,M.metal,0,-0.095,0.075));
+      boot.add(box(0.17,0.035,0.07,M.leather,0,0.035,0.19));
+      hip.add(th); return {th:th,sh:sh};
     }
-    P.legL = leg(-1); P.legR = leg(1);
-    // chest armour: back plate seen from behind with glowing spine and the energy core backpack
-    var torso = caps(0.2, 0.34, M.suit); torso.position.y = 0.42; torso.scale.set(1.04, 1, 0.78); hip.add(torso);
-    hip.add(bevel(0.42, 0.4, 0.07, M.plate, 0, 0.5, -0.17, 0.06));
-    hip.add(box(0.035, 0.34, 0.03, M.cyan, 0, 0.5, -0.215));
-    hip.add(bevel(0.46, 0.08, 0.3, M.gold, 0, 0.18, 0, 0.03));        // belt
-    var pack = bevel(0.34, 0.42, 0.18, M.plateL, 0, 0.5, -0.31, 0.06); hip.add(pack);
-    var core = ball(0.075, M.cyan); core.position.set(0, 0.52, -0.41); hip.add(core);
-    hip.add(box(0.28, 0.025, 0.02, M.cyanD, 0, 0.36, -0.405), box(0.28, 0.025, 0.02, M.cyanD, 0, 0.68, -0.405));
-    var fin1 = bevel(0.04, 0.26, 0.1, M.gold, -0.14, 0.66, -0.34, 0.015), fin2 = bevel(0.04, 0.26, 0.1, M.gold, 0.14, 0.66, -0.34, 0.015); hip.add(fin1, fin2);
-    // helmet: dark shell, glowing visor strip wraps the front, cyan comm fin on the back
-    var head = new THREE.Group(); head.position.y = 0.95; hip.add(head); P.head = head;
-    var shell = ball(0.27, M.plate, 1, 1.02, 1.05); head.add(shell);
-    var crest = bevel(0.06, 0.2, 0.46, M.plateL, 0, 0.2, 0, 0.025); head.add(crest);
-    var visor = ball(0.27, M.glass, 0.96, 0.4, 0.78); visor.position.set(0, 0.0, 0.1); head.add(visor);
-    var ringB = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.022, 10, 28), M.cyan); ringB.position.set(0, -0.01, -0.2); head.add(ringB);
-    head.add(box(0.5, 0.05, 0.05, M.gold, 0, -0.17, 0), box(0.05, 0.09, 0.05, M.cyan, -0.27, 0, 0), box(0.05, 0.09, 0.05, M.cyan, 0.27, 0, 0));
-    var neck = caps(0.09, 0.05, M.suit); neck.position.y = -0.24; head.add(neck);
-    // cape-like energy scarf tails (flutter)
-    P.tailL = bevel(0.1, 0.36, 0.02, M.cyan, 0, 0, 0, 0.03); P.tailR = bevel(0.1, 0.3, 0.02, M.cyanD, 0, 0, 0, 0.03);
-    P.tailLg = new THREE.Group(); P.tailLg.position.set(-0.12, 0.7, -0.36); P.tailL.position.y = -0.17; P.tailLg.add(P.tailL); hip.add(P.tailLg);
-    P.tailRg = new THREE.Group(); P.tailRg.position.set(0.12, 0.7, -0.36); P.tailR.position.y = -0.15; P.tailRg.add(P.tailR); hip.add(P.tailRg);
-    // arms with shoulder pads and a glowing wrist gauntlet
+    P.legL=leg(-1); P.legR=leg(1);
+    // Human torso with layered outdoor clothing, shoulder seams and field harness.
+    var torso = caps(0.205,0.38,M.cloth); torso.position.y=0.43; torso.scale.set(1.22,1.08,0.82); hip.add(torso);
+    var back = bevel(0.38,0.48,0.12,M.clothDark,0,0.48,-0.17,0.07); hip.add(back);
+    hip.add(bevel(0.11,0.55,0.035,M.leather,-0.17,0.46,0.12,0.025),bevel(0.11,0.55,0.035,M.leather,0.17,0.46,0.12,0.025));
+    hip.add(bevel(0.44,0.10,0.28,M.leather,0,0.16,0,0.035));
+    hip.add(box(0.07,0.08,0.045,M.metal,0,0.16,0.16));
+    // Practical expedition pack with rolled bedroll and side pouches.
+    var pack=bevel(0.37,0.48,0.22,M.clothDark,0,0.48,-0.31,0.055); hip.add(pack);
+    hip.add(box(0.30,0.13,0.07,M.leather,0,0.30,-0.44));
+    hip.add(box(0.10,0.28,0.10,M.leather,-0.24,0.43,-0.28),box(0.10,0.28,0.10,M.leather,0.24,0.43,-0.28));
+    var bedroll= new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,0.43,16),M.cloth); bedroll.rotation.z=Math.PI/2; bedroll.position.set(0,0.76,-0.34); hip.add(bedroll);
+    hip.add(box(0.035,0.42,0.035,M.leather,-0.16,0.49,-0.02),box(0.035,0.42,0.035,M.leather,0.16,0.49,-0.02));
+    // Neck and uncovered human head; face points down the track (+Z), hair visible from chase camera.
+    var neck=caps(0.085,0.12,M.skin); neck.position.set(0,0.79,0.015); hip.add(neck);
+    var head=new THREE.Group(); head.position.set(0,0.99,0.015); hip.add(head); P.head=head;
+    head.add(ball(0.205,M.skin,0.88,1.12,0.91));
+    // Jaw and cheek structure.
+    head.add(ball(0.145,M.skin,1,0.68,0.78)).position.set(0,-0.105,0.045);
+    // Hair cap and swept-back locks.
+    head.add(ball(0.205,M.hair,0.94,0.55,1.0)).position.set(0,0.105,-0.045);
+    head.add(ball(0.13,M.hair,1.25,0.5,0.75)).position.set(0,0.17,-0.12);
+    for(var hi=0;hi<5;hi++){var lock=ball(0.055,M.hair,0.65,1.5,0.8);lock.position.set((hi-2)*0.065,0.12,-0.16);head.add(lock);}
+    // Ears, eyes, brows and nose on the forward-facing side.
+    [-1,1].forEach(function(side){
+      var ear=ball(0.045,M.skin,0.65,1.15,0.55); ear.position.set(side*0.19,-0.015,0.015); head.add(ear);
+      var eye=ball(0.025,M.eye,1,0.8,0.55); eye.position.set(side*0.075,0.015,0.177); head.add(eye);
+      var iris=ball(0.012,M.iris); iris.position.set(side*0.075,0.014,0.194); head.add(iris);
+      var brow= caps(0.018,0.075,M.hair); brow.rotation.z=Math.PI/2; brow.position.set(side*0.075,0.055,0.17); head.add(brow);
+    });
+    var nose=ball(0.035,M.skin,0.75,1.1,0.8); nose.position.set(0,-0.035,0.205); head.add(nose);
+    var mouth=box(0.065,0.009,0.012,M.leather,0,-0.105,0.187); head.add(mouth);
+    // Arms with layered sleeves, elbow guards, gloves and wrist-mounted hook device.
     function arm(side, gaunt) {
-      var sh = new THREE.Group(); sh.position.set(side * 0.3, 0.66, 0);
-      var pad = ball(0.13, M.plate, 1.05, 0.8, 1.05); pad.position.y = 0.02; sh.add(pad);
-      sh.add(box(0.2, 0.025, 0.2, M.gold, 0, 0.06, 0));
-      var up = caps(0.068, 0.2, M.suit); up.position.y = -0.17; sh.add(up);
-      var el = new THREE.Group(); el.position.y = -0.34; sh.add(el);
-      var lo = caps(0.062, 0.2, M.suit); lo.position.y = -0.17; el.add(lo);
-      el.add(bevel(0.12, 0.17, 0.12, M.plate, 0, -0.2, 0, 0.04));
-      var hand = ball(0.08, M.plateL); hand.position.y = -0.38; el.add(hand);
-      el.add(box(0.13, 0.03, 0.13, M.cyan, 0, -0.1, 0));
-      var tip = new THREE.Object3D(); tip.position.y = -0.4; el.add(tip);
-      if (gaunt) { var dev = bevel(0.15, 0.11, 0.07, M.gold, 0, -0.22, 0.09, 0.03); el.add(dev); el.add(box(0.07, 0.05, 0.02, M.cyan, 0, -0.22, 0.13)); }
-      hip.add(sh); return { sh: sh, el: el, tip: tip };
+      var sh=new THREE.Group(); sh.position.set(side*0.29,0.65,0); hip.add(sh);
+      sh.add(ball(0.135,M.cloth,1.05,1,0.95));
+      var upper=caps(0.085,0.23,M.cloth); upper.position.y=-0.16; sh.add(upper);
+      sh.add(ball(0.095,M.plate,1,0.7,0.8)).position.set(0,-0.30,0.015);
+      var el=new THREE.Group(); el.position.y=-0.34; sh.add(el);
+      var lower=caps(0.075,0.22,M.clothDark); lower.position.y=-0.16; el.add(lower);
+      el.add(bevel(0.14,0.18,0.11,M.plate,0,-0.19,0.035,0.035));
+      var glove=ball(0.075,M.leather,1,1,1.1); glove.position.y=-0.36; el.add(glove);
+      var tip=new THREE.Object3D(); tip.position.y=-0.39; el.add(tip);
+      if(gaunt){el.add(bevel(0.16,0.12,0.09,M.plate,0,-0.20,0.09,0.025));el.add(box(0.08,0.045,0.018,M.cyan,0,-0.20,0.14);}
+      return {sh:sh,el:el,tip:tip};
     }
-    P.armL = arm(-1, false); P.armR = arm(1, true);
+    P.armL=arm(-1,false); P.armR=arm(1,true);
+    // Small luminous locator on the backpack: the only overtly sci-fi element.
+    var locator=ball(0.045,M.cyan); locator.position.set(0,0.51,-0.445); hip.add(locator);
+    P.tailL=bevel(0.035,0.22,0.018,M.cloth,0,0,0,0.012); P.tailR=bevel(0.035,0.19,0.018,M.clothDark,0,0,0,0.012);
+    P.tailLg=new THREE.Group(); P.tailLg.position.set(-0.11,0.66,-0.30); P.tailL.position.y=-0.10; P.tailLg.add(P.tailL); hip.add(P.tailLg);
+    P.tailRg=new THREE.Group(); P.tailRg.position.set(0.11,0.66,-0.30); P.tailR.position.y=-0.09; P.tailRg.add(P.tailR); hip.add(P.tailRg);
   })();
   player.scale.setScalar(1.18);
   fxRoot.add(player);
@@ -818,12 +836,9 @@ import * as THREE from './vendor/three.module.min.js';
     sceneTime = t / 1000; applyTheme(vz);
     updateGround(vz, game, menu); updateScenery(vz); updateForks(game, vz); syncObstacles(vz, game, menu); updateCoins(vz, game, t, dt, menu);
     poseExplorer(game, t, vz, dt);
-    ensureSprite(opts); ropeCol = opts.ropeColor || '#ffe86a';
-    if (sprMesh) {
-      sprTex.needsUpdate = true; player.visible = false;
-      sprMesh.visible = !(game.state === 'playing' && game.invuln > 0 && Math.floor(t / 90) % 2);
-      sprMesh.position.set(game.px, game.y + sprMesh.userData.dy, vz);
-    }
+    // The 3D human explorer is now the authoritative player model. Do not place
+    // the former flat canvas-character billboard over it.
+    ropeCol = opts.ropeColor || '#ffe86a';
 
     // temple on the horizon: slowly closer as you run
     temple.position.set(0, 0, vz + Math.max(150, 280 - game.pz * 0.03)); temple.scale.setScalar(1);

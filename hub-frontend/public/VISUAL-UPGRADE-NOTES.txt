@@ -1,0 +1,26 @@
+EVOLUTION 1: THE RUNNER — VISUAL UPGRADE
+========================================
+
+Updated folder: games/evolution-1-lanes/
+
+What changed:
+- Replaced the helmeted robot-like player with a procedural human expedition runner.
+- Added human head/face details, hair, skin, layered field clothing, cargo pockets,
+  expedition backpack, harness, gloves, articulated knees and boots.
+- Kept the existing player animation rig (running, jumping, sliding, hook/swing poses).
+- Removed the old flat 2D character billboard from the 3D scene so it no longer hides
+  the new 3D character.
+- Preserved the game core, lanes, turns, obstacles, hook mechanics, XERA coins,
+  store, HUD, controls, and Three.js vendor file.
+
+Important:
+This is a self-contained procedural 3D character upgrade. It is NOT a licensed or
+photorealistic AAA character asset, and it does not turn the browser game into an
+Unreal Engine game. For true console-grade realism, the next asset pass should add
+professionally modelled/rigged GLB character and environment assets with PBR textures
+and animation clips. The game remains browser-based and uses its existing Three.js renderer.
+
+Deployment:
+Keep the folder path as games/evolution-1-lanes/ and deploy it to the matching
+hub-frontend/public/games/evolution-1-lanes/ directory. Do not remove vendor/three.module.min.js
+or xera-coin.png.
