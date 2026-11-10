@@ -446,18 +446,29 @@ $('wr-followup').addEventListener('click', async () => {
 
 // --- Chat panel ----------------------------------------------------------------------
 function renderMessage(msg) {
+  const team = msg.sender_role === 'admin'
   const rowEl = document.createElement('div')
-  rowEl.style.cssText = 'display:flex; flex-direction:column; align-items:' +
-    (msg.sender_role === 'admin' ? 'flex-start' : 'flex-end') + ';'
+  rowEl.className = 'wr-msg ' + (team ? 'wr-msg--team' : 'wr-msg--me')
+
+  const who = document.createElement('div')
+  who.className = 'wr-who'
+  who.textContent = team ? 'Customer service' : 'You'
 
   const bubble = document.createElement('div')
-  bubble.style.cssText = 'max-width:80%; padding:9px 13px; border-radius:12px; font-size:13.5px; line-height:1.5;' +
-    (msg.sender_role === 'admin'
-      ? 'background:var(--surface2); color:var(--text);'
-      : 'background:var(--blue); color:#fff;')
-  // Always render via textContent — never innerHTML with raw user text.
+  bubble.className = 'wr-bubble'
+  // Always render via textContent, never innerHTML with raw user text.
   bubble.textContent = msg.body
-  rowEl.appendChild(bubble)
+
+  rowEl.append(who, bubble)
+  if (msg.created_at) {
+    const d = new Date(msg.created_at)
+    if (!Number.isNaN(d.getTime())) {
+      const t = document.createElement('div')
+      t.className = 'wr-time'
+      t.textContent = d.toLocaleString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })
+      rowEl.appendChild(t)
+    }
+  }
   chatLog.appendChild(rowEl)
   chatLog.scrollTop = chatLog.scrollHeight
 }
@@ -468,7 +479,13 @@ async function loadMessages(requestId) {
     .select('id, sender_role, body, created_at')
     .eq('request_id', requestId)
     .order('created_at', { ascending: true })
-  if (error) { console.error('[website-chat] load failed', error); return }
+  if (error) {
+    console.error('[website-chat] load failed', error)
+    chatError.textContent = "We couldn't load your messages. Please refresh the page. Your messages are safe."
+    chatError.style.display = 'block'
+    return
+  }
+  chatError.style.display = 'none'
   chatLog.innerHTML = ''
   data.forEach(renderMessage)
 }
