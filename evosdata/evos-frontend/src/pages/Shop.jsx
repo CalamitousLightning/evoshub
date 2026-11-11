@@ -206,37 +206,40 @@ export default function Shop() {
 
   return (
     <div style={styles.container}>
-      <style>{`@keyframes evos-spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes evos-spin { to { transform: rotate(360deg); } }
+.sh-head { margin: 0 0 16px; }
+.sh-head h2 { margin: 0; font-size: 26px; }
+.sh-head p { margin: 6px 0 0; display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--faint); }
+.sh-head i { font-style: normal; }
+.sh-head .on { color: var(--lime); font-weight: 700; }
+.sh-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 5px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+.sh-tab { min-height: 48px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font: 700 14px var(--font-display); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.sh-tab small { font-size: 10px; font-weight: 600; color: var(--danger); }
+.sh-tab.on { background: var(--lime); color: #0b1017; }
+.sh-tab:disabled { opacity: .4; cursor: not-allowed; }
+.sh-hint { margin: 22px 0; text-align: center; font-size: 14px; color: var(--faint); }
+.sh-list { display: flex; flex-direction: column; margin-top: 14px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); }
+.sh-row { display: flex; justify-content: space-between; align-items: center; min-height: 56px; padding: 0 16px; border: 0; border-bottom: 1px solid var(--line); background: var(--surface); color: var(--text); font-family: inherit; cursor: pointer; text-align: left; }
+.sh-row:last-child { border-bottom: 0; }
+.sh-row:hover:not(:disabled) { background: var(--surface-2); }
+.sh-row:disabled { opacity: .5; cursor: not-allowed; }
+.sh-size { font: 800 17px var(--font-display); }
+.sh-price { font-weight: 800; font-size: 15px; color: var(--lime); }
+.sh-out { font-size: 12px; font-weight: 700; color: var(--danger); }
+.sh-note { margin-top: 12px; text-align: center; font-size: 12.5px; color: var(--faint); }
+.sh-tab:focus-visible, .sh-row:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+`}</style>
 
       {/* HEADER */}
-      <div style={styles.header}>
-        <div style={styles.headerBadge}>🛒 Buy Data</div>
-        <h2 style={styles.title}>Choose Your Bundle</h2>
-        <p style={styles.subtitle}>Fast automated delivery across Ghana</p>
-      </div>
-
-      {/* PROGRESS BAR */}
-      <div style={styles.progressWrap}>
-        {["Network", "Bundle", "Checkout"].map((label, i) => {
-          const active = step === i + 1;
-          const done = step > i + 1;
-          return (
-            <div key={i} style={styles.progressItem}>
-              <div style={{
-                ...styles.progressDot,
-                background: done ? "#22c55e" : active ? "#ffb020" : "rgba(255,255,255,0.1)",
-                border: active ? "2px solid #ffb020" : done ? "2px solid #22c55e" : "2px solid rgba(255,255,255,0.1)",
-              }}>
-                {done ? "✓" : i + 1}
-              </div>
-              <span style={{
-                ...styles.progressLabel,
-                color: active ? "#ffb020" : done ? "#22c55e" : "#6c7a8f",
-              }}>{label}</span>
-            </div>
-          );
-        })}
-        <div style={styles.progressLine} />
+      <div className="sh-head">
+        <h2>Buy data</h2>
+        <p>
+          <span className={step < 3 ? "on" : ""}>{selectedNetwork?.label || "Network"}</span>
+          <i>›</i>
+          <span className={step === 3 ? "on" : ""}>{step === 3 ? bundle : "Bundle"}</span>
+          <i>›</i>
+          <span>Pay</span>
+        </p>
       </div>
 
       {/* PENDING ORDER NOTICE */}
@@ -255,89 +258,57 @@ export default function Shop() {
 
       <div style={styles.wrapper}>
 
-        {/* ============ STEP 1 — NETWORK ============ */}
-        {step === 1 && (
-          <div style={styles.box}>
-            <p style={styles.stepLabel}>Step 1 of 3 · Select Network</p>
-            <div style={styles.networkGrid}>
+        {/* ============ NETWORK + BUNDLE (one screen) ============ */}
+        {step < 3 && (
+          <div className="sh-pick">
+            <div className="sh-tabs" role="tablist" aria-label="Network">
               {networks.map((n) => {
                 const disabled = isOutOfStock(n.name);
                 return (
-                  <div
+                  <button
                     key={n.name}
-                    style={{
-                      ...styles.networkCard,
-                      background: n.bg,
-                      border: `1px solid ${n.border}`,
-                      opacity: disabled ? 0.4 : 1,
-                      cursor: disabled ? "not-allowed" : "pointer",
-                    }}
-                    onClick={() => {
-                      if (disabled) return;
-                      setNetwork(n.name);
-                      setStep(2);
-                    }}
+                    role="tab"
+                    aria-selected={network === n.name}
+                    disabled={disabled}
+                    className={`sh-tab ${network === n.name ? "on" : ""}`}
+                    style={{ "--c": n.color }}
+                    onClick={() => { setNetwork(n.name); setStep(2); }}
                   >
-                    <div style={{ ...styles.networkEmoji, color: n.color }}>{n.emoji}</div>
-                    <div style={{ ...styles.networkName, color: n.color }}>{n.label}</div>
-                    <div style={styles.networkDesc}>{n.desc}</div>
-                    {disabled && <div style={styles.stockBadge}>Out of Stock</div>}
-                    <div style={{ ...styles.networkArrow, color: n.color }}>→</div>
-                  </div>
+                    {n.label}
+                    {disabled && <small>Out of stock</small>}
+                  </button>
                 );
               })}
             </div>
-            <div style={styles.infoRow}>
-              <span style={styles.infoText}>🔒 Secured by Paystack</span>
-              <span style={styles.infoText}>⚡ Instant delivery</span>
-            </div>
-          </div>
-        )}
 
-        {/* ============ STEP 2 — BUNDLE ============ */}
-        {step === 2 && (
-          <div style={styles.box}>
-            <button style={styles.backBtn} onClick={() => setStep(1)}>← Back</button>
-            <p style={styles.stepLabel}>Step 2 of 3 · Select Bundle</p>
-            <div style={{
-              ...styles.networkPill,
-              background: selectedNetwork?.bg,
-              border: `1px solid ${selectedNetwork?.border}`,
-              color: selectedNetwork?.color,
-            }}>
-              {selectedNetwork?.emoji} {selectedNetwork?.label}
-            </div>
-            {bundles.length === 0 && (
-              <p style={styles.emptyText}>No bundles available for this network.</p>
+            {!network && <p className="sh-hint">Choose a network to see its bundles.</p>}
+
+            {network && bundles.length === 0 && (
+              <p className="sh-hint">No bundles available for this network.</p>
             )}
-            <div style={styles.bundleGrid}>
+
+            <div className="sh-list">
               {bundles.map((b, i) => {
                 const soldOut = b.in_stock === false;
                 return (
-                  <div
+                  <button
                     key={i}
-                    style={{
-                      ...styles.bundleCard,
-                      ...(soldOut ? { opacity: 0.5, cursor: "not-allowed" } : {}),
-                    }}
+                    className="sh-row"
+                    disabled={soldOut}
                     onClick={() => {
-                      if (soldOut) return;
                       setBundle(b.bundle);
                       setBundlePrice(b.price);
                       setStep(3);
                     }}
                   >
-                    <div style={styles.bundleSize}>{b.bundle}</div>
-                    <div style={styles.bundlePrice}>GH₵ {Number(b.price).toFixed(2)}</div>
-                    {soldOut ? (
-                      <div style={{ ...styles.bundleTap, color: "#ef4444", opacity: 0.9, fontWeight: 800 }}>Out of stock</div>
-                    ) : (
-                      <div style={styles.bundleTap}>Tap to select →</div>
-                    )}
-                  </div>
+                    <span className="sh-size">{b.bundle}</span>
+                    {soldOut ? <span className="sh-out">Out of stock</span> : <span className="sh-price">GH₵ {Number(b.price).toFixed(2)}</span>}
+                  </button>
                 );
               })}
             </div>
+
+            <p className="sh-note">🔒 Paid through Paystack. Delivered automatically.</p>
           </div>
         )}
 
@@ -345,7 +316,7 @@ export default function Shop() {
         {step === 3 && (
           <div style={styles.box}>
             <button style={styles.backBtn} onClick={() => setStep(2)}>← Back</button>
-            <p style={styles.stepLabel}>Step 3 of 3 · Complete Order</p>
+            <p style={styles.stepLabel}>Complete your order</p>
 
             <div style={styles.summaryCard}>
               <div style={styles.summaryRow}>
