@@ -103,3 +103,13 @@ a{color:inherit;text-decoration:none}
   .ah--home .ah-app-name{font-size:13.5px}
   .ah--home .ah-bar{width:min(520px,calc(100% - 48px))}
 }
+
+.ah-invite{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 22px;padding:14px 16px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.ah-invite:active{transform:scale(.99)}
+.ah-invite-ic{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:rgba(91,108,255,.16);color:#5b6cff}
+.ah-invite-ic svg{width:24px;height:24px}
+.ah-invite-tx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.ah-invite-tx b{font-size:15px}
+.ah-invite-tx small{font-size:12.5px;color:var(--dim)}
+.ah-invite-chev{font-size:22px;color:var(--dim)}
+@media(min-width:900px){.ah--home .ah-invite{grid-column:1/-1}}

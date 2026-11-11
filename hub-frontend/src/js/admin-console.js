@@ -15,6 +15,7 @@ const SECTIONS = [
   { id: 'wallet', label: 'XERA wallet (pilot)', icon: '◐' },
   { id: 'kyc', label: 'XERA KYC review', icon: '✓' },
   { id: 'updates', label: 'App updates', icon: '◇' },
+  { id: 'products', label: 'Product switches', icon: '⏻' },
 ]
 
 let section = ''
@@ -110,6 +111,7 @@ async function loadSection(id, force) {
     else if (id === 'wallet') await openWallet(force)
     else if (id === 'kyc') { const m = await import('./admin-console-kyc.js'); await m.initKyc() }
     else if (id === 'updates') { const m = await import('./admin-console-updates.js'); m.initUpdates() }
+    else if (id === 'products') { const m = await import('./admin-console-products.js'); await m.initProducts() }
     $('dx-sub').textContent = `Synced ${new Date().toLocaleTimeString('en-GH')}`
   } catch (e) { fail(e) }
 }

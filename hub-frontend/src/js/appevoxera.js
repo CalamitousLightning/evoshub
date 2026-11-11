@@ -165,3 +165,22 @@ async function initAdminStrip() {
   scrim.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setTimeout(close, 0)))
 }
 initAdminStrip()
+
+
+// ---- invite button: share a join link (uses your XERA referral link when signed in) ----
+{
+  const btn = $('inviteBtn'), sub = $('inviteSub')
+  const idle = sub.textContent
+  const say = (t) => { sub.textContent = t; setTimeout(() => { sub.textContent = idle }, 2200) }
+  btn.addEventListener('click', async () => {
+    let link = `${location.origin}/`
+    if (signedIn) {
+      try { const r = await api('/api/xera/referral/me'); if (r && r.link) link = r.link } catch (e) { /* share the plain site link */ }
+    }
+    const text = `Join me on Evoxera Technology, a hub for tech fans: blockchain and more. ${link}`
+    try {
+      if (navigator.share) await navigator.share({ title: 'Join Evoxera Technology', text })
+      else { await navigator.clipboard.writeText(text); say('Invite link copied') }
+    } catch (e) { if (e && e.name !== 'AbortError') say('Could not share. Try again.') }
+  })
+}
