@@ -1,3 +1,11 @@
 User-agent: *
 Allow: /
+Disallow: /admin-login
+Disallow: /admin-updates
+Disallow: /admin-website-chat
+Disallow: /admin-xera-wallet
+Disallow: /admin-xera-kyc
+Disallow: /xera-wallet
+Disallow: /xera/dashboard
+
 Sitemap: https://evoshub.xyz/sitemap.xml
