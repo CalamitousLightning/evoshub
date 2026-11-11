@@ -18,8 +18,8 @@ function Card() {
   return (
     <div data-no-community style={{
       margin: "12px 16px", padding: "14px 16px", borderRadius: 16,
-      background: "linear-gradient(135deg, rgba(124,58,237,.18), rgba(14,165,233,.12))",
-      border: "1px solid rgba(167,139,250,.35)", display: "flex", gap: 12,
+      background: "linear-gradient(135deg, rgba(20,184,166,.18), rgba(14,165,233,.12))",
+      border: "1px solid rgba(94,234,212,.35)", display: "flex", gap: 12,
       alignItems: "center", justifyContent: "space-between", flexWrap: "wrap",
     }}>
       <div style={{ minWidth: 200, flex: 1 }}>
@@ -27,7 +27,7 @@ function Card() {
         <div style={{ fontSize: 13, opacity: 0.8, marginTop: 2 }}>{BODY}</div>
       </div>
       <a href={XERA_URL} style={{
-        padding: "8px 14px", borderRadius: 10, background: "#7c3aed", color: "#fff",
+        padding: "8px 14px", borderRadius: 10, background: "#14b8a6", color: "#fff",
         fontWeight: 600, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap",
       }}>Learn about XERA</a>
     </div>
@@ -60,12 +60,12 @@ function Popup({ page }) {
     <div data-no-community role="dialog" aria-label={TITLE} style={{
       position: "fixed", right: 16, bottom: 96, zIndex: 9000, maxWidth: 320,
       padding: 16, borderRadius: 16, background: "#14102a", color: "#fff",
-      border: "1px solid rgba(167,139,250,.45)", boxShadow: "0 10px 30px rgba(0,0,0,.45)",
+      border: "1px solid rgba(94,234,212,.45)", boxShadow: "0 10px 30px rgba(0,0,0,.45)",
     }}>
       <div style={{ fontWeight: 700 }}>{TITLE}</div>
       <div style={{ fontSize: 13, opacity: 0.85, margin: "6px 0 12px" }}>{BODY}</div>
       <div style={{ display: "flex", gap: 8 }}>
-        <a href={XERA_URL} onClick={dismiss} style={{ flex: 1, textAlign: "center", padding: "8px 0", borderRadius: 10, background: "#7c3aed", color: "#fff", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>Learn more</a>
+        <a href={XERA_URL} onClick={dismiss} style={{ flex: 1, textAlign: "center", padding: "8px 0", borderRadius: 10, background: "#14b8a6", color: "#fff", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>Learn more</a>
         <button onClick={dismiss} aria-label="Dismiss XERA announcement" style={{ padding: "8px 12px", borderRadius: 10, background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,.25)", fontSize: 13, cursor: "pointer" }}>Not now</button>
       </div>
     </div>

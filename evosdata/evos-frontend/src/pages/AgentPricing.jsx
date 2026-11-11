@@ -10,7 +10,7 @@ const agentHeaders = () => ({
 const NETWORK_CONFIG = {
   MTN: { emoji: "🟡", color: "#b45309", accentColor: "#f59e0b", bg: "linear-gradient(135deg, #fffbeb, #fef3c7)", border: "#fcd34d", shadow: "0 4px 20px rgba(245,158,11,0.2)" },
   TELECEL: { emoji: "🔴", color: "#991b1b", accentColor: "#ef4444", bg: "linear-gradient(135deg, #fff5f5, #fee2e2)", border: "#fca5a5", shadow: "0 4px 20px rgba(239,68,68,0.15)" },
-  AIRTELTIGO: { emoji: "🔵", color: "#3730a3", accentColor: "#8b5cf6", bg: "linear-gradient(135deg, #f0f1ff, #e0e7ff)", border: "#a5b4fc", shadow: "0 4px 20px rgba(139,92,246,0.15)" },
+  AIRTELTIGO: { emoji: "🔵", color: "#3730a3", accentColor: "#2dd4bf", bg: "linear-gradient(135deg, #f0f1ff, #e0e7ff)", border: "#a5b4fc", shadow: "0 4px 20px rgba(45,212,191,0.15)" },
 };
 
 const bundleAccents = [
@@ -139,10 +139,10 @@ export default function AgentPricing({ user, setPage }) {
           const done = step > i + 1;
           return (
             <div key={i} style={styles.progressItem}>
-              <div style={{ ...styles.progressDot, background: done ? "linear-gradient(135deg, #22c55e, #16a34a)" : active ? "linear-gradient(135deg, #8b5cf6, #8b5cf6)" : "#e5e7eb", boxShadow: active ? "0 0 0 4px rgba(139,92,246,0.2)" : done ? "0 0 0 4px rgba(34,197,94,0.15)" : "none", color: done || active ? "white" : "#9ca3af" }}>
+              <div style={{ ...styles.progressDot, background: done ? "linear-gradient(135deg, #22c55e, #16a34a)" : active ? "linear-gradient(135deg, #2dd4bf, #2dd4bf)" : "#e5e7eb", boxShadow: active ? "0 0 0 4px rgba(45,212,191,0.2)" : done ? "0 0 0 4px rgba(34,197,94,0.15)" : "none", color: done || active ? "white" : "#9ca3af" }}>
                 {done ? "✓" : i + 1}
               </div>
-              <span style={{ ...styles.progressLabel, color: active ? "#8b5cf6" : done ? "#22c55e" : "#9ca3af", fontWeight: active || done ? 800 : 600 }}>{label}</span>
+              <span style={{ ...styles.progressLabel, color: active ? "#2dd4bf" : done ? "#22c55e" : "#9ca3af", fontWeight: active || done ? 800 : 600 }}>{label}</span>
             </div>
           );
         })}
@@ -168,7 +168,7 @@ export default function AgentPricing({ user, setPage }) {
             ) : (
               <div style={styles.networkGrid}>
                 {availableNetworks.map((netKey) => {
-                  const c = NETWORK_CONFIG[netKey] || { emoji: "📡", color: "#7a6fa3", accentColor: "#9189b5", bg: "linear-gradient(135deg, #f8fafc, #f3f0fb)", border: "#d9d4ec", shadow: "none" };
+                  const c = NETWORK_CONFIG[netKey] || { emoji: "📡", color: "#6c7a8f", accentColor: "#8b98ab", bg: "linear-gradient(135deg, #f8fafc, #f4f6f9)", border: "#d4dbe4", shadow: "none" };
                   const netBundles = rows.filter((r) => r.network === netKey);
                   const setPrices = netBundles.filter((r) => Number(r.markup) > 0).length;
                   return (
@@ -226,7 +226,7 @@ export default function AgentPricing({ user, setPage }) {
                 );
               })}
             </div>
-            <button onClick={saveAll} disabled={savingAll} style={{ ...styles.saveAllBtn, opacity: savingAll ? 0.65 : 1, background: savedAll ? "linear-gradient(135deg, #22c55e, #16a34a)" : "linear-gradient(135deg, #c8ff3e, #8fe600)" }}>
+            <button onClick={saveAll} disabled={savingAll} style={{ ...styles.saveAllBtn, opacity: savingAll ? 0.65 : 1, background: savedAll ? "linear-gradient(135deg, #22c55e, #16a34a)" : "linear-gradient(135deg, #ffb020, #f59300)" }}>
               {savingAll ? "⏳ Saving All..." : savedAll ? "✓ All Prices Saved!" : "💾 Save All Prices"}
             </button>
           </div>
@@ -237,11 +237,11 @@ export default function AgentPricing({ user, setPage }) {
 }
 
 const styles = {
-  container: { padding: "28px 18px 80px", minHeight: "auto", fontFamily: "'Nunito', 'Poppins', ui-rounded, system-ui, Arial", color: "#241c3d" },
+  container: { padding: "28px 18px 80px", minHeight: "auto", fontFamily: "'Nunito', 'Poppins', ui-rounded, system-ui, Arial", color: "#202a38" },
   header: { textAlign: "center", marginBottom: 20 },
-  headerBadge: { display: "inline-block", padding: "5px 18px", borderRadius: 50, background: "linear-gradient(135deg, #e0e7ff, #ddd6fe)", border: "1px solid #c4b5fd", color: "#6d28d9", fontSize: 12, fontWeight: 800, marginBottom: 10, letterSpacing: "0.5px" },
-  title: { fontSize: 26, fontWeight: 900, color: "#f3f0fb", margin: "0 0 6px", letterSpacing: "-0.5px" },
-  subtitle: { fontSize: 13, color: "#9189b5", margin: 0, fontWeight: 600 },
+  headerBadge: { display: "inline-block", padding: "5px 18px", borderRadius: 50, background: "linear-gradient(135deg, #e0e7ff, #ccfbf1)", border: "1px solid #99f6e4", color: "#0f9d8e", fontSize: 12, fontWeight: 800, marginBottom: 10, letterSpacing: "0.5px" },
+  title: { fontSize: 26, fontWeight: 900, color: "#f4f6f9", margin: "0 0 6px", letterSpacing: "-0.5px" },
+  subtitle: { fontSize: 13, color: "#8b98ab", margin: 0, fontWeight: 600 },
   infoBanner: { display: "flex", alignItems: "flex-start", gap: 10, background: "rgba(234,179,8,0.1)", border: "1.5px solid rgba(234,179,8,0.3)", borderRadius: 14, padding: "12px 16px", maxWidth: 480, margin: "0 auto 20px", fontSize: 13, color: "#ca8a04" },
   infoIcon: { fontSize: 16, flexShrink: 0, marginTop: 1 },
   infoText: { lineHeight: 1.55, fontWeight: 600 },
@@ -250,32 +250,32 @@ const styles = {
   progressDot: { width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, transition: "all 0.35s" },
   progressLabel: { fontSize: 11, transition: "color 0.3s" },
   progressLine: { position: "absolute", top: 17, left: "20%", right: "20%", height: 3, background: "#e5e7eb", zIndex: 0, borderRadius: 10, overflow: "hidden" },
-  progressLineFill: { height: "100%", background: "linear-gradient(90deg, #22c55e, #8b5cf6)", borderRadius: 10, transition: "width 0.4s ease" },
+  progressLineFill: { height: "100%", background: "linear-gradient(90deg, #22c55e, #2dd4bf)", borderRadius: 10, transition: "width 0.4s ease" },
   wrapper: { maxWidth: 520, margin: "0 auto" },
-  box: { background: "rgba(22,17,38,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", padding: "24px 20px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 8px 40px rgba(0,0,0,0.3)" },
-  stepLabel: { fontSize: 11, color: "#8b5cf6", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 18px" },
+  box: { background: "rgba(22,30,41,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", padding: "24px 20px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 8px 40px rgba(0,0,0,0.3)" },
+  stepLabel: { fontSize: 11, color: "#2dd4bf", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 18px" },
   emptyBox: { textAlign: "center", padding: "30px 0" },
-  emptyText: { color: "#9189b5", fontSize: 14, margin: 0, fontWeight: 600 },
+  emptyText: { color: "#8b98ab", fontSize: 14, margin: 0, fontWeight: 600 },
   networkGrid: { display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 },
   networkCard: { padding: "16px 18px", borderRadius: 18, cursor: "pointer", display: "flex", alignItems: "center", transition: "transform 0.15s" },
   networkLeft: { display: "flex", alignItems: "center", gap: 14, flex: 1 },
   networkEmoji: { fontSize: 28, flexShrink: 0 },
   networkName: { fontWeight: 900, fontSize: 16, marginBottom: 2 },
-  networkDesc: { fontSize: 12, color: "#9189b5", fontWeight: 600 },
+  networkDesc: { fontSize: 12, color: "#8b98ab", fontWeight: 600 },
   networkBadge: { fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 50, marginRight: 10 },
   networkArrow: { fontSize: 18, fontWeight: 900, flexShrink: 0 },
-  backDashBtn: { width: "100%", padding: "12px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#b4acd0", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 4 },
-  backBtn: { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", color: "#b4acd0", fontSize: 13, fontWeight: 800, cursor: "pointer", padding: "6px 14px", borderRadius: 50, marginBottom: 16, display: "inline-block" },
+  backDashBtn: { width: "100%", padding: "12px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#b3bece", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 4 },
+  backBtn: { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", color: "#b3bece", fontSize: 13, fontWeight: 800, cursor: "pointer", padding: "6px 14px", borderRadius: 50, marginBottom: 16, display: "inline-block" },
   networkPill: { display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 18px", borderRadius: 50, fontSize: 13, fontWeight: 900, marginBottom: 20 },
   bundleGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
   bundleCard: { borderRadius: 18, padding: "16px 14px 14px", display: "flex", flexDirection: "column", alignItems: "center", gap: 0, textAlign: "center", transition: "transform 0.15s", position: "relative" },
   visibilityBadge: { fontSize: 10, fontWeight: 800, padding: "3px 8px", borderRadius: 50, marginBottom: 10, letterSpacing: "0.3px" },
   bundleSize: { fontWeight: 900, fontSize: 18, marginBottom: 4, letterSpacing: "-0.3px" },
-  basePrice: { fontSize: 11, color: "#9189b5", fontWeight: 600, marginBottom: 8 },
+  basePrice: { fontSize: 11, color: "#8b98ab", fontWeight: 600, marginBottom: 8 },
   bundleDivider: { width: "50%", height: 2, borderRadius: 10, marginBottom: 10, opacity: 0.4 },
   markupLabel: { fontSize: 11, fontWeight: 800, marginBottom: 4, letterSpacing: "0.3px", alignSelf: "flex-start" },
-  markupInput: { width: "100%", padding: "10px 12px", borderRadius: 12, background: "white", color: "#161126", fontSize: 14, fontWeight: 700, marginBottom: 8, boxSizing: "border-box", outline: "none", textAlign: "center" },
+  markupInput: { width: "100%", padding: "10px 12px", borderRadius: 12, background: "white", color: "#161e29", fontSize: 14, fontWeight: 700, marginBottom: 8, boxSizing: "border-box", outline: "none", textAlign: "center" },
   finalPrice: { fontSize: 12, fontWeight: 700, marginBottom: 12 },
-  saveAllBtn: { width: "100%", padding: "15px", borderRadius: 16, border: "none", color: "white", fontWeight: 900, fontSize: 15, cursor: "pointer", boxShadow: "0 6px 24px rgba(200,255,62,0.3)", marginTop: 16, letterSpacing: "0.2px", transition: "all 0.3s" },
+  saveAllBtn: { width: "100%", padding: "15px", borderRadius: 16, border: "none", color: "white", fontWeight: 900, fontSize: 15, cursor: "pointer", boxShadow: "0 6px 24px rgba(255,176,32,0.3)", marginTop: 16, letterSpacing: "0.2px", transition: "all 0.3s" },
   saveSingleBtn: { width: "100%", padding: "10px", borderRadius: 12, border: "none", color: "white", fontWeight: 900, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.2)", transition: "all 0.3s" },
 };

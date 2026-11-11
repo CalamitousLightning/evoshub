@@ -344,13 +344,13 @@ export default function AgentWithdraw({ user, setPage }) {
             <div key={n} style={S.stepItem}>
               <div style={{
                 ...S.stepDot,
-                background: done_ ? "#22c55e" : active ? "#c8ff3e" : "rgba(255,255,255,0.08)",
-                color:      done_ || active ? "#000" : "#7a6fa3",
-                border:     active ? "2px solid #c8ff3e" : done_ ? "2px solid #22c55e" : "2px solid rgba(255,255,255,0.08)",
+                background: done_ ? "#22c55e" : active ? "#ffb020" : "rgba(255,255,255,0.08)",
+                color:      done_ || active ? "#000" : "#6c7a8f",
+                border:     active ? "2px solid #ffb020" : done_ ? "2px solid #22c55e" : "2px solid rgba(255,255,255,0.08)",
               }}>
                 {done_ ? "✓" : n}
               </div>
-              <span style={{ ...S.stepLabel, color: active ? "#e9e5f6" : "#7a6fa3" }}>{label}</span>
+              <span style={{ ...S.stepLabel, color: active ? "#eef1f5" : "#6c7a8f" }}>{label}</span>
             </div>
           );
         })}
@@ -378,11 +378,11 @@ export default function AgentWithdraw({ user, setPage }) {
               style={{
                 ...S.providerCard,
                 border: provider === "paystack"
-                  ? "2px solid #c8ff3e"
+                  ? "2px solid #ffb020"
                   : "2px solid rgba(255,255,255,0.07)",
                 background: provider === "paystack"
-                  ? "rgba(200,255,62,0.08)"
-                  : "rgba(22,17,38,0.7)",
+                  ? "rgba(255,176,32,0.08)"
+                  : "rgba(22,30,41,0.7)",
               }}
             >
               <div style={S.providerIcon}>🏦</div>
@@ -406,11 +406,11 @@ export default function AgentWithdraw({ user, setPage }) {
                 cursor: MOOLRE_ENABLED ? "pointer" : "not-allowed",
                 opacity: MOOLRE_ENABLED ? 1 : 0.45,
                 border: provider === "moolre"
-                  ? "2px solid #a78bfa"
+                  ? "2px solid #5eead4"
                   : "2px solid rgba(255,255,255,0.07)",
                 background: provider === "moolre"
-                  ? "rgba(167,139,250,0.08)"
-                  : "rgba(22,17,38,0.7)",
+                  ? "rgba(94,234,212,0.08)"
+                  : "rgba(22,30,41,0.7)",
               }}
             >
               <div style={S.providerIcon}>📱</div>
@@ -420,7 +420,7 @@ export default function AgentWithdraw({ user, setPage }) {
               </div>
               {!MOOLRE_ENABLED && <div style={S.comingSoonBadge}>Coming soon</div>}
               {MOOLRE_ENABLED && provider === "moolre" && (
-                <div style={{ ...S.providerCheck, color: "#a78bfa" }}>✓</div>
+                <div style={{ ...S.providerCheck, color: "#5eead4" }}>✓</div>
               )}
             </div>
           </div>
@@ -472,9 +472,9 @@ export default function AgentWithdraw({ user, setPage }) {
                 onClick={() => { setAmount(String(v)); clear(); }}
                 style={{
                   ...S.quickChip,
-                  background: Number(amount) === v ? "#c8ff3e" : "rgba(255,255,255,0.05)",
-                  color:      Number(amount) === v ? "#000" : "#b4acd0",
-                  border:     Number(amount) === v ? "1px solid #c8ff3e" : "1px solid rgba(255,255,255,0.08)",
+                  background: Number(amount) === v ? "#ffb020" : "rgba(255,255,255,0.05)",
+                  color:      Number(amount) === v ? "#000" : "#b3bece",
+                  border:     Number(amount) === v ? "1px solid #ffb020" : "1px solid rgba(255,255,255,0.08)",
                 }}
               >
                 GH₵ {v}
@@ -494,7 +494,7 @@ export default function AgentWithdraw({ user, setPage }) {
                 <span style={{ ...S.feeValue, color: "#f87171" }}>− GH₵ {previewFee.toFixed(2)}</span>
               </div>
               <div style={{ ...S.feeRow, ...S.feeRowFinal }}>
-                <span style={{ ...S.feeLabel, fontWeight: 800, color: "#d9d4ec" }}>You'll receive</span>
+                <span style={{ ...S.feeLabel, fontWeight: 800, color: "#d4dbe4" }}>You'll receive</span>
                 <span style={{ ...S.feeValue, fontWeight: 900, color: "#4ade80" }}>GH₵ {previewPayout.toFixed(2)}</span>
               </div>
             </div>
@@ -527,9 +527,9 @@ export default function AgentWithdraw({ user, setPage }) {
                 onClick={() => { setNetwork(n); clear(); }}
                 style={{
                   ...S.networkBtn,
-                  background: network === n ? "#c8ff3e" : "rgba(255,255,255,0.05)",
+                  background: network === n ? "#ffb020" : "rgba(255,255,255,0.05)",
                   color:      network === n ? "#000" : "#e5e7eb",
-                  border:     network === n ? "1px solid #c8ff3e" : "1px solid rgba(255,255,255,0.08)",
+                  border:     network === n ? "1px solid #ffb020" : "1px solid rgba(255,255,255,0.08)",
                   fontWeight: network === n ? 800 : 500,
                 }}
               >
@@ -678,11 +678,11 @@ function ConfirmRow({ label, value, highlight, verified, warn }) {
       padding: "9px 0",
       borderBottom: "1px solid rgba(255,255,255,0.05)",
     }}>
-      <span style={{ fontSize: 13, color: "#9189b5" }}>{label}</span>
+      <span style={{ fontSize: 13, color: "#8b98ab" }}>{label}</span>
       <span style={{
         fontSize: highlight ? 16 : 13,
         fontWeight: highlight ? 900 : 600,
-        color: highlight ? "#c8ff3e" : verified ? "#4ade80" : warn ? "#f87171" : "#e9e5f6",
+        color: highlight ? "#ffb020" : verified ? "#4ade80" : warn ? "#f87171" : "#eef1f5",
       }}>
         {value}
       </span>
@@ -712,9 +712,9 @@ const styles = {
   balancePill: {
     fontSize: 12,
     fontWeight: 700,
-    color: "#c8ff3e",
-    background: "rgba(200,255,62,0.1)",
-    border: "1px solid rgba(200,255,62,0.25)",
+    color: "#ffb020",
+    background: "rgba(255,176,32,0.1)",
+    border: "1px solid rgba(255,176,32,0.25)",
     padding: "5px 12px",
     borderRadius: 20,
   },
@@ -762,7 +762,7 @@ const styles = {
   stepHeading: {
     fontSize: 15,
     fontWeight: 700,
-    color: "#d9d4ec",
+    color: "#d4dbe4",
     marginBottom: 18,
     marginTop: 4,
   },
@@ -782,15 +782,15 @@ const styles = {
     transition: "0.15s",
   },
   providerIcon: { fontSize: 22, marginBottom: 6 },
-  providerName: { fontSize: 15, fontWeight: 800, color: "#e9e5f6", marginBottom: 4, display: "flex", alignItems: "center", gap: 8 },
-  providerDesc: { fontSize: 12, color: "#9189b5", lineHeight: 1.5 },
+  providerName: { fontSize: 15, fontWeight: 800, color: "#eef1f5", marginBottom: 4, display: "flex", alignItems: "center", gap: 8 },
+  providerDesc: { fontSize: 12, color: "#8b98ab", lineHeight: 1.5 },
   providerCheck: {
     position: "absolute",
     top: 14,
     right: 16,
     fontSize: 16,
     fontWeight: 900,
-    color: "#c8ff3e",
+    color: "#ffb020",
   },
   instantBadge: {
     fontSize: 10,
@@ -807,7 +807,7 @@ const styles = {
     right: 16,
     fontSize: 10,
     fontWeight: 800,
-    color: "#b4acd0",
+    color: "#b3bece",
     background: "rgba(255,255,255,0.06)",
     border: "1px solid rgba(255,255,255,0.12)",
     borderRadius: 20,
@@ -817,8 +817,8 @@ const styles = {
   },
 
   feeNotice: {
-    background: "rgba(200,255,62,0.08)",
-    border: "1px solid rgba(200,255,62,0.25)",
+    background: "rgba(255,176,32,0.08)",
+    border: "1px solid rgba(255,176,32,0.25)",
     borderRadius: 10,
     padding: "10px 14px",
     fontSize: 12,
@@ -831,7 +831,7 @@ const styles = {
   policyLink: {
     fontSize: 12.5,
     fontWeight: 700,
-    color: "#b4acd0",
+    color: "#b3bece",
     textDecoration: "underline",
     textDecorationColor: "rgba(148,163,184,0.4)",
     textAlign: "center",
@@ -851,7 +851,7 @@ const styles = {
     zIndex: 1000,
   },
   modalCard: {
-    background: "#161126",
+    background: "#161e29",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 16,
     padding: "20px 20px 18px",
@@ -869,11 +869,11 @@ const styles = {
   modalTitle: {
     fontSize: 15,
     fontWeight: 800,
-    color: "#e9e5f6",
+    color: "#eef1f5",
   },
   modalClose: {
     fontSize: 14,
-    color: "#9189b5",
+    color: "#8b98ab",
     cursor: "pointer",
     padding: "2px 6px",
   },
@@ -881,7 +881,7 @@ const styles = {
     margin: 0,
     paddingLeft: 18,
     fontSize: 13,
-    color: "#d9d4ec",
+    color: "#d4dbe4",
     lineHeight: 1.8,
   },
   modalCloseBtn: {
@@ -891,7 +891,7 @@ const styles = {
     borderRadius: 10,
     border: "1px solid rgba(255,255,255,0.09)",
     background: "rgba(255,255,255,0.04)",
-    color: "#e9e5f6",
+    color: "#eef1f5",
     fontWeight: 700,
     fontSize: 13,
     cursor: "pointer",
@@ -907,12 +907,12 @@ const styles = {
     marginBottom: 16,
   },
   blockedIcon: { fontSize: 40, marginBottom: 12 },
-  blockedTitle: { fontSize: 17, fontWeight: 800, color: "#e9e5f6", marginBottom: 10 },
-  blockedSub: { fontSize: 13, color: "#b4acd0", lineHeight: 1.6, margin: 0 },
+  blockedTitle: { fontSize: 17, fontWeight: 800, color: "#eef1f5", marginBottom: 10 },
+  blockedSub: { fontSize: 13, color: "#b3bece", lineHeight: 1.6, margin: 0 },
 
   // fee breakdown (step 2)
   feeBreakdown: {
-    background: "rgba(22,17,38,0.9)",
+    background: "rgba(22,30,41,0.9)",
     border: "1px solid rgba(255,255,255,0.07)",
     borderRadius: 12,
     padding: "10px 14px 4px",
@@ -927,8 +927,8 @@ const styles = {
     borderTop: "1px solid rgba(255,255,255,0.07)",
     marginTop: 2,
   },
-  feeLabel: { fontSize: 12.5, color: "#b4acd0" },
-  feeValue: { fontSize: 13, fontWeight: 700, color: "#e9e5f6" },
+  feeLabel: { fontSize: 12.5, color: "#b3bece" },
+  feeValue: { fontSize: 13, fontWeight: 700, color: "#eef1f5" },
 
   // amount quick picks
   quickRow: {
@@ -948,7 +948,7 @@ const styles = {
   },
   hint: {
     fontSize: 11,
-    color: "#7a6fa3",
+    color: "#6c7a8f",
     marginBottom: 18,
     lineHeight: 1.5,
     margin: "0 0 16px",
@@ -972,7 +972,7 @@ const styles = {
 
   // confirm card
   confirmCard: {
-    background: "rgba(22,17,38,0.9)",
+    background: "rgba(22,30,41,0.9)",
     border: "1px solid rgba(255,255,255,0.07)",
     borderRadius: 14,
     padding: "4px 16px 8px",
@@ -1011,7 +1011,7 @@ const styles = {
     padding: 14,
     borderRadius: 12,
     border: "none",
-    background: "linear-gradient(135deg,#c8ff3e,#8fe600)",
+    background: "linear-gradient(135deg,#ffb020,#f59300)",
     color: "#000",
     fontWeight: 900,
     cursor: "pointer",
@@ -1023,7 +1023,7 @@ const styles = {
     padding: "12px 16px",
     borderRadius: 10,
     background: "rgba(255,255,255,0.04)",
-    color: "#b4acd0",
+    color: "#b3bece",
     border: "1px solid rgba(255,255,255,0.07)",
     cursor: "pointer",
     fontSize: 13,
@@ -1048,7 +1048,7 @@ const styles = {
   successTitle: { fontSize: 22, fontWeight: 900, marginBottom: 10 },
   successSub: {
     fontSize: 14,
-    color: "#b4acd0",
+    color: "#b3bece",
     lineHeight: 1.6,
     marginBottom: 24,
   },
@@ -1060,13 +1060,13 @@ const styles = {
     borderRadius: 10,
     marginBottom: 8,
   },
-  metaLabel: { fontSize: 12, color: "#7a6fa3" },
-  metaValue: { fontSize: 13, fontWeight: 700, color: "#e9e5f6" },
+  metaLabel: { fontSize: 12, color: "#6c7a8f" },
+  metaValue: { fontSize: 13, fontWeight: 700, color: "#eef1f5" },
 
   label: {
     display: "block",
     fontSize: 12,
-    color: "#9189b5",
+    color: "#8b98ab",
     fontWeight: 600,
     marginBottom: 7,
     textTransform: "uppercase",
@@ -1078,7 +1078,7 @@ const styles = {
     marginBottom: 16,
     borderRadius: 12,
     border: "1px solid rgba(255,255,255,0.09)",
-    background: "rgba(10,8,20,0.8)",
+    background: "rgba(11,16,23,0.8)",
     color: "white",
     fontSize: 15,
     boxSizing: "border-box",
@@ -1090,7 +1090,7 @@ const styles = {
     marginTop: 28,
     textAlign: "center",
     fontSize: 11,
-    color: "#9189b5",
+    color: "#8b98ab",
     lineHeight: 1.7,
   },
 };

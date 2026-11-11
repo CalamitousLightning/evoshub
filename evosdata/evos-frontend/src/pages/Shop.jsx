@@ -196,9 +196,9 @@ export default function Shop() {
       border: "rgba(239,68,68,0.4)", desc: "Formerly Vodafone Ghana",
     },
     {
-      name: "AIRTELTIGO", label: "AirtelTigo", emoji: "🔵", color: "#8b5cf6",
-      bg: "linear-gradient(135deg, rgba(139,92,246,0.18), rgba(139,92,246,0.06))",
-      border: "rgba(139,92,246,0.4)", desc: "Nationwide coverage",
+      name: "AIRTELTIGO", label: "AirtelTigo", emoji: "🔵", color: "#2dd4bf",
+      bg: "linear-gradient(135deg, rgba(45,212,191,0.18), rgba(45,212,191,0.06))",
+      border: "rgba(45,212,191,0.4)", desc: "Nationwide coverage",
     },
   ];
 
@@ -224,14 +224,14 @@ export default function Shop() {
             <div key={i} style={styles.progressItem}>
               <div style={{
                 ...styles.progressDot,
-                background: done ? "#22c55e" : active ? "#c8ff3e" : "rgba(255,255,255,0.1)",
-                border: active ? "2px solid #c8ff3e" : done ? "2px solid #22c55e" : "2px solid rgba(255,255,255,0.1)",
+                background: done ? "#22c55e" : active ? "#ffb020" : "rgba(255,255,255,0.1)",
+                border: active ? "2px solid #ffb020" : done ? "2px solid #22c55e" : "2px solid rgba(255,255,255,0.1)",
               }}>
                 {done ? "✓" : i + 1}
               </div>
               <span style={{
                 ...styles.progressLabel,
-                color: active ? "#c8ff3e" : done ? "#22c55e" : "#7a6fa3",
+                color: active ? "#ffb020" : done ? "#22c55e" : "#6c7a8f",
               }}>{label}</span>
             </div>
           );
@@ -360,7 +360,7 @@ export default function Shop() {
               </div>
               <div style={{ ...styles.summaryRow, borderBottom: "none" }}>
                 <span style={styles.summaryLabel}>Amount</span>
-                <span style={{ ...styles.summaryVal, color: "#c8ff3e", fontSize: 20, fontWeight: 900 }}>
+                <span style={{ ...styles.summaryVal, color: "#ffb020", fontSize: 20, fontWeight: 900 }}>
                   {xeraOn && (
                     <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: 14, marginRight: 8 }}>
                       GH₵ {Number(bundlePrice).toFixed(2)}
@@ -374,7 +374,7 @@ export default function Shop() {
             {xeraQuote && (xeraQuote.eligible ? (
               <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer",
                               padding: "10px 12px", marginBottom: 14, borderRadius: 10,
-                              border: "1px solid rgba(200,255,62,0.35)", background: "rgba(200,255,62,0.06)" }}>
+                              border: "1px solid rgba(255,176,32,0.35)", background: "rgba(255,176,32,0.06)" }}>
                 <input type="checkbox" checked={useXera} onChange={(e) => setUseXera(e.target.checked)}
                        style={{ marginTop: 3 }} />
                 <span style={{ fontSize: 13, lineHeight: 1.45 }}>
@@ -446,7 +446,7 @@ export default function Shop() {
                 type="checkbox"
                 checked={agree}
                 onChange={() => setAgree(!agree)}
-                style={{ accentColor: "#c8ff3e", width: 16, height: 16, flexShrink: 0, marginTop: 2 }}
+                style={{ accentColor: "#ffb020", width: 16, height: 16, flexShrink: 0, marginTop: 2 }}
               />
               <span style={styles.checkText}>
                 I confirm this number is correct.{" "}
@@ -576,11 +576,11 @@ const styles = {
   header: { textAlign: "center", marginBottom: 28 },
   headerBadge: {
     display: "inline-block", padding: "5px 16px", borderRadius: 50,
-    background: "rgba(200,255,62,0.15)", border: "1px solid rgba(200,255,62,0.3)",
-    color: "#c8ff3e", fontSize: 12, fontWeight: 700, marginBottom: 12,
+    background: "rgba(255,176,32,0.15)", border: "1px solid rgba(255,176,32,0.3)",
+    color: "#ffb020", fontSize: 12, fontWeight: 700, marginBottom: 12,
   },
-  title: { fontSize: 26, fontWeight: 900, color: "#f3f0fb", margin: "0 0 6px" },
-  subtitle: { fontSize: 14, color: "#9189b5", margin: 0 },
+  title: { fontSize: 26, fontWeight: 900, color: "#f4f6f9", margin: "0 0 6px" },
+  subtitle: { fontSize: 14, color: "#8b98ab", margin: 0 },
 
   progressWrap: {
     display: "flex", justifyContent: "center", alignItems: "center",
@@ -603,8 +603,8 @@ const styles = {
   },
 
   pendingNotice: {
-    background: "rgba(200,255,62,0.1)", border: "1px solid rgba(200,255,62,0.3)",
-    color: "#c8ff3e", padding: "12px 16px", borderRadius: 12,
+    background: "rgba(255,176,32,0.1)", border: "1px solid rgba(255,176,32,0.3)",
+    color: "#ffb020", padding: "12px 16px", borderRadius: 12,
     marginBottom: 16, fontSize: 14, maxWidth: 480,
     margin: "0 auto 16px", textAlign: "center", fontWeight: 700,
   },
@@ -617,13 +617,13 @@ const styles = {
 
   wrapper: { maxWidth: 480, margin: "0 auto" },
   box: {
-    background: "rgba(22,17,38,0.9)", backdropFilter: "blur(20px)",
+    background: "rgba(22,30,41,0.9)", backdropFilter: "blur(20px)",
     WebkitBackdropFilter: "blur(20px)", padding: "24px 20px",
     borderRadius: 22, border: "1px solid rgba(255,255,255,0.07)",
     boxShadow: "0 25px 60px rgba(0,0,0,0.4)",
   },
   stepLabel: {
-    fontSize: 12, color: "#c8ff3e", fontWeight: 700,
+    fontSize: 12, color: "#ffb020", fontWeight: 700,
     textTransform: "uppercase", letterSpacing: "0.8px", margin: "0 0 18px",
   },
 
@@ -635,7 +635,7 @@ const styles = {
   },
   networkEmoji: { fontSize: 26, flexShrink: 0 },
   networkName: { fontWeight: 800, fontSize: 16, flex: 1 },
-  networkDesc: { fontSize: 12, color: "#9189b5" },
+  networkDesc: { fontSize: 12, color: "#8b98ab" },
   networkArrow: { fontSize: 18, fontWeight: 900 },
   stockBadge: {
     position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
@@ -643,10 +643,10 @@ const styles = {
     color: "#ef4444", fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 50,
   },
   infoRow: { display: "flex", justifyContent: "center", gap: 20 },
-  infoText: { fontSize: 12, color: "#7a6fa3", fontWeight: 600 },
+  infoText: { fontSize: 12, color: "#6c7a8f", fontWeight: 600 },
 
   backBtn: {
-    background: "none", border: "none", color: "#c8ff3e",
+    background: "none", border: "none", color: "#ffb020",
     fontSize: 14, fontWeight: 700, cursor: "pointer",
     padding: 0, marginBottom: 14, display: "block",
   },
@@ -654,38 +654,38 @@ const styles = {
     display: "inline-block", padding: "6px 16px", borderRadius: 50,
     fontSize: 13, fontWeight: 800, marginBottom: 18,
   },
-  emptyText: { color: "#7a6fa3", fontSize: 14, textAlign: "center", padding: "20px 0" },
+  emptyText: { color: "#6c7a8f", fontSize: 14, textAlign: "center", padding: "20px 0" },
   bundleGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 8 },
   bundleCard: {
-    background: "rgba(10,8,20,0.7)", border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(11,16,23,0.7)", border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 16, padding: "16px 14px", cursor: "pointer",
     textAlign: "center", transition: "border-color 0.15s",
   },
-  bundleSize: { fontWeight: 900, fontSize: 18, color: "#f3f0fb", marginBottom: 6 },
-  bundlePrice: { fontWeight: 800, fontSize: 16, color: "#c8ff3e", marginBottom: 8 },
-  bundleTap: { fontSize: 11, color: "#c8ff3e", opacity: 0.6 },
+  bundleSize: { fontWeight: 900, fontSize: 18, color: "#f4f6f9", marginBottom: 6 },
+  bundlePrice: { fontWeight: 800, fontSize: 16, color: "#ffb020", marginBottom: 8 },
+  bundleTap: { fontSize: 11, color: "#ffb020", opacity: 0.6 },
 
   summaryCard: {
-    background: "rgba(10,8,20,0.7)", border: "1px solid rgba(255,255,255,0.06)",
+    background: "rgba(11,16,23,0.7)", border: "1px solid rgba(255,255,255,0.06)",
     borderRadius: 16, padding: "6px 16px", marginBottom: 22,
   },
   summaryRow: {
     display: "flex", justifyContent: "space-between", alignItems: "center",
     padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.05)",
   },
-  summaryLabel: { fontSize: 13, color: "#9189b5" },
+  summaryLabel: { fontSize: 13, color: "#8b98ab" },
   summaryVal: { fontSize: 15, fontWeight: 700, color: "#e5e7eb" },
 
-  inputLabel: { display: "block", fontSize: 12, color: "#9189b5", fontWeight: 700, marginBottom: 6 },
+  inputLabel: { display: "block", fontSize: 12, color: "#8b98ab", fontWeight: 700, marginBottom: 6 },
   input: {
     width: "100%", padding: "13px 14px", marginBottom: 6, borderRadius: 12,
-    border: "1.5px solid", background: "rgba(10,8,20,0.75)",
+    border: "1.5px solid", background: "rgba(11,16,23,0.75)",
     color: "#fff", outline: "none", fontSize: 14, boxSizing: "border-box",
     transition: "border-color 0.2s",
   },
   phoneHint: { fontSize: 12, color: "#f87171", margin: "0 0 14px", paddingLeft: 2 },
   phoneHintGood: { fontSize: 12, color: "#22c55e", margin: "0 0 14px", paddingLeft: 2 },
-  verifyChecking: { fontSize: 12, color: "#9189b5", margin: "0 0 14px", paddingLeft: 2 },
+  verifyChecking: { fontSize: 12, color: "#8b98ab", margin: "0 0 14px", paddingLeft: 2 },
   verifyWarning: { fontSize: 12, color: "#f59e0b", margin: "0 0 14px", paddingLeft: 2, lineHeight: 1.5 },
 
   checkWrap: {
@@ -693,42 +693,42 @@ const styles = {
     background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)",
     padding: "12px 14px", borderRadius: 12, marginBottom: 16, cursor: "pointer", marginTop: 8,
   },
-  checkText: { fontSize: 13, color: "#b4acd0", lineHeight: 1.55 },
+  checkText: { fontSize: 13, color: "#b3bece", lineHeight: 1.55 },
   buyBtn: {
     width: "100%", padding: "15px", borderRadius: 14, border: "none",
     background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "white",
     fontWeight: 900, fontSize: 15, cursor: "pointer", marginBottom: 12,
     boxShadow: "0 4px 20px rgba(34,197,94,0.3)",
   },
-  secureNote: { textAlign: "center", fontSize: 12, color: "#7a6fa3", margin: 0 },
+  secureNote: { textAlign: "center", fontSize: 12, color: "#6c7a8f", margin: 0 },
 
   verifyOverlay: {
-    position: "fixed", inset: 0, background: "rgba(10,8,20,0.7)",
+    position: "fixed", inset: 0, background: "rgba(11,16,23,0.7)",
     backdropFilter: "blur(2px)", display: "flex",
     alignItems: "center", justifyContent: "center", zIndex: 2000,
   },
   verifyPopup: {
-    background: "#161126", border: "1px solid rgba(255,255,255,0.1)",
+    background: "#161e29", border: "1px solid rgba(255,255,255,0.1)",
     borderRadius: 20, padding: "28px 32px", textAlign: "center",
     boxShadow: "0 20px 60px rgba(0,0,0,0.5)", maxWidth: 280,
   },
   verifySpinner: {
     width: 34, height: 34, margin: "0 auto 14px", borderRadius: "50%",
-    border: "3px solid rgba(200,255,62,0.2)", borderTopColor: "#c8ff3e",
+    border: "3px solid rgba(255,176,32,0.2)", borderTopColor: "#ffb020",
     animation: "evos-spin 0.8s linear infinite",
   },
-  verifyPopupText: { fontSize: 15, fontWeight: 800, color: "#f3f0fb", margin: "0 0 4px" },
-  verifyPopupSub: { fontSize: 12, color: "#9189b5", margin: 0 },
+  verifyPopupText: { fontSize: 15, fontWeight: 800, color: "#f4f6f9", margin: "0 0 4px" },
+  verifyPopupSub: { fontSize: 12, color: "#8b98ab", margin: 0 },
   verifyPopupActions: {
     display: "flex", flexDirection: "column", gap: 8, marginTop: 18,
   },
   verifyPopupProceedBtn: {
-    background: "linear-gradient(135deg, #c8ff3e, #8fe600)", color: "#fff",
+    background: "linear-gradient(135deg, #ffb020, #f59300)", color: "#fff",
     border: "none", borderRadius: 12, padding: "12px 16px",
     fontSize: 14, fontWeight: 800, cursor: "pointer",
   },
   verifyPopupCancelBtn: {
-    background: "transparent", color: "#b4acd0",
+    background: "transparent", color: "#b3bece",
     border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12,
     padding: "10px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer",
   },
@@ -738,12 +738,12 @@ const styles = {
     display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10,
   },
   chatPopup: {
-    background: "#161126", border: "1px solid rgba(255,255,255,0.1)",
+    background: "#161e29", border: "1px solid rgba(255,255,255,0.1)",
     borderRadius: 18, padding: 18, width: 270, boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
   },
   chatHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  chatClose: { background: "none", border: "none", color: "#9189b5", cursor: "pointer", fontSize: 14 },
-  chatMsg: { fontSize: 13, color: "#b4acd0", lineHeight: 1.55, margin: "0 0 12px" },
+  chatClose: { background: "none", border: "none", color: "#8b98ab", cursor: "pointer", fontSize: 14 },
+  chatMsg: { fontSize: 13, color: "#b3bece", lineHeight: 1.55, margin: "0 0 12px" },
   chatOptions: { display: "flex", flexDirection: "column", gap: 8 },
   chatOption: {
     padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)",

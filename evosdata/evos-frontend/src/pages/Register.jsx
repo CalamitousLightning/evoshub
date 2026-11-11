@@ -203,7 +203,7 @@ const s = {
   card: {
     width: "100%",
     maxWidth: 420,
-    background: "rgba(22,17,38,0.92)",
+    background: "rgba(22,30,41,0.92)",
     backdropFilter: "blur(20px)",
     WebkitBackdropFilter: "blur(20px)",
     borderRadius: 24,
@@ -223,21 +223,21 @@ const s = {
   },
   brandDot: {
     width: 10, height: 10, borderRadius: "50%",
-    background: "#c8ff3e", boxShadow: "0 0 10px #c8ff3e",
+    background: "#ffb020", boxShadow: "0 0 10px #ffb020",
   },
   brandName: {
-    fontSize: 18, fontWeight: 900, color: "#c8ff3e", letterSpacing: "0.15em",
+    fontSize: 18, fontWeight: 900, color: "#ffb020", letterSpacing: "0.15em",
   },
   title: {
     fontSize: 22, fontWeight: 900, color: "#e5e7eb",
     margin: "0 0 4px", textAlign: "center",
   },
   sub: {
-    fontSize: 13, color: "#9189b5", textAlign: "center", margin: "0 0 22px",
+    fontSize: 13, color: "#8b98ab", textAlign: "center", margin: "0 0 22px",
   },
   field: { marginBottom: 14 },
   label: {
-    display: "block", fontSize: 11, color: "#b4acd0",
+    display: "block", fontSize: 11, color: "#b3bece",
     marginBottom: 5, letterSpacing: "0.05em", textTransform: "uppercase",
   },
   iconWrap: { position: "relative", display: "flex", alignItems: "center" },
@@ -250,7 +250,7 @@ const s = {
     padding: "12px 14px 12px 36px",
     borderRadius: 12,
     border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(10,8,20,0.7)",
+    background: "rgba(11,16,23,0.7)",
     color: "#e5e7eb",
     fontSize: 14,
     outline: "none",
@@ -279,14 +279,14 @@ const s = {
   },
   btn: {
     width: "100%", padding: 14, borderRadius: 14, border: "none",
-    background: "linear-gradient(135deg,#c8ff3e,#8fe600)",
+    background: "linear-gradient(135deg,#ffb020,#f59300)",
     color: "#000", fontWeight: 900, fontSize: 15, marginBottom: 16,
   },
   divider: {
     display: "flex", alignItems: "center", gap: 10, marginBottom: 16,
   },
   dividerLine: { flex: 1, height: 1, background: "rgba(255,255,255,0.07)" },
-  dividerText: { fontSize: 11, color: "#7a6fa3", whiteSpace: "nowrap" },
+  dividerText: { fontSize: 11, color: "#6c7a8f", whiteSpace: "nowrap" },
   loginBtn: {
     width: "100%", padding: 13, borderRadius: 14,
     border: "1px solid rgba(255,255,255,0.1)",

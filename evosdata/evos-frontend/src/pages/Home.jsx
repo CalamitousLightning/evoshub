@@ -22,11 +22,11 @@ const FONTS = {
 const THEMES = {
   vybz: {
     name: "Vybz",
-    accent: "#C8FF3E",
-    bg: "#0A0814", surface: "#161126", surfaceAlt: "#110D1F",
-    line: "rgba(200,255,62,0.22)", lineSoft: "rgba(243,240,251,0.09)", overlay: "243,240,251",
-    gold: "#FFC933", red: "#FF4D8D", green: "#3DDC97",
-    text: "#F3F0FB", muted: "#B4ACD0", faint: "#7A6FA3",
+    accent: "#ffb020",
+    bg: "#0b1017", surface: "#161e29", surfaceAlt: "#111821",
+    line: "rgba(255,176,32,0.22)", lineSoft: "rgba(243,240,251,0.09)", overlay: "243,240,251",
+    gold: "#FFC933", red: "#ff7a59", green: "#3DDC97",
+    text: "#f4f6f9", muted: "#b3bece", faint: "#6c7a8f",
     ...FONTS,
   },
   forest: {
@@ -58,9 +58,9 @@ const THEMES = {
   },
   grape: {
     name: "Grape",
-    accent: "#A78BFA",
+    accent: "#5eead4",
     bg: "#0E0B16", surface: "#191325", surfaceAlt: "#130F1D",
-    line: "rgba(167,139,250,0.2)", lineSoft: "rgba(240,237,250,0.09)", overlay: "240,237,250",
+    line: "rgba(94,234,212,0.2)", lineSoft: "rgba(240,237,250,0.09)", overlay: "240,237,250",
     gold: "#FFC933", red: "#E8495A", green: "#34D399",
     text: "#F0EDFA", muted: "#A79DBE", faint: "#5F5674",
     ...FONTS,
@@ -757,7 +757,7 @@ function buildStyles(T) {
     marginBottom: 16,
     color: T.text,
   },
-  highlight: { background: `linear-gradient(90deg, ${T.accent}, #ff4d8d 85%)`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" },
+  highlight: { background: `linear-gradient(90deg, ${T.accent}, #ff7a59 85%)`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" },
   subtitle: {
     position: "relative",
     fontSize: 16.5, color: T.muted, maxWidth: 480,

@@ -158,7 +158,7 @@ export default function AgentCheckerPricing({ user, setPage }) {
             </div>
           )}
 
-          <button onClick={saveAll} disabled={savingAll || loading} style={{ ...styles.saveAllBtn, opacity: savingAll ? 0.65 : 1, background: savedAll ? "linear-gradient(135deg, #22c55e, #16a34a)" : "linear-gradient(135deg, #c8ff3e, #8fe600)" }}>
+          <button onClick={saveAll} disabled={savingAll || loading} style={{ ...styles.saveAllBtn, opacity: savingAll ? 0.65 : 1, background: savedAll ? "linear-gradient(135deg, #22c55e, #16a34a)" : "linear-gradient(135deg, #ffb020, #f59300)" }}>
             {savingAll ? "⏳ Saving All..." : savedAll ? "✓ All Prices Saved!" : "💾 Save All Prices"}
           </button>
 
@@ -170,29 +170,29 @@ export default function AgentCheckerPricing({ user, setPage }) {
 }
 
 const styles = {
-  container: { padding: "28px 18px 80px", minHeight: "auto", fontFamily: "'Nunito', 'Poppins', ui-rounded, system-ui, Arial", color: "#241c3d" },
+  container: { padding: "28px 18px 80px", minHeight: "auto", fontFamily: "'Nunito', 'Poppins', ui-rounded, system-ui, Arial", color: "#202a38" },
   header: { textAlign: "center", marginBottom: 20 },
   headerBadge: { display: "inline-block", padding: "5px 18px", borderRadius: 50, background: "linear-gradient(135deg, #dcfce7, #bbf7d0)", border: "1px solid #86efac", color: "#15803d", fontSize: 12, fontWeight: 800, marginBottom: 10, letterSpacing: "0.5px" },
-  title: { fontSize: 26, fontWeight: 900, color: "#f3f0fb", margin: "0 0 6px", letterSpacing: "-0.5px" },
-  subtitle: { fontSize: 13, color: "#9189b5", margin: 0, fontWeight: 600 },
+  title: { fontSize: 26, fontWeight: 900, color: "#f4f6f9", margin: "0 0 6px", letterSpacing: "-0.5px" },
+  subtitle: { fontSize: 13, color: "#8b98ab", margin: 0, fontWeight: 600 },
   infoBanner: { display: "flex", alignItems: "flex-start", gap: 10, background: "rgba(234,179,8,0.1)", border: "1.5px solid rgba(234,179,8,0.3)", borderRadius: 14, padding: "12px 16px", maxWidth: 480, margin: "0 auto 20px", fontSize: 13, color: "#ca8a04" },
   infoIcon: { fontSize: 16, flexShrink: 0, marginTop: 1 },
   infoText: { lineHeight: 1.55, fontWeight: 600 },
   wrapper: { maxWidth: 520, margin: "0 auto" },
-  box: { background: "rgba(22,17,38,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", padding: "24px 20px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 8px 40px rgba(0,0,0,0.3)" },
+  box: { background: "rgba(22,30,41,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", padding: "24px 20px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 8px 40px rgba(0,0,0,0.3)" },
   emptyBox: { textAlign: "center", padding: "30px 0" },
-  emptyText: { color: "#9189b5", fontSize: 14, margin: 0, fontWeight: 600 },
+  emptyText: { color: "#8b98ab", fontSize: 14, margin: 0, fontWeight: 600 },
   checkerGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 },
   checkerCard: { borderRadius: 18, padding: "16px 14px 14px", display: "flex", flexDirection: "column", alignItems: "center", gap: 0, textAlign: "center", position: "relative" },
   visibilityBadge: { fontSize: 10, fontWeight: 800, padding: "3px 8px", borderRadius: 50, marginBottom: 8, letterSpacing: "0.3px" },
   checkerName: { fontWeight: 900, fontSize: 17, margin: "4px 0 2px", letterSpacing: "-0.3px" },
-  checkerDesc: { fontSize: 10.5, color: "#9189b5", fontWeight: 600, marginBottom: 8, lineHeight: 1.4 },
-  basePrice: { fontSize: 11, color: "#9189b5", fontWeight: 600, marginBottom: 8 },
+  checkerDesc: { fontSize: 10.5, color: "#8b98ab", fontWeight: 600, marginBottom: 8, lineHeight: 1.4 },
+  basePrice: { fontSize: 11, color: "#8b98ab", fontWeight: 600, marginBottom: 8 },
   divider: { width: "50%", height: 2, borderRadius: 10, marginBottom: 10, opacity: 0.4 },
   markupLabel: { fontSize: 11, fontWeight: 800, marginBottom: 4, letterSpacing: "0.3px", alignSelf: "flex-start" },
-  markupInput: { width: "100%", padding: "10px 12px", borderRadius: 12, background: "white", color: "#161126", fontSize: 14, fontWeight: 700, marginBottom: 8, boxSizing: "border-box", outline: "none", textAlign: "center" },
+  markupInput: { width: "100%", padding: "10px 12px", borderRadius: 12, background: "white", color: "#161e29", fontSize: 14, fontWeight: 700, marginBottom: 8, boxSizing: "border-box", outline: "none", textAlign: "center" },
   finalPrice: { fontSize: 12, fontWeight: 700, marginBottom: 12 },
-  saveAllBtn: { width: "100%", padding: "15px", borderRadius: 16, border: "none", color: "white", fontWeight: 900, fontSize: 15, cursor: "pointer", boxShadow: "0 6px 24px rgba(200,255,62,0.3)", marginTop: 4, letterSpacing: "0.2px", transition: "all 0.3s" },
+  saveAllBtn: { width: "100%", padding: "15px", borderRadius: 16, border: "none", color: "white", fontWeight: 900, fontSize: 15, cursor: "pointer", boxShadow: "0 6px 24px rgba(255,176,32,0.3)", marginTop: 4, letterSpacing: "0.2px", transition: "all 0.3s" },
   saveSingleBtn: { width: "100%", padding: "10px", borderRadius: 12, border: "none", color: "white", fontWeight: 900, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.2)", transition: "all 0.3s" },
-  backDashBtn: { width: "100%", padding: "12px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#b4acd0", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 12 },
+  backDashBtn: { width: "100%", padding: "12px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#b3bece", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 12 },
 };

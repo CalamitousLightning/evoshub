@@ -79,7 +79,7 @@ export default function AgentBuyAfa({ user, setPage }) {
       <div style={s.wrapper}>
         <div style={s.box}>
           <div style={{ ...s.row, borderBottom: "none", paddingTop: 0 }}>
-            <span style={{ color: "#b4acd0" }}>💳 Wallet Balance</span>
+            <span style={{ color: "#b3bece" }}>💳 Wallet Balance</span>
             <strong style={{ color: hasFunds ? "#22c55e" : "#f87171", fontSize: 16 }}>GH₵ {wallet.toFixed(2)}</strong>
           </div>
           {ok && <div style={s.successBanner}>{ok}</div>}

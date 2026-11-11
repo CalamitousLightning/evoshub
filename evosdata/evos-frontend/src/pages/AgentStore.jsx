@@ -159,10 +159,10 @@ export default function AgentStore({ setPage }) {
         {step === 2 && (
           <div style={styles.box}>
             <button style={styles.back} onClick={() => setStep(1)}>← Back</button>
-            <h3 style={styles.step}>Select Bundle — <span style={{ color: "#c8ff3e" }}>{network}</span></h3>
+            <h3 style={styles.step}>Select Bundle — <span style={{ color: "#ffb020" }}>{network}</span></h3>
 
             {bundles.length === 0 && (
-              <p style={{ color: "#9189b5", fontSize: 13 }}>No bundles available.</p>
+              <p style={{ color: "#8b98ab", fontSize: 13 }}>No bundles available.</p>
             )}
 
             <div style={styles.bundleGrid}>
@@ -192,9 +192,9 @@ export default function AgentStore({ setPage }) {
             <h3 style={styles.step}>Complete Order</h3>
 
             <div style={styles.summary}>
-              <p style={{ margin: "0 0 4px", color: "#b4acd0", fontSize: 13 }}>{network}</p>
+              <p style={{ margin: "0 0 4px", color: "#b3bece", fontSize: 13 }}>{network}</p>
               <h3 style={{ margin: "0 0 4px", color: "#e5e7eb" }}>{bundle}</h3>
-              <p style={{ margin: 0, color: "#c8ff3e", fontWeight: 800, fontSize: 18 }}>
+              <p style={{ margin: 0, color: "#ffb020", fontWeight: 800, fontSize: 18 }}>
                 GH₵ {Number(finalPrice).toFixed(2)}
               </p>
             </div>
@@ -221,7 +221,7 @@ export default function AgentStore({ setPage }) {
                   type="checkbox"
                   checked={agree}
                   onChange={() => setAgree(!agree)}
-                  style={{ accentColor: "#c8ff3e", flexShrink: 0, marginTop: 2 }}
+                  style={{ accentColor: "#ffb020", flexShrink: 0, marginTop: 2 }}
                 />
                 <span style={styles.checkText}>
                   I confirm this number is correct.{" "}
@@ -259,7 +259,7 @@ const styles = {
     fontWeight: "900",
   },
   subTitle: {
-    color: "#b4acd0",
+    color: "#b3bece",
     marginBottom: "22px",
     fontSize: "14px",
   },
@@ -268,7 +268,7 @@ const styles = {
     margin: "0 auto",
   },
   box: {
-    background: "rgba(22,17,38, 0.88)",
+    background: "rgba(22,30,41, 0.88)",
     backdropFilter: "blur(16px)",
     WebkitBackdropFilter: "blur(16px)",
     padding: "22px",
@@ -279,7 +279,7 @@ const styles = {
   },
   step: {
     marginBottom: "16px",
-    color: "#c8ff3e",
+    color: "#ffb020",
     fontWeight: "700",
     fontSize: "14px",
     textTransform: "uppercase",
@@ -308,7 +308,7 @@ const styles = {
     gap: 10,
   },
   bundleCard: {
-    background: "rgba(10,8,20,0.65)",
+    background: "rgba(11,16,23,0.65)",
     border: "1px solid rgba(255,255,255,0.07)",
     borderRadius: 12,
     padding: "14px 12px",
@@ -318,10 +318,10 @@ const styles = {
     gap: 4,
   },
   bundleName: { fontWeight: 700, fontSize: 13, color: "#e5e7eb" },
-  bundlePrice: { fontWeight: 800, fontSize: 16, color: "#c8ff3e" },
-  bundleArrow: { fontSize: 10, color: "#c8ff3e", opacity: 0.6, marginTop: 2 },
+  bundlePrice: { fontWeight: 800, fontSize: 16, color: "#ffb020" },
+  bundleArrow: { fontSize: 10, color: "#ffb020", opacity: 0.6, marginTop: 2 },
   summary: {
-    background: "rgba(10,8,20, 0.65)",
+    background: "rgba(11,16,23, 0.65)",
     padding: "14px",
     borderRadius: "12px",
     marginBottom: "15px",
@@ -333,7 +333,7 @@ const styles = {
     marginBottom: "12px",
     borderRadius: "12px",
     border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(10,8,20, 0.75)",
+    background: "rgba(11,16,23, 0.75)",
     color: "#ffffff",
     outline: "none",
     fontSize: "14px",
@@ -355,12 +355,12 @@ const styles = {
     lineHeight: "1.5",
     cursor: "pointer",
   },
-  checkText: { fontSize: 13, color: "#b4acd0", lineHeight: 1.55 },
+  checkText: { fontSize: 13, color: "#b3bece", lineHeight: 1.55 },
   buyBtn: {
     width: "100%",
     padding: "14px",
     borderRadius: "14px",
-    background: "linear-gradient(135deg,#c8ff3e,#8fe600)",
+    background: "linear-gradient(135deg,#ffb020,#f59300)",
     border: "none",
     color: "#000",
     fontWeight: "900",
@@ -371,7 +371,7 @@ const styles = {
     marginBottom: "12px",
     background: "transparent",
     border: "none",
-    color: "#c8ff3e",
+    color: "#ffb020",
     cursor: "pointer",
     fontWeight: "700",
     fontSize: "14px",
@@ -382,7 +382,7 @@ const styles = {
     width: "100%",
     padding: "12px",
     borderRadius: "12px",
-    background: "#241c3d",
+    background: "#202a38",
     color: "white",
     border: "none",
     cursor: "pointer",

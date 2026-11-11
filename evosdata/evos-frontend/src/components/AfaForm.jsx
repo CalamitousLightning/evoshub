@@ -116,25 +116,25 @@ export default function AfaForm({ regions = AFA_REGIONS, showEmail = false, subm
 }
 
 export const s = {
-  container: { padding: "28px 18px 80px", fontFamily: "'Nunito', 'Poppins', ui-rounded, system-ui, Arial", color: "#241c3d" },
+  container: { padding: "28px 18px 80px", fontFamily: "'Nunito', 'Poppins', ui-rounded, system-ui, Arial", color: "#202a38" },
   header: { textAlign: "center", marginBottom: 20 },
   badge: { display: "inline-block", padding: "5px 18px", borderRadius: 50, background: "linear-gradient(135deg, #fef9c3, #fde68a)", border: "1px solid #facc15", color: "#854d0e", fontSize: 12, fontWeight: 800, marginBottom: 10, letterSpacing: "0.5px" },
-  title: { fontSize: 24, fontWeight: 900, color: "#f3f0fb", margin: "0 0 6px", letterSpacing: "-0.5px" },
-  subtitle: { fontSize: 13, color: "#9189b5", margin: 0, fontWeight: 600 },
+  title: { fontSize: 24, fontWeight: 900, color: "#f4f6f9", margin: "0 0 6px", letterSpacing: "-0.5px" },
+  subtitle: { fontSize: 13, color: "#8b98ab", margin: 0, fontWeight: 600 },
   wrapper: { maxWidth: 480, margin: "0 auto" },
-  box: { background: "rgba(22,17,38,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", padding: "24px 20px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 8px 40px rgba(0,0,0,0.3)", marginBottom: 16 },
+  box: { background: "rgba(22,30,41,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", padding: "24px 20px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 8px 40px rgba(0,0,0,0.3)", marginBottom: 16 },
   label: { fontSize: 11, color: "#facc15", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", margin: "16px 0 8px" },
-  input: { width: "100%", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f3f0fb", fontSize: 14, fontWeight: 700, boxSizing: "border-box", outline: "none", colorScheme: "dark" },
-  agree: { display: "flex", gap: 10, alignItems: "flex-start", margin: "18px 0 0", fontSize: 12, color: "#b4acd0", fontWeight: 600, lineHeight: 1.5 },
+  input: { width: "100%", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f4f6f9", fontSize: 14, fontWeight: 700, boxSizing: "border-box", outline: "none", colorScheme: "dark" },
+  agree: { display: "flex", gap: 10, alignItems: "flex-start", margin: "18px 0 0", fontSize: 12, color: "#b3bece", fontWeight: 600, lineHeight: 1.5 },
   submit: { width: "100%", padding: 15, borderRadius: 16, border: "none", color: "#1a1300", fontWeight: 900, fontSize: 15, marginTop: 16, background: "linear-gradient(135deg, #facc15, #eab308)", boxShadow: "0 6px 24px rgba(250,204,21,0.25)" },
   errorBanner: { background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.35)", color: "#f87171", borderRadius: 12, padding: "10px 14px", fontSize: 13, fontWeight: 700, marginBottom: 6 },
   successBanner: { background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)", color: "#22c55e", borderRadius: 12, padding: "10px 14px", fontSize: 13, fontWeight: 700, marginBottom: 14 },
-  row: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: 13, color: "#d9d4ec", fontWeight: 700 },
-  small: { fontSize: 11, color: "#9189b5", fontWeight: 600 },
-  ghost: { width: "100%", padding: 12, borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#b4acd0", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 12 },
+  row: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: 13, color: "#d4dbe4", fontWeight: 700 },
+  small: { fontSize: 11, color: "#8b98ab", fontWeight: 600 },
+  ghost: { width: "100%", padding: 12, borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#b3bece", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 12 },
 };
 
 export function StatusPill({ status }) {
-  const m = STATUS_META[status] || { label: status, color: "#9189b5" };
+  const m = STATUS_META[status] || { label: status, color: "#8b98ab" };
   return <span style={{ color: m.color, fontWeight: 900, fontSize: 12 }}>● {m.label}</span>;
 }

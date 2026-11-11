@@ -140,12 +140,12 @@ export default function AgentDeposit({ user, setPage, authLoading }) {
                 style={{
                   ...s.quickBtn,
                   background: numAmount === q
-                    ? "linear-gradient(135deg, #c8ff3e, #8fe600)"
+                    ? "linear-gradient(135deg, #ffb020, #f59300)"
                     : "rgba(255,255,255,0.05)",
                   border: numAmount === q
-                    ? "1px solid #c8ff3e"
+                    ? "1px solid #ffb020"
                     : "1px solid rgba(255,255,255,0.08)",
-                  color:      numAmount === q ? "#000" : "#b4acd0",
+                  color:      numAmount === q ? "#000" : "#b3bece",
                   fontWeight: numAmount === q ? 900 : 600,
                 }}
                 onClick={() => setAmount(String(q))}
@@ -182,7 +182,7 @@ export default function AgentDeposit({ user, setPage, authLoading }) {
               </div>
               <div style={s.breakdownDivider} />
               <div style={s.breakdownRow}>
-                <span style={{ ...s.breakdownLabel, color: "#f3f0fb", fontWeight: 800 }}>
+                <span style={{ ...s.breakdownLabel, color: "#f4f6f9", fontWeight: 800 }}>
                   You pay
                 </span>
                 <span style={{ ...s.breakdownVal, color: "#22c55e", fontSize: 18, fontWeight: 900 }}>
@@ -249,7 +249,7 @@ const s = {
     gap: 12,
     padding: "14px 18px",
     borderBottom: "1px solid rgba(255,255,255,0.06)",
-    background: "rgba(22,17,38,0.9)",
+    background: "rgba(22,30,41,0.9)",
     backdropFilter: "blur(12px)",
     position: "sticky",
     top: 0,
@@ -259,36 +259,36 @@ const s = {
     width: 36, height: 36, borderRadius: 10,
     border: "1px solid rgba(255,255,255,0.08)",
     background: "rgba(255,255,255,0.05)",
-    color: "#b4acd0", fontSize: 16, cursor: "pointer",
+    color: "#b3bece", fontSize: 16, cursor: "pointer",
     fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center",
     flexShrink: 0,
   },
   headerMid:   { flex: 1 },
-  headerTitle: { fontSize: 16, fontWeight: 900, color: "#f3f0fb" },
-  headerSub:   { fontSize: 11, color: "#7a6fa3", fontWeight: 600, marginTop: 1 },
+  headerTitle: { fontSize: 16, fontWeight: 900, color: "#f4f6f9" },
+  headerSub:   { fontSize: 11, color: "#6c7a8f", fontWeight: 600, marginTop: 1 },
   walletPill: {
     display: "flex", flexDirection: "column", alignItems: "flex-end",
     background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)",
     borderRadius: 12, padding: "6px 12px", flexShrink: 0,
   },
-  walletPillLabel: { fontSize: 10, color: "#9189b5", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" },
+  walletPillLabel: { fontSize: 10, color: "#8b98ab", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" },
   walletPillVal:   { fontSize: 14, fontWeight: 900, color: "#22c55e" },
 
   main: { maxWidth: 480, margin: "0 auto", padding: "20px 16px 80px" },
 
   heroCard: {
     display: "flex", alignItems: "center", gap: 16,
-    background: "linear-gradient(135deg, rgba(200,255,62,0.12), rgba(139,92,246,0.08))",
-    border: "1px solid rgba(200,255,62,0.2)",
+    background: "linear-gradient(135deg, rgba(255,176,32,0.12), rgba(45,212,191,0.08))",
+    border: "1px solid rgba(255,176,32,0.2)",
     borderRadius: 20, padding: "18px 20px", marginBottom: 18,
   },
   heroIcon:  { fontSize: 36, flexShrink: 0 },
   heroText:  { flex: 1 },
-  heroTitle: { fontSize: 16, fontWeight: 900, color: "#f3f0fb", marginBottom: 4 },
-  heroSub:   { fontSize: 12, color: "#9189b5", fontWeight: 600 },
+  heroTitle: { fontSize: 16, fontWeight: 900, color: "#f4f6f9", marginBottom: 4 },
+  heroSub:   { fontSize: 12, color: "#8b98ab", fontWeight: 600 },
 
   card: {
-    background: "rgba(22,17,38,0.9)",
+    background: "rgba(22,30,41,0.9)",
     backdropFilter: "blur(20px)",
     borderRadius: 22,
     border: "1px solid rgba(255,255,255,0.07)",
@@ -297,7 +297,7 @@ const s = {
     boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
   },
   cardLabel: {
-    fontSize: 11, color: "#c8ff3e", fontWeight: 800,
+    fontSize: 11, color: "#ffb020", fontWeight: 800,
     textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 14,
   },
 
@@ -313,26 +313,26 @@ const s = {
 
   inputWrap: {
     display: "flex", alignItems: "center",
-    background: "rgba(10,8,20,0.75)",
+    background: "rgba(11,16,23,0.75)",
     border: "1px solid rgba(255,255,255,0.1)",
     borderRadius: 14, overflow: "hidden", marginBottom: 16,
   },
   inputPrefix: {
     padding: "0 14px", fontSize: 14, fontWeight: 900,
-    color: "#c8ff3e", borderRight: "1px solid rgba(255,255,255,0.08)",
+    color: "#ffb020", borderRight: "1px solid rgba(255,255,255,0.08)",
     height: "100%", display: "flex", alignItems: "center",
-    background: "rgba(200,255,62,0.06)", whiteSpace: "nowrap",
+    background: "rgba(255,176,32,0.06)", whiteSpace: "nowrap",
     lineHeight: "48px",
   },
   input: {
     flex: 1, padding: "14px 14px", border: "none",
-    background: "transparent", color: "#f3f0fb",
+    background: "transparent", color: "#f4f6f9",
     fontSize: 18, fontWeight: 800, outline: "none",
     fontFamily: "inherit",
   },
 
   breakdown: {
-    background: "rgba(10,8,20,0.5)",
+    background: "rgba(11,16,23,0.5)",
     border: "1px solid rgba(255,255,255,0.06)",
     borderRadius: 16, padding: "14px 16px", marginBottom: 18,
   },
@@ -340,13 +340,13 @@ const s = {
     display: "flex", justifyContent: "space-between",
     alignItems: "center", padding: "5px 0",
   },
-  breakdownLabel: { fontSize: 13, color: "#9189b5", fontWeight: 600 },
+  breakdownLabel: { fontSize: 13, color: "#8b98ab", fontWeight: 600 },
   breakdownVal:   { fontSize: 14, fontWeight: 800, color: "#e5e7eb" },
   breakdownDivider: {
     height: 1, background: "rgba(255,255,255,0.07)", margin: "8px 0",
   },
   breakdownNote: {
-    fontSize: 11, color: "#7a6fa3", fontWeight: 600,
+    fontSize: 11, color: "#6c7a8f", fontWeight: 600,
     marginTop: 10, textAlign: "center",
   },
 
@@ -364,17 +364,17 @@ const s = {
     marginBottom: 10, fontFamily: "inherit", transition: "opacity 0.2s",
   },
   secureNote: {
-    textAlign: "center", fontSize: 11, color: "#7a6fa3",
+    textAlign: "center", fontSize: 11, color: "#6c7a8f",
     margin: 0, fontWeight: 600,
   },
 
   stepsCard: {
-    background: "rgba(22,17,38,0.6)",
+    background: "rgba(22,30,41,0.6)",
     border: "1px solid rgba(255,255,255,0.05)",
     borderRadius: 18, padding: "18px 16px",
   },
   stepsTitle: {
-    fontSize: 12, color: "#7a6fa3", fontWeight: 800,
+    fontSize: 12, color: "#6c7a8f", fontWeight: 800,
     textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 14,
   },
   stepRow: {
@@ -382,5 +382,5 @@ const s = {
     padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)",
   },
   stepIcon: { fontSize: 16, flexShrink: 0, marginTop: 1 },
-  stepText: { fontSize: 13, color: "#9189b5", fontWeight: 600, lineHeight: 1.5 },
+  stepText: { fontSize: 13, color: "#8b98ab", fontWeight: 600, lineHeight: 1.5 },
 };

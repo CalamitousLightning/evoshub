@@ -164,7 +164,7 @@ export default function Checkers() {
               </div>
               <span style={{
                 ...styles.progressLabel,
-                color: active || done ? "#22c55e" : "#7a6fa3",
+                color: active || done ? "#22c55e" : "#6c7a8f",
               }}>{label}</span>
             </div>
           );
@@ -350,10 +350,10 @@ export default function Checkers() {
         <div style={styles.verifyOverlay} onClick={() => setTrackOpen(false)}>
           <div style={styles.trackPopup} onClick={(e) => e.stopPropagation()}>
             <div style={styles.trackHeader}>
-              <span style={{ fontWeight: 900, fontSize: 16, color: "#f3f0fb" }}>🔎 Find My Checker</span>
+              <span style={{ fontWeight: 900, fontSize: 16, color: "#f4f6f9" }}>🔎 Find My Checker</span>
               <button style={styles.chatClose} onClick={() => setTrackOpen(false)}>✕</button>
             </div>
-            <p style={{ fontSize: 13, color: "#b4acd0", margin: "0 0 14px", lineHeight: 1.5 }}>
+            <p style={{ fontSize: 13, color: "#b3bece", margin: "0 0 14px", lineHeight: 1.5 }}>
               Enter the phone number you used at checkout to see your serial number and PIN.
             </p>
             <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -423,7 +423,7 @@ export default function Checkers() {
                         ))}
                       </div>
                     ) : (
-                      <p style={{ fontSize: 12, color: "#9189b5", margin: "6px 0 0" }}>
+                      <p style={{ fontSize: 12, color: "#8b98ab", margin: "6px 0 0" }}>
                         {c.status === "failed"
                           ? "This order did not go through. Contact support if you were charged."
                           : "Still processing — check back shortly."}
@@ -482,8 +482,8 @@ const styles = {
     background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)",
     color: "#22c55e", fontSize: 12, fontWeight: 700, marginBottom: 12,
   },
-  title: { fontSize: 24, fontWeight: 900, color: "#f3f0fb", margin: "0 0 6px" },
-  subtitle: { fontSize: 14, color: "#9189b5", margin: "0 0 12px" },
+  title: { fontSize: 24, fontWeight: 900, color: "#f4f6f9", margin: "0 0 6px" },
+  subtitle: { fontSize: 14, color: "#8b98ab", margin: "0 0 12px" },
   trackLinkBtn: {
     background: "none", border: "none", color: "#22c55e",
     fontSize: 13, fontWeight: 700, cursor: "pointer", padding: 0,
@@ -519,7 +519,7 @@ const styles = {
 
   wrapper: { maxWidth: 480, margin: "0 auto" },
   box: {
-    background: "rgba(22,17,38,0.9)", backdropFilter: "blur(20px)",
+    background: "rgba(22,30,41,0.9)", backdropFilter: "blur(20px)",
     WebkitBackdropFilter: "blur(20px)", padding: "24px 20px",
     borderRadius: 22, border: "1px solid rgba(255,255,255,0.07)",
     boxShadow: "0 25px 60px rgba(0,0,0,0.4)",
@@ -537,7 +537,7 @@ const styles = {
   },
   networkEmoji: { fontSize: 26, flexShrink: 0 },
   networkName: { fontWeight: 800, fontSize: 16, marginBottom: 2 },
-  networkDesc: { fontSize: 12, color: "#9189b5", lineHeight: 1.4 },
+  networkDesc: { fontSize: 12, color: "#8b98ab", lineHeight: 1.4 },
   priceTag: { fontSize: 12, color: "#22c55e", fontWeight: 800, marginTop: 6 },
   networkArrow: { fontSize: 18, fontWeight: 900, flexShrink: 0 },
   stockBadge: {
@@ -546,8 +546,8 @@ const styles = {
     color: "#ef4444", fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 50,
   },
   infoRow: { display: "flex", justifyContent: "center", gap: 20 },
-  infoText: { fontSize: 12, color: "#7a6fa3", fontWeight: 600 },
-  emptyText: { color: "#7a6fa3", fontSize: 14, textAlign: "center", padding: "20px 0" },
+  infoText: { fontSize: 12, color: "#6c7a8f", fontWeight: 600 },
+  emptyText: { color: "#6c7a8f", fontSize: 14, textAlign: "center", padding: "20px 0" },
 
   backBtn: {
     background: "none", border: "none", color: "#22c55e",
@@ -567,25 +567,25 @@ const styles = {
   },
   qtyInput: {
     flex: 1, textAlign: "center", padding: "10px 8px", borderRadius: 12,
-    border: "1.5px solid rgba(255,255,255,0.08)", background: "rgba(10,8,20,0.75)",
+    border: "1.5px solid rgba(255,255,255,0.08)", background: "rgba(11,16,23,0.75)",
     color: "#fff", fontSize: 16, fontWeight: 800, outline: "none",
   },
 
   summaryCard: {
-    background: "rgba(10,8,20,0.7)", border: "1px solid rgba(255,255,255,0.06)",
+    background: "rgba(11,16,23,0.7)", border: "1px solid rgba(255,255,255,0.06)",
     borderRadius: 16, padding: "6px 16px", marginBottom: 22,
   },
   summaryRow: {
     display: "flex", justifyContent: "space-between", alignItems: "center",
     padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.05)",
   },
-  summaryLabel: { fontSize: 13, color: "#9189b5" },
+  summaryLabel: { fontSize: 13, color: "#8b98ab" },
   summaryVal: { fontSize: 15, fontWeight: 700, color: "#e5e7eb" },
 
-  inputLabel: { display: "block", fontSize: 12, color: "#9189b5", fontWeight: 700, marginBottom: 6 },
+  inputLabel: { display: "block", fontSize: 12, color: "#8b98ab", fontWeight: 700, marginBottom: 6 },
   input: {
     width: "100%", padding: "13px 14px", marginBottom: 6, borderRadius: 12,
-    border: "1.5px solid", background: "rgba(10,8,20,0.75)",
+    border: "1.5px solid", background: "rgba(11,16,23,0.75)",
     color: "#fff", outline: "none", fontSize: 14, boxSizing: "border-box",
     transition: "border-color 0.2s",
   },
@@ -597,22 +597,22 @@ const styles = {
     background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)",
     padding: "12px 14px", borderRadius: 12, marginBottom: 16, cursor: "pointer", marginTop: 8,
   },
-  checkText: { fontSize: 13, color: "#b4acd0", lineHeight: 1.55 },
+  checkText: { fontSize: 13, color: "#b3bece", lineHeight: 1.55 },
   buyBtn: {
     width: "100%", padding: "15px", borderRadius: 14, border: "none",
     background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "white",
     fontWeight: 900, fontSize: 15, cursor: "pointer", marginBottom: 12,
     boxShadow: "0 4px 20px rgba(34,197,94,0.3)",
   },
-  secureNote: { textAlign: "center", fontSize: 12, color: "#7a6fa3", margin: 0 },
+  secureNote: { textAlign: "center", fontSize: 12, color: "#6c7a8f", margin: 0 },
 
   verifyOverlay: {
-    position: "fixed", inset: 0, background: "rgba(10,8,20,0.7)",
+    position: "fixed", inset: 0, background: "rgba(11,16,23,0.7)",
     backdropFilter: "blur(2px)", display: "flex",
     alignItems: "center", justifyContent: "center", zIndex: 2000, padding: 16,
   },
   trackPopup: {
-    background: "#161126", border: "1px solid rgba(255,255,255,0.1)",
+    background: "#161e29", border: "1px solid rgba(255,255,255,0.1)",
     borderRadius: 20, padding: "22px 20px", textAlign: "left",
     boxShadow: "0 20px 60px rgba(0,0,0,0.5)", maxWidth: 380, width: "100%",
     maxHeight: "80vh", overflowY: "auto",
@@ -625,7 +625,7 @@ const styles = {
   },
   trackResultsList: { display: "flex", flexDirection: "column", gap: 10, marginTop: 6 },
   trackResultCard: {
-    background: "rgba(10,8,20,0.6)", border: "1px solid rgba(255,255,255,0.06)",
+    background: "rgba(11,16,23,0.6)", border: "1px solid rgba(255,255,255,0.06)",
     borderRadius: 12, padding: "12px 14px",
   },
   trackResultHead: { display: "flex", justifyContent: "space-between", alignItems: "center" },
@@ -638,9 +638,9 @@ const styles = {
     borderRadius: 10, padding: "8px 10px",
   },
   cardRow: { display: "flex", alignItems: "center", gap: 8, padding: "3px 0" },
-  cardLabel: { fontSize: 11, color: "#9189b5", fontWeight: 700, width: 44, flexShrink: 0 },
+  cardLabel: { fontSize: 11, color: "#8b98ab", fontWeight: 700, width: 44, flexShrink: 0 },
   cardValue: {
-    fontSize: 13, color: "#f3f0fb", fontWeight: 800, fontFamily: "monospace",
+    fontSize: 13, color: "#f4f6f9", fontWeight: 800, fontFamily: "monospace",
     flex: 1, wordBreak: "break-all",
   },
   copyBtn: {
@@ -654,12 +654,12 @@ const styles = {
     display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10,
   },
   chatPopup: {
-    background: "#161126", border: "1px solid rgba(255,255,255,0.1)",
+    background: "#161e29", border: "1px solid rgba(255,255,255,0.1)",
     borderRadius: 18, padding: 18, width: 270, boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
   },
   chatHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  chatClose: { background: "none", border: "none", color: "#9189b5", cursor: "pointer", fontSize: 14 },
-  chatMsg: { fontSize: 13, color: "#b4acd0", lineHeight: 1.55, margin: "0 0 12px" },
+  chatClose: { background: "none", border: "none", color: "#8b98ab", cursor: "pointer", fontSize: 14 },
+  chatMsg: { fontSize: 13, color: "#b3bece", lineHeight: 1.55, margin: "0 0 12px" },
   chatOptions: { display: "flex", flexDirection: "column", gap: 8 },
   chatOption: {
     padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)",

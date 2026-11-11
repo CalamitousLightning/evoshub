@@ -16,17 +16,17 @@ const STATUS_CONFIG = {
   },
   paid: {
     label: "Payment Confirmed",
-    color: "#c8ff3e",
-    bg: "rgba(200,255,62,0.1)",
-    border: "rgba(200,255,62,0.3)",
+    color: "#ffb020",
+    bg: "rgba(255,176,32,0.1)",
+    border: "rgba(255,176,32,0.3)",
     eta: "Your order is queued for delivery. Usually starts within 1-2 minutes.",
     icon: "✅",
   },
   processing: {
     label: "Processing",
-    color: "#a78bfa",
-    bg: "rgba(167,139,250,0.1)",
-    border: "rgba(167,139,250,0.3)",
+    color: "#5eead4",
+    bg: "rgba(94,234,212,0.1)",
+    border: "rgba(94,234,212,0.3)",
     eta: "Data bundle is being delivered. Usually arrives within 5-30 minutes.",
     icon: "📡",
   },
@@ -205,7 +205,7 @@ export default function ETATrack({ setPage, backTo = "home" }) {
               </div>
               <div style={styles.detailRow}>
                 <span style={styles.detailLabel}>Amount Paid</span>
-                <span style={{ ...styles.detailVal, color: "#c8ff3e", fontWeight: 800 }}>
+                <span style={{ ...styles.detailVal, color: "#ffb020", fontWeight: 800 }}>
                   GH&#8373; {Number(order.price || 0).toFixed(2)}
                 </span>
               </div>
@@ -219,7 +219,7 @@ export default function ETATrack({ setPage, backTo = "home" }) {
               </div>
               <div style={{ ...styles.detailRow, borderBottom: "none" }}>
                 <span style={styles.detailLabel}>Reference</span>
-                <span style={{ ...styles.detailVal, fontSize: 11, color: "#9189b5" }}>
+                <span style={{ ...styles.detailVal, fontSize: 11, color: "#8b98ab" }}>
                   {order.evosdata_ref || order.paystack_ref || "—"}
                 </span>
               </div>
@@ -288,7 +288,7 @@ const styles = {
     textAlign: "center",
   },
   sub: {
-    color: "#b4acd0",
+    color: "#b3bece",
     fontSize: 13,
     textAlign: "center",
     marginBottom: 16,
@@ -303,7 +303,7 @@ const styles = {
   backBtnTop: {
     background: "none",
     border: "none",
-    color: "#c8ff3e",
+    color: "#ffb020",
     fontSize: 13,
     fontWeight: 700,
     cursor: "pointer",
@@ -329,7 +329,7 @@ const styles = {
     padding: "13px 14px",
     borderRadius: 12,
     border: "1px solid rgba(255,255,255,0.1)",
-    background: "rgba(10,8,20,0.75)",
+    background: "rgba(11,16,23,0.75)",
     color: "white",
     fontSize: 15,
     outline: "none",
@@ -338,7 +338,7 @@ const styles = {
     padding: "13px 20px",
     borderRadius: 12,
     border: "none",
-    background: "linear-gradient(135deg,#c8ff3e,#8fe600)",
+    background: "linear-gradient(135deg,#ffb020,#f59300)",
     color: "#000",
     fontWeight: 900,
     fontSize: 14,
@@ -355,7 +355,7 @@ const styles = {
     marginBottom: 14,
   },
   card: {
-    background: "rgba(22,17,38,0.88)",
+    background: "rgba(22,30,41,0.88)",
     backdropFilter: "blur(16px)",
     WebkitBackdropFilter: "blur(16px)",
     borderRadius: 18,
@@ -375,7 +375,7 @@ const styles = {
   statusIcon: { fontSize: 18 },
   statusLabel: { fontWeight: 800, fontSize: 14 },
   detailGrid: {
-    background: "rgba(10,8,20,0.5)",
+    background: "rgba(11,16,23,0.5)",
     borderRadius: 12,
     padding: "4px 14px",
     marginBottom: 14,
@@ -388,7 +388,7 @@ const styles = {
     padding: "10px 0",
     borderBottom: "1px solid rgba(255,255,255,0.05)",
   },
-  detailLabel: { fontSize: 12, color: "#9189b5" },
+  detailLabel: { fontSize: 12, color: "#8b98ab" },
   detailVal: { fontSize: 13, fontWeight: 600, color: "#e5e7eb" },
   etaBox: { padding: "10px 14px", borderRadius: 10 },
   etaText: { fontSize: 12, margin: 0, lineHeight: 1.55, fontWeight: 500 },
@@ -403,7 +403,7 @@ const styles = {
     gap: 10,
   },
   chatPopup: {
-    background: "#161126",
+    background: "#161e29",
     border: "1px solid rgba(255,255,255,0.1)",
     borderRadius: 16,
     padding: "16px",
@@ -422,14 +422,14 @@ const styles = {
   chatClose: {
     background: "none",
     border: "none",
-    color: "#9189b5",
+    color: "#8b98ab",
     cursor: "pointer",
     fontSize: 14,
     padding: "2px 6px",
   },
   chatMsg: {
     fontSize: 13,
-    color: "#b4acd0",
+    color: "#b3bece",
     lineHeight: 1.55,
     margin: "0 0 14px",
   },

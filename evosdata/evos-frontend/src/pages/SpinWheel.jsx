@@ -3,9 +3,9 @@ import { userApi, errorText } from "../lib/userApi";
 
 // Wheel: 1GB, Try again, 2GB, Try again ... 10GB, Try again (the server sends the same 20 labels).
 const FALLBACK_SEGMENTS = Array.from({ length: 20 }, (_, i) => (i % 2 === 0 ? `${i / 2 + 1}GB` : "Try again"));
-const PRIZE_COLORS = ["#c8ff3e", "#a3f03a", "#7be85a", "#3ddc97", "#22d3b6", "#38bdf8", "#818cf8", "#a78bfa", "#e879f9", "#ff4d8d"];
+const PRIZE_COLORS = ["#ffb020", "#a3f03a", "#7be85a", "#3ddc97", "#22d3b6", "#38bdf8", "#818cf8", "#5eead4", "#e879f9", "#ff7a59"];
 const NETWORK_LABEL = { MTN: "MTN", AIRTELTIGO: "AirtelTigo", TELECEL: "Telecel / Vodafone" };
-const NETWORK_COLOR = { MTN: "#ffcc00", AIRTELTIGO: "#8b5cf6", TELECEL: "#ef4444" };
+const NETWORK_COLOR = { MTN: "#ffcc00", AIRTELTIGO: "#2dd4bf", TELECEL: "#ef4444" };
 const SPIN_MS = 5200;
 
 const polar = (cx, cy, r, deg) => {
@@ -25,7 +25,7 @@ export function Confetti() {
     delay: Math.random() * 0.8,
     dur: 2.2 + Math.random() * 2,
     size: 6 + Math.random() * 8,
-    color: ["#c8ff3e", "#ff4d8d", "#a78bfa", "#3ddc97", "#ffb020", "#38bdf8"][i % 6],
+    color: ["#ffb020", "#ff7a59", "#5eead4", "#3ddc97", "#ffb020", "#38bdf8"][i % 6],
     rot: Math.random() * 360,
   })), []);
   return (
@@ -134,7 +134,7 @@ export default function SpinWheel({ user, setPage }) {
         <g key={i}>
           <path d={`M${C} ${C} L${x0} ${y0} A${R} ${R} 0 0 1 ${x1} ${y1} Z`} fill={fill} stroke="rgba(0,0,0,0.35)" strokeWidth="1" />
           <text x={tx} y={ty} transform={`rotate(${a0 + slice / 2 - 90 + ((a0 + slice / 2) % 360 > 180 ? 180 : 0)} ${tx} ${ty})`} textAnchor="middle" dominantBaseline="middle"
-            fontSize={isPrize ? 15 : 9} fontWeight="900" fill={isPrize ? "#0b0818" : "#b4acd0"}>
+            fontSize={isPrize ? 15 : 9} fontWeight="900" fill={isPrize ? "#0b1017" : "#b3bece"}>
             {isPrize ? label : "Try again"}
           </text>
         </g>
@@ -159,9 +159,9 @@ export default function SpinWheel({ user, setPage }) {
           ...s.wheel, transform: `rotate(${rotation}deg)`,
           transition: spinning ? `transform ${SPIN_MS}ms cubic-bezier(0.12, 0.7, 0.1, 1)` : "none",
         }} role="img" aria-label="Prize wheel">
-          <circle cx="160" cy="160" r="156" fill="#0b0818" stroke="#c8ff3e" strokeWidth="3" />
+          <circle cx="160" cy="160" r="156" fill="#0b1017" stroke="#ffb020" strokeWidth="3" />
           {wheel}
-          <circle cx="160" cy="160" r="22" fill="#0b0818" stroke="#c8ff3e" strokeWidth="3" />
+          <circle cx="160" cy="160" r="22" fill="#0b1017" stroke="#ffb020" strokeWidth="3" />
         </svg>
       </div>
 
@@ -193,7 +193,7 @@ export default function SpinWheel({ user, setPage }) {
           {claimed && (
             <div style={s.claimedBox}>
               ✅ <b>{claimed.prize_gb}GB</b> is on its way to <b>{claimed.phone}</b> ({NETWORK_LABEL[claimed.network]}).
-              {claimed.delivery === "queued" && <div style={{ marginTop: 6, fontSize: 12, color: "#b4acd0" }}>It is queued and will be delivered shortly.</div>}
+              {claimed.delivery === "queued" && <div style={{ marginTop: 6, fontSize: 12, color: "#b3bece" }}>It is queued and will be delivered shortly.</div>}
               <div><button style={s.linkBtn} onClick={() => setPage("orders")}>Track it in My Orders →</button></div>
             </div>
           )}
@@ -269,7 +269,7 @@ function ClaimModal({ user, prize, onClose, onDone }) {
                   filter: info.available ? "none" : "grayscale(1)",
                 }}>
                 <span style={{ fontWeight: 800 }}>{NETWORK_LABEL[k]}</span>
-                {!info.available && <span style={{ fontSize: 10, color: "#9189b5" }}>{info.reason}</span>}
+                {!info.available && <span style={{ fontSize: 10, color: "#8b98ab" }}>{info.reason}</span>}
               </button>
             );
           })}
@@ -289,41 +289,41 @@ function ClaimModal({ user, prize, onClose, onDone }) {
 const s = {
   page: { maxWidth: 480, margin: "0 auto", padding: "22px 16px 70px", color: "#e5e7eb", textAlign: "center" },
   head: { marginBottom: 10 },
-  title: { fontSize: 28, fontWeight: 900, margin: "0 0 6px", color: "#f3f0fb" },
-  sub: { fontSize: 14, color: "#9189b5", margin: 0 },
+  title: { fontSize: 28, fontWeight: 900, margin: "0 0 6px", color: "#f4f6f9" },
+  sub: { fontSize: 14, color: "#8b98ab", margin: 0 },
   wheelWrap: { position: "relative", width: "min(86vw, 340px)", margin: "26px auto 22px" },
-  wheel: { width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 12px 36px rgba(200,255,62,0.18))" },
+  wheel: { width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 12px 36px rgba(255,176,32,0.18))" },
   pointer: {
     position: "absolute", top: -12, left: "50%", marginLeft: -14, zIndex: 3, width: 0, height: 0,
-    borderLeft: "14px solid transparent", borderRight: "14px solid transparent", borderTop: "30px solid #ff4d8d",
+    borderLeft: "14px solid transparent", borderRight: "14px solid transparent", borderTop: "30px solid #ff7a59",
     filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.5))",
   },
   spinBtn: {
     width: "100%", maxWidth: 340, padding: "16px", borderRadius: 16, border: "none", cursor: "pointer",
-    background: "linear-gradient(135deg,#c8ff3e,#8fe600)", color: "#000", fontWeight: 900, fontSize: 17, letterSpacing: "0.06em",
-    boxShadow: "0 8px 28px rgba(200,255,62,0.3)",
+    background: "linear-gradient(135deg,#ffb020,#f59300)", color: "#000", fontWeight: 900, fontSize: 17, letterSpacing: "0.06em",
+    boxShadow: "0 8px 28px rgba(255,176,32,0.3)",
   },
-  waitBox: { maxWidth: 340, margin: "0 auto", padding: "16px", borderRadius: 16, background: "rgba(22,17,38,0.9)", border: "1px solid rgba(255,255,255,0.08)" },
-  waitLabel: { fontSize: 12, color: "#9189b5", textTransform: "uppercase", letterSpacing: "0.08em" },
-  waitTime: { fontSize: 34, fontWeight: 900, color: "#c8ff3e", fontVariantNumeric: "tabular-nums", margin: "4px 0" },
-  waitSub: { fontSize: 12, color: "#7a6fa3" },
-  muted: { color: "#9189b5" },
-  notice: { maxWidth: 340, margin: "14px auto 0", padding: "12px 14px", borderRadius: 12, background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.3)", color: "#d8ccff", fontSize: 14 },
+  waitBox: { maxWidth: 340, margin: "0 auto", padding: "16px", borderRadius: 16, background: "rgba(22,30,41,0.9)", border: "1px solid rgba(255,255,255,0.08)" },
+  waitLabel: { fontSize: 12, color: "#8b98ab", textTransform: "uppercase", letterSpacing: "0.08em" },
+  waitTime: { fontSize: 34, fontWeight: 900, color: "#ffb020", fontVariantNumeric: "tabular-nums", margin: "4px 0" },
+  waitSub: { fontSize: 12, color: "#6c7a8f" },
+  muted: { color: "#8b98ab" },
+  notice: { maxWidth: 340, margin: "14px auto 0", padding: "12px 14px", borderRadius: 12, background: "rgba(94,234,212,0.12)", border: "1px solid rgba(94,234,212,0.3)", color: "#d8ccff", fontSize: 14 },
   error: { maxWidth: 340, margin: "14px auto 0", padding: "12px 14px", borderRadius: 12, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.35)", color: "#f87171", fontSize: 13 },
-  prizeBar: { maxWidth: 340, margin: "14px auto 0", padding: "14px", borderRadius: 14, background: "rgba(200,255,62,0.1)", border: "1px solid rgba(200,255,62,0.35)", fontSize: 14, display: "grid", gap: 10 },
-  claimBtn: { padding: "11px", borderRadius: 12, border: "none", background: "#c8ff3e", color: "#000", fontWeight: 900, cursor: "pointer" },
+  prizeBar: { maxWidth: 340, margin: "14px auto 0", padding: "14px", borderRadius: 14, background: "rgba(255,176,32,0.1)", border: "1px solid rgba(255,176,32,0.35)", fontSize: 14, display: "grid", gap: 10 },
+  claimBtn: { padding: "11px", borderRadius: 12, border: "none", background: "#ffb020", color: "#000", fontWeight: 900, cursor: "pointer" },
   claimedBox: { maxWidth: 340, margin: "14px auto 0", padding: "14px", borderRadius: 14, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)", fontSize: 14, lineHeight: 1.5 },
-  linkBtn: { marginTop: 8, background: "none", border: "none", color: "#c8ff3e", fontWeight: 700, cursor: "pointer", fontSize: 13 },
-  rules: { maxWidth: 340, margin: "24px auto 0", textAlign: "left", padding: "14px 16px", borderRadius: 14, background: "rgba(22,17,38,0.7)", border: "1px solid rgba(255,255,255,0.06)" },
-  ruleTitle: { fontWeight: 800, fontSize: 13, color: "#f3f0fb", marginBottom: 6 },
-  ruleList: { margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#9189b5", lineHeight: 1.65 },
-  scrim: { position: "fixed", inset: 0, zIndex: 1100, background: "rgba(5,3,12,0.82)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, overflowY: "auto" },
-  modal: { width: "100%", maxWidth: 380, background: "rgba(22,17,38,0.98)", border: "1px solid rgba(200,255,62,0.35)", borderRadius: 24, padding: "24px 20px", boxShadow: "0 30px 80px rgba(0,0,0,0.6)", textAlign: "left", position: "relative", zIndex: 1250 },
-  mTitle: { margin: "4px 0 6px", textAlign: "center", fontSize: 26, fontWeight: 900, color: "#c8ff3e" },
-  mSub: { textAlign: "center", color: "#b4acd0", fontSize: 14, margin: "0 0 16px" },
-  label: { display: "block", fontSize: 12, color: "#b4acd0", textTransform: "uppercase", letterSpacing: "0.04em", margin: "12px 0 6px" },
-  input: { width: "100%", boxSizing: "border-box", padding: "13px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(10,8,20,0.7)", color: "#e5e7eb", fontSize: 16, outline: "none" },
+  linkBtn: { marginTop: 8, background: "none", border: "none", color: "#ffb020", fontWeight: 700, cursor: "pointer", fontSize: 13 },
+  rules: { maxWidth: 340, margin: "24px auto 0", textAlign: "left", padding: "14px 16px", borderRadius: 14, background: "rgba(22,30,41,0.7)", border: "1px solid rgba(255,255,255,0.06)" },
+  ruleTitle: { fontWeight: 800, fontSize: 13, color: "#f4f6f9", marginBottom: 6 },
+  ruleList: { margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#8b98ab", lineHeight: 1.65 },
+  scrim: { position: "fixed", inset: 0, zIndex: 1100, background: "rgba(5,8,12,0.82)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, overflowY: "auto" },
+  modal: { width: "100%", maxWidth: 380, background: "rgba(22,30,41,0.98)", border: "1px solid rgba(255,176,32,0.35)", borderRadius: 24, padding: "24px 20px", boxShadow: "0 30px 80px rgba(0,0,0,0.6)", textAlign: "left", position: "relative", zIndex: 1250 },
+  mTitle: { margin: "4px 0 6px", textAlign: "center", fontSize: 26, fontWeight: 900, color: "#ffb020" },
+  mSub: { textAlign: "center", color: "#b3bece", fontSize: 14, margin: "0 0 16px" },
+  label: { display: "block", fontSize: 12, color: "#b3bece", textTransform: "uppercase", letterSpacing: "0.04em", margin: "12px 0 6px" },
+  input: { width: "100%", boxSizing: "border-box", padding: "13px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(11,16,23,0.7)", color: "#e5e7eb", fontSize: 16, outline: "none" },
   netRow: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 },
   netBtn: { display: "grid", gap: 2, justifyItems: "center", padding: "12px 4px", borderRadius: 12, border: "2px solid", color: "#e5e7eb", fontSize: 12, textAlign: "center" },
-  later: { width: "100%", marginTop: 8, background: "none", border: "none", color: "#9189b5", cursor: "pointer", fontSize: 13, padding: 8 },
+  later: { width: "100%", marginTop: 8, background: "none", border: "none", color: "#8b98ab", cursor: "pointer", fontSize: 13, padding: 8 },
 };

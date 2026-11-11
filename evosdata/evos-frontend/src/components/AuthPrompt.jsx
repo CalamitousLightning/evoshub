@@ -35,7 +35,7 @@ export default function AuthPrompt({ page, back, onCancel }) {
       </p>
       <div style={{ display: "flex", gap: ".6rem", justifyContent: "center", flexWrap: "wrap" }}>
         <a href={hubSignInUrl(back)} className="btn"
-          style={{ padding: ".65rem 1.2rem", borderRadius: 10, background: "var(--lime, #b6ff3c)", color: "#000", fontWeight: 700, textDecoration: "none" }}>
+          style={{ padding: ".65rem 1.2rem", borderRadius: 10, background: "var(--lime, #ffc24d)", color: "#000", fontWeight: 700, textDecoration: "none" }}>
           Log in
         </a>
         <a href={hubSignInUrl(back) + "&mode=register"} className="btn"

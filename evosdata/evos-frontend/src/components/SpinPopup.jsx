@@ -44,11 +44,11 @@ export default function SpinPopup({ user, page, setPage }) {
 }
 
 const s = {
-  scrim: { position: "fixed", inset: 0, zIndex: 1000, background: "rgba(5,3,12,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 },
-  card: { position: "relative", width: "100%", maxWidth: 340, textAlign: "center", background: "rgba(22,17,38,0.98)", border: "1px solid rgba(200,255,62,0.35)", borderRadius: 24, padding: "28px 22px 20px", color: "#e5e7eb", boxShadow: "0 30px 80px rgba(0,0,0,0.6)" },
-  x: { position: "absolute", top: 10, right: 12, background: "none", border: "none", color: "#9189b5", fontSize: 18, cursor: "pointer" },
-  h: { margin: "6px 0 6px", fontSize: 22, fontWeight: 900, color: "#c8ff3e" },
-  p: { margin: "0 0 18px", fontSize: 14, color: "#b4acd0", lineHeight: 1.5 },
-  go: { width: "100%", padding: 14, borderRadius: 14, border: "none", background: "linear-gradient(135deg,#c8ff3e,#8fe600)", color: "#000", fontWeight: 900, fontSize: 15, cursor: "pointer" },
-  later: { width: "100%", marginTop: 6, background: "none", border: "none", color: "#9189b5", cursor: "pointer", fontSize: 13, padding: 8 },
+  scrim: { position: "fixed", inset: 0, zIndex: 1000, background: "rgba(5,8,12,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 },
+  card: { position: "relative", width: "100%", maxWidth: 340, textAlign: "center", background: "rgba(22,30,41,0.98)", border: "1px solid rgba(255,176,32,0.35)", borderRadius: 24, padding: "28px 22px 20px", color: "#e5e7eb", boxShadow: "0 30px 80px rgba(0,0,0,0.6)" },
+  x: { position: "absolute", top: 10, right: 12, background: "none", border: "none", color: "#8b98ab", fontSize: 18, cursor: "pointer" },
+  h: { margin: "6px 0 6px", fontSize: 22, fontWeight: 900, color: "#ffb020" },
+  p: { margin: "0 0 18px", fontSize: 14, color: "#b3bece", lineHeight: 1.5 },
+  go: { width: "100%", padding: 14, borderRadius: 14, border: "none", background: "linear-gradient(135deg,#ffb020,#f59300)", color: "#000", fontWeight: 900, fontSize: 15, cursor: "pointer" },
+  later: { width: "100%", marginTop: 6, background: "none", border: "none", color: "#8b98ab", cursor: "pointer", fontSize: 13, padding: 8 },
 };

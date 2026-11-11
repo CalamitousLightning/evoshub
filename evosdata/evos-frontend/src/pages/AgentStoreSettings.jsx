@@ -242,13 +242,13 @@ export default function AgentStoreSettings({ user, setPage }) {
                                     <span style={styles.cardTitle}>✏️ Store Display Name</span>
                                     {storeName && (
                                         <span style={styles.cardCurrent}>
-                                            Current: <strong style={{ color: "#c8ff3e" }}>{storeName}</strong>
+                                            Current: <strong style={{ color: "#ffb020" }}>{storeName}</strong>
                                         </span>
                                     )}
                                 </div>
                                 <p style={styles.cardHint}>
                                     This name appears on your store page and in your store link. e.g.{" "}
-                                    <span style={{ color: "#c8ff3e", fontFamily: "monospace", fontSize: 11 }}>
+                                    <span style={{ color: "#ffb020", fontFamily: "monospace", fontSize: 11 }}>
                                         /store/{user?.id}/{storeName ? slugify(storeName) : "your-store-name"}
                                     </span>
                                 </p>
@@ -261,7 +261,7 @@ export default function AgentStoreSettings({ user, setPage }) {
                                     style={styles.cardInput}
                                 />
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <span style={{ fontSize: 11, color: "#7a6fa3" }}>{storeNameInput.length}/40 characters</span>
+                                    <span style={{ fontSize: 11, color: "#6c7a8f" }}>{storeNameInput.length}/40 characters</span>
                                     {storeNameMsg && (
                                         <span style={{ fontSize: 12, fontWeight: 700, color: storeNameMsg.startsWith("✅") ? "#22c55e" : "#f87171" }}>
                                             {storeNameMsg}
@@ -296,7 +296,7 @@ export default function AgentStoreSettings({ user, setPage }) {
                                         alt="Store logo preview"
                                         style={{
                                             width: 64, height: 64, objectFit: "cover", borderRadius: 14,
-                                            border: "1px solid rgba(255,255,255,0.08)", background: "rgba(10,8,20,0.75)",
+                                            border: "1px solid rgba(255,255,255,0.08)", background: "rgba(11,16,23,0.75)",
                                         }}
                                     />
                                     <label style={styles.logoChooseBtn}>
@@ -306,9 +306,9 @@ export default function AgentStoreSettings({ user, setPage }) {
                                 </div>
 
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                                    <span style={{ fontSize: 11, color: "#7a6fa3" }}>Square images work best</span>
+                                    <span style={{ fontSize: 11, color: "#6c7a8f" }}>Square images work best</span>
                                     {storeLogoMsg && (
-                                        <span style={{ fontSize: 12, fontWeight: 700, color: storeLogoMsg.startsWith("✅") ? "#22c55e" : storeLogoMsg.startsWith("Removed") ? "#b4acd0" : "#f87171" }}>
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: storeLogoMsg.startsWith("✅") ? "#22c55e" : storeLogoMsg.startsWith("Removed") ? "#b3bece" : "#f87171" }}>
                                             {storeLogoMsg}
                                         </span>
                                     )}
@@ -353,28 +353,28 @@ export default function AgentStoreSettings({ user, setPage }) {
 }
 
 const styles = {
-    container: { padding: "28px 18px 80px", minHeight: "auto", fontFamily: "'Nunito', 'Poppins', ui-rounded, system-ui, Arial", color: "#241c3d" },
+    container: { padding: "28px 18px 80px", minHeight: "auto", fontFamily: "'Nunito', 'Poppins', ui-rounded, system-ui, Arial", color: "#202a38" },
     header: { textAlign: "center", marginBottom: 20 },
-    headerBadge: { display: "inline-block", padding: "5px 18px", borderRadius: 50, background: "linear-gradient(135deg, #e0e7ff, #ddd6fe)", border: "1px solid #c4b5fd", color: "#6d28d9", fontSize: 12, fontWeight: 800, marginBottom: 10, letterSpacing: "0.5px" },
-    title: { fontSize: 26, fontWeight: 900, color: "#f3f0fb", margin: "0 0 6px", letterSpacing: "-0.5px" },
-    subtitle: { fontSize: 13, color: "#9189b5", margin: 0, fontWeight: 600 },
+    headerBadge: { display: "inline-block", padding: "5px 18px", borderRadius: 50, background: "linear-gradient(135deg, #e0e7ff, #ccfbf1)", border: "1px solid #99f6e4", color: "#0f9d8e", fontSize: 12, fontWeight: 800, marginBottom: 10, letterSpacing: "0.5px" },
+    title: { fontSize: 26, fontWeight: 900, color: "#f4f6f9", margin: "0 0 6px", letterSpacing: "-0.5px" },
+    subtitle: { fontSize: 13, color: "#8b98ab", margin: 0, fontWeight: 600 },
     wrapper: { maxWidth: 520, margin: "0 auto" },
-    box: { background: "rgba(22,17,38,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", padding: "24px 20px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 8px 40px rgba(0,0,0,0.3)" },
+    box: { background: "rgba(22,30,41,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", padding: "24px 20px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 8px 40px rgba(0,0,0,0.3)" },
     errorBox: { background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171", padding: "12px 16px", borderRadius: 12, fontSize: 14, marginBottom: 16 },
     emptyBox: { textAlign: "center", padding: "30px 0" },
-    emptyText: { color: "#9189b5", fontSize: 14, margin: 0, fontWeight: 600 },
-    card: { background: "rgba(10,8,20,0.4)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, padding: "18px 16px", marginBottom: 16 },
+    emptyText: { color: "#8b98ab", fontSize: 14, margin: 0, fontWeight: 600 },
+    card: { background: "rgba(11,16,23,0.4)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, padding: "18px 16px", marginBottom: 16 },
     cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
-    cardTitle: { fontWeight: 800, fontSize: 14, color: "#f3f0fb" },
-    cardCurrent: { fontSize: 12, color: "#9189b5" },
-    cardHint: { fontSize: 12, color: "#7a6fa3", margin: "0 0 12px", lineHeight: 1.6 },
-    cardInput: { width: "100%", padding: "12px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(10,8,20,0.75)", color: "#e5e7eb", fontSize: 14, marginBottom: 8, boxSizing: "border-box", outline: "none" },
-    cardBtn: { marginTop: 10, width: "100%", padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #c8ff3e, #8fe600)", color: "#000", fontWeight: 900, fontSize: 14, cursor: "pointer" },
-    logoChooseBtn: { padding: "10px 16px", borderRadius: 12, border: "1px solid rgba(200,255,62,0.3)", background: "rgba(200,255,62,0.1)", color: "#c8ff3e", fontWeight: 800, fontSize: 13, cursor: "pointer" },
+    cardTitle: { fontWeight: 800, fontSize: 14, color: "#f4f6f9" },
+    cardCurrent: { fontSize: 12, color: "#8b98ab" },
+    cardHint: { fontSize: 12, color: "#6c7a8f", margin: "0 0 12px", lineHeight: 1.6 },
+    cardInput: { width: "100%", padding: "12px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(11,16,23,0.75)", color: "#e5e7eb", fontSize: 14, marginBottom: 8, boxSizing: "border-box", outline: "none" },
+    cardBtn: { marginTop: 10, width: "100%", padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ffb020, #f59300)", color: "#000", fontWeight: 900, fontSize: 14, cursor: "pointer" },
+    logoChooseBtn: { padding: "10px 16px", borderRadius: 12, border: "1px solid rgba(255,176,32,0.3)", background: "rgba(255,176,32,0.1)", color: "#ffb020", fontWeight: 800, fontSize: 13, cursor: "pointer" },
     storeLinkBadge: { fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 50, background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e", textTransform: "uppercase" },
-    storeLinkText: { fontSize: 13, color: "#9189b5", wordBreak: "break-all", lineHeight: 1.5, marginBottom: 14, background: "rgba(10,8,20,0.5)", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.05)" },
+    storeLinkText: { fontSize: 13, color: "#8b98ab", wordBreak: "break-all", lineHeight: 1.5, marginBottom: 14, background: "rgba(11,16,23,0.5)", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.05)" },
     storeLinkBtns: { display: "flex", gap: 10 },
-    copyBtn: { flex: 1, padding: "11px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #c8ff3e, #8fe600)", color: "#000", fontWeight: 900, fontSize: 13, cursor: "pointer" },
-    visitBtn: { flex: 1, padding: "11px", borderRadius: 12, border: "1px solid rgba(200,255,62,0.3)", background: "rgba(200,255,62,0.08)", color: "#c8ff3e", fontWeight: 800, fontSize: 13, cursor: "pointer" },
-    backDashBtn: { width: "100%", padding: "12px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#b4acd0", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 4 },
+    copyBtn: { flex: 1, padding: "11px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ffb020, #f59300)", color: "#000", fontWeight: 900, fontSize: 13, cursor: "pointer" },
+    visitBtn: { flex: 1, padding: "11px", borderRadius: 12, border: "1px solid rgba(255,176,32,0.3)", background: "rgba(255,176,32,0.08)", color: "#ffb020", fontWeight: 800, fontSize: 13, cursor: "pointer" },
+    backDashBtn: { width: "100%", padding: "12px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#b3bece", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 4 },
 };

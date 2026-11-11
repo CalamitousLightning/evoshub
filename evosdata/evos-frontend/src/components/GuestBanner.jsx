@@ -18,7 +18,7 @@ export default function GuestBanner() {
         You're browsing as a guest. Some progress, preferences, or activity may be lost if you leave or refresh.
         Sign in to help save and sync across EVOS products.
       </span>
-      <a href={hubSignInUrl()} style={{ color: "var(--lime, #b6ff3c)", fontWeight: 700, textDecoration: "none" }}>Sign in</a>
+      <a href={hubSignInUrl()} style={{ color: "var(--lime, #ffc24d)", fontWeight: 700, textDecoration: "none" }}>Sign in</a>
       <button type="button" onClick={dismiss} aria-label="Dismiss"
         style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", fontSize: "1.1rem" }}>×</button>
     </div>
