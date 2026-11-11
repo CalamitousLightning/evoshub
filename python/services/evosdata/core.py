@@ -2884,6 +2884,7 @@ async def retry_stuck_order_payments():
     while True:
         try:
             logger.info("ORDER PAYMENT RETRY: scanning for stuck order payments...")
+            hold_minutes = int(xera_discount.load_config(supabase).get("hold_minutes") or 60)
 
             now    = utc_now()
             floor  = (now - timedelta(minutes=5)).isoformat()   # give the webhook a head start
@@ -2929,20 +2930,18 @@ async def retry_stuck_order_payments():
                     )
 
                     if paystack_status != "success":
+                        age = utc_now() - parse_db_dt(order["created_at"])
+                        # The ORDER is marked failed after 30 minutes, but the buyer's XERA stays held for the
+                        # configured hold time (default 60 min), so a payment made after the 30-minute mark is
+                        # still recovered below (failed orders are re-checked) and settled with the discount.
                         if order["status"] == "pending_payment":
-                            age = utc_now() - parse_db_dt(order["created_at"])
                             if age > timedelta(minutes=30):
                                 supabase.table("orders").update({"status": "failed"}).eq("id", order_id).execute()
-                                xera_discount.release(supabase, reference)   # free any XERA held for this order
-                                logger.info(
-                                    "ORDER PAYMENT RETRY: order %s marked failed — Paystack unpaid after 30min",
-                                    order_id
-                                )
+                                logger.info("ORDER PAYMENT RETRY: order %s marked failed - Paystack unpaid after 30min", order_id)
                             else:
-                                logger.info(
-                                    "ORDER PAYMENT RETRY: order %s still pending on Paystack — will retry",
-                                    order_id
-                                )
+                                logger.info("ORDER PAYMENT RETRY: order %s still pending on Paystack - will retry", order_id)
+                        if age > timedelta(minutes=hold_minutes):
+                            xera_discount.release(supabase, reference)   # hold time is over: free the held XERA
                         # already "failed" and Paystack still says not-success —
                         # nothing to do, leave it as is.
                         continue
@@ -3074,7 +3073,13 @@ async def retry_stuck_order_payments():
         except Exception as e:
             logger.error("ORDER PAYMENT RETRY ERROR: %s", str(e))
 
-        await asyncio.sleep(300)
+        # Safety sweep: any paid discount order whose XERA was not taken gets settled now.
+        try:
+            await asyncio.to_thread(xera_discount.reconcile_paid_orders, supabase)
+        except Exception as e:
+            logger.error("XERA DISCOUNT RECONCILE ERROR: %s", str(e))
+
+        await asyncio.sleep(180)   # every 3 minutes
 
 
 

@@ -382,6 +382,7 @@ export default function Shop() {
                   {" "}(pay GH₵ {Number(xeraQuote.final_price).toFixed(2)}).
                   <span style={{ display: "block", opacity: 0.6, fontSize: 11.5 }}>
                     Promotional discount. Your XERA balance: {Number(xeraQuote.spendable)}.
+                    {" "}Complete your payment within {Number(xeraQuote.hold_minutes) || 60} minutes.
                   </span>
                   {xeraQuote.verified === false && Number(xeraQuote.xera_if_verified) < Number(xeraQuote.xera_amount) && (
                     <span style={{ display: "block", opacity: 0.8, fontSize: 11.5, marginTop: 2 }}>
