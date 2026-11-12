@@ -12,7 +12,7 @@
 // wallet password. Manual input is rejected client-side if it looks like one.
 
 import { TonConnectUI } from '@tonconnect/ui';
-import { appKitConfigured, connectWithAppKit, cancelAppKitConnect, reopenAppKitPicker, restoredAppKitProvider, disconnectAppKit, switchAppKitNetwork } from './xera-appkit.js';
+import { appKitConfigured, connectWithAppKit, cancelAppKitConnect, reopenAppKitPicker, restoredAppKitProvider, disconnectAppKit, switchAppKitNetwork, nudgeAppKitConnection } from './xera-appkit.js';
 
 const API = window.XERA_API_BASE || (import.meta.env && import.meta.env.VITE_API_BASE_URL) || ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.evoshub.xyz');
 const $ = (id) => document.getElementById(id);
@@ -645,8 +645,17 @@ async function resumePendingBnbLink() {
             return;
         }
         await loadNetworkConfig();
-        const restored = await restoredAppKitProvider(state.network && state.network.chain_id, 12000);
-        if (!restored || !restored.address) { trace('No connected wallet found yet'); return; }   // keep the pending mark: the wallet may still be answering
+        nudgeAppKitConnection();
+        setNotice('Reconnecting to your wallet… this can take up to a minute.');
+        const restored = await restoredAppKitProvider(state.network && state.network.chain_id, 45000);
+        if (!restored || !restored.address) {
+            // Keep the pending mark and KEEP LOOKING (every few seconds, while this page is open and the link is still
+            // fresh): the wallet app may still be answering, and a phone can take a while to bring its connection back.
+            trace('No connected wallet found yet, will keep checking');
+            setNotice('Still waiting for your wallet. Approve the request in your wallet app. We keep checking, no need to start again.');
+            setTimeout(() => { if (linkPendingFresh() && document.visibilityState === 'visible') resumePendingBnbLink(); }, 4000);
+            return;
+        }
         trace(`Found connected wallet: ${shorten(restored.address)}`);
         const same = (w) => w && w.verified && w.address && w.address.toLowerCase() === restored.address.toLowerCase();
         if (same(state.wallets.BNB)) { clearLinkPending(); return; }                      // already saved
@@ -685,7 +694,7 @@ function returnToWalletScreen() {
     let tries = 0;
     const timer = setInterval(() => {
         tries += 1;
-        if (!linkPendingFresh() || tries > 40) { clearInterval(timer); return; }       // ~12 s
+        if (!linkPendingFresh() || tries > 200) { clearInterval(timer); return; }      // ~60 s
         if (window.__xeraOnchainEnabled === true && token()) {
             clearInterval(timer);
             const btn = $('openChainClaim');
@@ -835,7 +844,7 @@ async function connectTonWallet() {
 // XERA page (it comes back on the home screen), which killed the in-progress link: the wallet connected but
 // was never verified/saved, so the old wallet kept showing. We remember the link and finish it on return.
 const LINK_PENDING_KEY = 'xera_bnb_link_pending';
-const LINK_PENDING_TTL_MS = 10 * 60 * 1000;
+const LINK_PENDING_TTL_MS = 15 * 60 * 1000;
 function markLinkPending() { try { localStorage.setItem(LINK_PENDING_KEY, String(Date.now())); } catch (_e) { /* storage blocked */ } }
 function clearLinkPending() { try { localStorage.removeItem(LINK_PENDING_KEY); } catch (_e) { /* ignore */ } }
 function linkPendingFresh() {
@@ -1390,7 +1399,7 @@ function initChainPanel() {
     if (CFG.autoOpen) openChainTab();
     returnToWalletScreen();
     // Back from the wallet app without a reload (tab was only in the background): finish the link too.
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && linkPendingFresh()) resumePendingBnbLink(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && linkPendingFresh()) { nudgeAppKitConnection(); resumePendingBnbLink(); } });
 }
 
 if (document.readyState === 'loading') {

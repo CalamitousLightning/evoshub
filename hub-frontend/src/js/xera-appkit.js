@@ -8,14 +8,14 @@
 // wallet app (SafePal, Trust, ...) can take several seconds to open and approve. The old code
 // treated "picker closed + page still visible" as the user cancelling, stopped listening, and
 // then ignored the connection when it finally arrived. This version NEVER decides the user
-// cancelled. It waits until a wallet connects, the user taps Cancel, or 10 minutes pass.
+// cancelled. It waits until a wallet connects, the user taps Cancel, or 15 minutes pass.
 //
 // Loaded lazily so the large AppKit bundle is not part of the first page load. If
 // VITE_REOWN_PROJECT_ID is unset, xera-chain.js falls back to the browser-injected wallet flow.
 
 const PROJECT_ID = (import.meta.env && import.meta.env.VITE_REOWN_PROJECT_ID) || '';
-const WAIT_MS = 10 * 60 * 1000;          // how long one connect attempt may wait for the wallet
-const PROVIDER_WAIT_MS = 8000;           // account connected but provider not ready yet
+const WAIT_MS = 15 * 60 * 1000;          // how long one connect attempt may wait for the wallet
+const PROVIDER_WAIT_MS = 20000;          // account connected but provider not ready yet (slow phones / slow relays)
 
 const say = (m) => { try { window.dispatchEvent(new CustomEvent('xera-link-trace', { detail: m })); } catch (_e) { /* ignore */ } };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -173,6 +173,19 @@ export async function restoredAppKitProvider(expectedChainId, ms = 6000) {
         const modal = await getModal(expectedChainId);
         return await waitForSession(modal, ms);
     } catch (_e) { return null; }
+}
+
+// A phone suspends the page's network connection while the wallet app is in front, so the link to the wallet
+// (WalletConnect relay) can be dead when the user comes back. Ask it to reconnect right away instead of waiting
+// for it to notice. Best effort: this reaches into the provider, so it is wrapped and never throws.
+export function nudgeAppKitConnection() {
+    try {
+        if (!modalRef) return false;
+        const provider = modalRef.getWalletProvider && modalRef.getWalletProvider();
+        const relayer = provider && provider.client && provider.client.core && provider.client.core.relayer;
+        if (relayer && typeof relayer.restartTransport === 'function') { relayer.restartTransport().catch(() => {}); return true; }
+    } catch (_e) { /* not available in this AppKit version */ }
+    return false;
 }
 
 export async function disconnectAppKit() {
