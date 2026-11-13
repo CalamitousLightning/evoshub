@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "prices": "node scripts/snapshot-prices.mjs",
+    "build": "node scripts/snapshot-prices.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
