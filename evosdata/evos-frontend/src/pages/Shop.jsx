@@ -89,7 +89,7 @@ export default function Shop({ setPage } = {}) {
       localStorage.removeItem("selectedNetwork");
     }
 
-    // Background refresh: the list above is already on screen; this only swaps it if prices,
+    // Background refresh: the saved list is already on screen; this only swaps it if prices,
     // stock or a new bundle size changed on the server.
     const off = subscribePrices(setPrices);
     refreshPrices();
@@ -265,7 +265,7 @@ export default function Shop({ setPage } = {}) {
 .sh-hint { margin: 22px 0; text-align: center; font-size: 14px; color: var(--faint); }
 .sh-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
 @media (max-width: 340px) { .sh-list { grid-template-columns: repeat(2, 1fr); } }
-.sh-row { aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--text); font-family: inherit; cursor: pointer; text-align: center; transition: transform .12s, border-color .12s; }
+.sh-row { aspect-ratio: 1 / 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--text); font-family: inherit; cursor: pointer; text-align: center; transition: transform .12s, border-color .12s; }
 .sh-row:hover:not(:disabled) { background: var(--surface-2); border-color: var(--lime); }
 .sh-row:active:not(:disabled) { transform: scale(.97); }
 .sh-row:disabled { opacity: .5; cursor: not-allowed; }
