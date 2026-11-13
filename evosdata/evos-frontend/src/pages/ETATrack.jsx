@@ -48,6 +48,14 @@ const STATUS_CONFIG = {
   },
 };
 
+// "(took 30 min)" - how long this order took from being placed to being delivered.
+function tookText(order) {
+  const a = new Date(order.created_at).getTime(), b = new Date(order.delivered_at).getTime();
+  if (!(b > a)) return "";
+  const m = Math.round((b - a) / 60000);
+  return m < 1 ? "" : m < 60 ? ` (took ${m} min)` : ` (took ${Math.floor(m / 60)} hr${m % 60 ? ` ${m % 60} min` : ""})`;
+}
+
 function formatDate(dateStr) {
   if (!dateStr) return "—";
   const d = new Date(dateStr);
@@ -232,7 +240,9 @@ export default function ETATrack({ setPage, backTo = "home" }) {
               border: `1px solid ${cfg.border}`,
             }}>
               <p style={{ ...styles.etaText, color: cfg.color }}>
-                {cfg.eta}
+                {status === "successful" && order.delivered_at
+                  ? `Delivered at ${formatDate(order.delivered_at)}${tookText(order)}.`
+                  : order.eta_text || cfg.eta}
               </p>
             </div>
 
