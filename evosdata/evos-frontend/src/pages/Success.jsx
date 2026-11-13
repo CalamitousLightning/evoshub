@@ -8,6 +8,7 @@ export default function Success() {
   const [status, setStatus] = useState("verifying");
   const [checkerData, setCheckerData] = useState(null);
   const [afaData, setAfaData] = useState(null);
+  const [walletTop, setWalletTop] = useState(null);
   const [copiedKey, setCopiedKey] = useState("");
   const [spinReady, setSpinReady] = useState(false);
 
@@ -33,6 +34,23 @@ export default function Success() {
       // No work to do here: the server confirms the payment and upgrades the account on its own.
       setStatus("agent_fee_success");
     } else if (type === "deposit") {
+      if (String(reference).startsWith("EVOS-CDP-")) {
+        // Customer wallet top-up: confirm it with the customer's own token and show the new balance.
+        setStatus("wallet_topup_verifying");
+        const tok = localStorage.getItem("userToken") || "";
+        const attempt = (n) => smartFetch(`/wallet/deposit/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-User-Token": tok },
+          body: JSON.stringify({ reference }),
+        }).then((r) => r.json()).then((d) => {
+          if (d?.status === "credited" || d?.status === "already_credited") {
+            setWalletTop({ balance: d.balance }); setStatus("wallet_topup_success");
+          } else if (n < 4) setTimeout(() => attempt(n + 1), 2500);
+          else setStatus("wallet_topup_pending");
+        }).catch(() => (n < 4 ? setTimeout(() => attempt(n + 1), 2500) : setStatus("wallet_topup_pending")));
+        attempt(0);
+        return;
+      }
       // fire-and-forget
       smartFetch(`/agent/deposit/verify`, {
         method: "POST",
@@ -111,6 +129,26 @@ export default function Success() {
               <button style={s.primaryBtn} onClick={() => window.location.href = withBase(`/become-agent${reference ? `?reference=${encodeURIComponent(reference)}` : ""}`)}>
                 ⏱ See activation status
               </button>
+              <button style={s.secondaryBtn} onClick={() => window.location.href = withBase("/dashboard")}>🏠 Dashboard</button>
+            </div>
+          </>
+        )}
+
+        {/* ── WALLET TOP-UP (customer) ── */}
+        {(status === "wallet_topup_verifying" || status === "wallet_topup_pending" || status === "wallet_topup_success") && (
+          <>
+            <div style={{ ...s.iconCircle, background: "rgba(34,197,94,0.15)", border: "2px solid rgba(34,197,94,0.3)" }}>
+              {status === "wallet_topup_success" ? "💰" : "⏳"}
+            </div>
+            <h2 style={{ ...s.title, color: "#22c55e" }}>
+              {status === "wallet_topup_success" ? "Wallet topped up!" : status === "wallet_topup_verifying" ? "Confirming your payment…" : "Still confirming"}
+            </h2>
+            <p style={s.sub}>
+              {status === "wallet_topup_success" ? `New balance: GH₵ ${Number(walletTop?.balance || 0).toFixed(2)}`
+                : status === "wallet_topup_pending" ? "Your payment is being confirmed. Check your wallet in a minute." : "One moment"}
+            </p>
+            <div style={s.btnGroup}>
+              <button style={s.primaryBtn} onClick={() => window.location.href = withBase("/shop")}>📡 Buy Data Now</button>
               <button style={s.secondaryBtn} onClick={() => window.location.href = withBase("/dashboard")}>🏠 Dashboard</button>
             </div>
           </>

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import API, { verifyNumber } from "../api";
 import { isGhanaPhone, toGhanaPhone, GHANA_ONLY_MSG } from "../lib/ghanaPhone";
 
-export default function Shop() {
+export default function Shop({ setPage } = {}) {
   const [step, setStep] = useState(1);
   const [network, setNetwork] = useState("");
   const [bundle, setBundle] = useState("");
@@ -47,6 +47,38 @@ export default function Shop() {
 
   const xeraOn = !!(useXera && xeraQuote?.eligible);
   const payAmount = xeraOn ? Number(xeraQuote.final_price) : Number(bundlePrice);
+
+  // ── Wallet: the "scan". Asks the server if the wallet can pay (with or without the XERA discount). ──
+  const [wallet, setWallet] = useState(null);          // server answer for this bundle
+  const [payMethod, setPayMethod] = useState("paystack");
+  const [shortPopup, setShortPopup] = useState(null);  // { balance, needed } when the wallet can't cover the order
+  const [done, setDone] = useState(null);              // wallet order confirmation
+
+  useEffect(() => {
+    setWallet(null);
+    if (!user_id || !network || !bundle || !(Number(bundlePrice) > 0)) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await API.get("/wallet/quote", {
+          params: { user_id, network, bundle },
+          headers: { "X-User-Token": localStorage.getItem("userToken") || "" },
+        });
+        if (!cancelled && res.data?.status === "ok") setWallet(res.data);
+      } catch { /* no wallet info: Paystack still works */ }
+    })();
+    return () => { cancelled = true; };
+  }, [user_id, network, bundle, bundlePrice]);
+
+  const walletAmount = wallet ? Number(xeraOn ? (wallet.wallet_price_with_xera ?? wallet.wallet_price) : wallet.wallet_price) : 0;
+  const walletEnough = !!wallet && (xeraOn && wallet.enough_with_xera !== null ? wallet.enough_with_xera : wallet.enough);
+  const walletBalance = wallet ? Number(wallet.balance) : 0;
+  const useWallet = payMethod === "wallet" && walletEnough;
+
+  // Pick the wallet automatically when it can pay; fall back to Paystack when it can't.
+  useEffect(() => {
+    setPayMethod(wallet && walletEnough ? "wallet" : "paystack");
+  }, [wallet, walletEnough, xeraOn]);
 
   useEffect(() => {
     const saved = localStorage.getItem("selectedNetwork");
@@ -146,9 +178,16 @@ export default function Shop() {
         user_id, network, bundle, phone: toGhanaPhone(phone),
         email: email || "guest@evoshub.com",
         ...(xeraOn ? { use_xera: true } : {}),   // the server works out the price; this only asks for it
+        ...(useWallet ? { pay_with: "wallet" } : {}),
       });
 
       const data = res.data;
+
+      if (data?.paid_with === "wallet") {          // paid from the wallet: no redirect
+        setLoading(false);
+        setDone({ message: data.message, balance: data.new_wallet_balance, charged: data.charged, reference: data.reference });
+        return;
+      }
 
       const paymentUrl =
         data?.payment_url ||
@@ -176,6 +215,16 @@ export default function Shop() {
 
     } catch (err) {
       setLoading(false);
+      const d = err.response?.data?.detail;
+      if (d && typeof d === "object") {
+        if (d.code === "insufficient_wallet") {      // balance moved since the scan: show the same popup
+          setShortPopup({ balance: Number(d.balance), needed: Number(d.needed) });
+          setPayMethod("paystack");
+          return;
+        }
+        setError(d.message || "Order failed");
+        return;
+      }
       setError(
         err.response?.data?.detail ||
         err.response?.data?.message ||
@@ -313,7 +362,24 @@ export default function Shop() {
         )}
 
         {/* ============ STEP 3 — CHECKOUT ============ */}
-        {step === 3 && (
+        {step === 3 && done && (
+          <div style={{ ...styles.box, textAlign: "center" }}>
+            <p style={{ fontSize: 44, margin: "0 0 6px" }}>✅</p>
+            <p style={{ ...styles.stepLabel, marginBottom: 6 }}>Order placed</p>
+            <p style={{ fontSize: 14, opacity: 0.85, margin: "0 0 4px" }}>{done.message}</p>
+            <p style={{ fontSize: 13, opacity: 0.65, margin: "0 0 18px" }}>
+              Paid GH₵ {Number(done.charged).toFixed(2)} · wallet balance GH₵ {Number(done.balance).toFixed(2)}
+            </p>
+            <button style={styles.buyBtn} onClick={() => { setDone(null); setStep(1); setBundle(""); setPhone(""); setAgree(false); }}>
+              Buy another
+            </button>
+            {setPage && (
+              <button style={styles.verifyPopupCancelBtn} onClick={() => setPage("orders")}>View my orders</button>
+            )}
+          </div>
+        )}
+
+        {step === 3 && !done && (
           <div style={styles.box}>
             <button style={styles.backBtn} onClick={() => setStep(2)}>← Back</button>
             <p style={styles.stepLabel}>Complete your order</p>
@@ -337,7 +403,7 @@ export default function Shop() {
                       GH₵ {Number(bundlePrice).toFixed(2)}
                     </span>
                   )}
-                  GH₵ {payAmount.toFixed(2)}
+                  GH₵ {(useWallet ? walletAmount : payAmount).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -365,6 +431,35 @@ export default function Shop() {
             ) : (xeraQuote.message && xeraQuote.reason !== "disabled" && xeraQuote.reason !== "no_discount") ? (
               <p style={{ fontSize: 12, opacity: 0.65, margin: "0 0 14px" }}>🪙 {xeraQuote.message}</p>
             ) : null)}
+
+            {wallet && (
+              <div style={{ marginBottom: 14 }}>
+                <p style={{ ...styles.inputLabel, marginBottom: 8 }}>How do you want to pay?</p>
+                <div style={{ display: "grid", gap: 8 }}>
+                  <button type="button"
+                    onClick={() => walletEnough ? setPayMethod("wallet")
+                      : setShortPopup({ balance: walletBalance, needed: walletAmount })}
+                    style={{ textAlign: "left", padding: "12px 14px", borderRadius: 12, cursor: "pointer",
+                             border: useWallet ? "2px solid #22c55e" : "1px solid rgba(255,255,255,0.12)",
+                             background: useWallet ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.03)",
+                             color: "inherit", opacity: walletEnough ? 1 : 0.45, filter: walletEnough ? "none" : "grayscale(1)" }}>
+                    <b>👛 Wallet · GH₵ {walletAmount.toFixed(2)}</b>
+                    <span style={{ display: "block", fontSize: 12, opacity: 0.75 }}>
+                      {walletEnough
+                        ? `Wallet price: GH₵ ${Number(wallet.wallet_discount || 0).toFixed(2)} cheaper · balance GH₵ ${walletBalance.toFixed(2)}`
+                        : `Balance GH₵ ${walletBalance.toFixed(2)} · not enough for this order`}
+                    </span>
+                  </button>
+                  <button type="button" onClick={() => setPayMethod("paystack")}
+                    style={{ textAlign: "left", padding: "12px 14px", borderRadius: 12, cursor: "pointer",
+                             border: !useWallet ? "2px solid #22c55e" : "1px solid rgba(255,255,255,0.12)",
+                             background: !useWallet ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.03)", color: "inherit" }}>
+                    <b>💳 Paystack · GH₵ {payAmount.toFixed(2)}</b>
+                    <span style={{ display: "block", fontSize: 12, opacity: 0.75 }}>Mobile money or card</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             <label style={styles.inputLabel}>📱 Recipient Phone Number</label>
             <input
@@ -442,14 +537,37 @@ export default function Shop() {
               >
                 {loading
                   ? pendingMsg ? "⏳ Redirecting to payment..." : "⏳ Processing..."
-                  : `💳 Pay GH₵ ${payAmount.toFixed(2)} via Paystack`}
+                  : useWallet
+                    ? `👛 Pay GH₵ ${walletAmount.toFixed(2)} from wallet`
+                    : `💳 Pay GH₵ ${payAmount.toFixed(2)} via Paystack`}
               </button>
             )}
 
-            <p style={styles.secureNote}>🔒 Secured & encrypted via Paystack</p>
+            <p style={styles.secureNote}>{useWallet ? "🔒 Paid from your EVOS Data wallet" : "🔒 Secured & encrypted via Paystack"}</p>
           </div>
         )}
       </div>
+
+      {/* WALLET TOO LOW POPUP */}
+      {shortPopup && (
+        <div style={styles.verifyOverlay}>
+          <div style={styles.verifyPopup}>
+            <p style={styles.verifyPopupText}>👛 Wallet balance too low</p>
+            <p style={styles.verifyPopupSub}>
+              You have GH₵ {Number(shortPopup.balance).toFixed(2)}; this order needs GH₵ {Number(shortPopup.needed).toFixed(2)}.
+              Top up to get the cheaper wallet price, or pay with Paystack now.
+            </p>
+            <div style={styles.verifyPopupActions}>
+              {setPage && (
+                <button style={styles.verifyPopupProceedBtn}
+                  onClick={() => { setShortPopup(null); setPage("wallet-topup"); }}>Top up wallet</button>
+              )}
+              <button style={styles.verifyPopupCancelBtn}
+                onClick={() => { setShortPopup(null); setPayMethod("paystack"); }}>Pay with Paystack instead</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* VERIFY NUMBER POPUP */}
       {(checkingBlocking || showVerifyResult) && (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { userApi } from "../lib/userApi";
 import { Icon, WhatsAppIcon } from "../components/Icons";
+import WalletCard from "../components/WalletCard";
 import { openCommunity, SUPPORT_URL } from "../lib/community";
 
 const STATUS = {
@@ -77,6 +78,8 @@ export default function Dashboard({ setPage, user }) {
           </div>
         </div>
       </section>
+
+      <WalletCard user={user} setPage={setPage} />
 
       {/* BENTO STATS */}
       <div className="db-h"><h2>Your overview</h2></div>
