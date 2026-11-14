@@ -12,7 +12,7 @@
 // wallet password. Manual input is rejected client-side if it looks like one.
 
 import { TonConnectUI } from '@tonconnect/ui';
-import { appKitConfigured, connectWithAppKit, cancelAppKitConnect, reopenAppKitPicker, restoredAppKitProvider, disconnectAppKit, switchAppKitNetwork, nudgeAppKitConnection } from './xera-appkit.js';
+import { appKitConfigured, connectWithAppKit, cancelAppKitConnect, reopenAppKitPicker, restoredAppKitProvider, disconnectAppKit, switchAppKitNetwork, nudgeAppKitConnection, appKitDiagnostics } from './xera-appkit.js';
 
 const API = window.XERA_API_BASE || (import.meta.env && import.meta.env.VITE_API_BASE_URL) || ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.evoshub.xyz');
 const $ = (id) => document.getElementById(id);
@@ -663,8 +663,8 @@ async function resumePendingBnbLink() {
         if (!restored || !restored.address) {
             // Keep the pending mark and KEEP LOOKING (every few seconds, while this page is open and the link is still
             // fresh): the wallet app may still be answering, and a phone can take a while to bring its connection back.
-            trace('No connected wallet found yet, will keep checking');
-            setNotice('Still waiting for your wallet. Approve the request in your wallet app. We keep checking, no need to start again.');
+            trace('No connected wallet found yet, will keep checking (' + appKitDiagnostics() + ')');
+            setNotice('Still waiting for your wallet. Approve the request in your wallet app. We keep checking, no need to start again. Use a wallet that supports BNB Smart Chain (Trust Wallet, MetaMask, Binance Wallet, SafePal). TON-only wallets such as Tonkeeper cannot link a BNB address.');
             addWaitActions();
             setTimeout(() => { if (linkPendingFresh() && document.visibilityState === 'visible') resumePendingBnbLink(); }, 4000);
             return;

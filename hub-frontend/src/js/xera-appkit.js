@@ -188,6 +188,26 @@ export function nudgeAppKitConnection() {
     return false;
 }
 
+// One line describing what AppKit can see right now, for the "Wallet link steps" log. Never throws.
+export function appKitDiagnostics() {
+    try {
+        if (!modalRef) return 'wallet module not started';
+        const bits = [];
+        bits.push('connected=' + (modalRef.getIsConnectedState() ? 'yes' : 'no'));
+        const evm = modalRef.getAddress && modalRef.getAddress('eip155');
+        bits.push('evm_address=' + (evm ? short(evm) : 'none'));
+        let relay = 'unknown';
+        try {
+            const provider = modalRef.getWalletProvider && modalRef.getWalletProvider();
+            const r = provider && provider.client && provider.client.core && provider.client.core.relayer;
+            if (r) relay = r.connected ? 'connected' : 'disconnected';
+        } catch (_e) { /* ignore */ }
+        bits.push('relay=' + relay);
+        bits.push('online=' + (navigator.onLine ? 'yes' : 'no'));
+        return bits.join(', ');
+    } catch (_e) { return 'diagnostics unavailable'; }
+}
+
 export async function disconnectAppKit() {
     if (!modalRef) return;
     try { await modalRef.disconnect(); } catch (_e) { /* already gone */ }
