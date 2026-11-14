@@ -601,6 +601,13 @@ function showWaitingForWallet() {
         h('button', { type: 'button', class: 'btn btn-sm btn-ghost', text: 'Pick another wallet', onclick: () => reopenAppKitPicker() }), ' ',
         h('button', { type: 'button', class: 'btn btn-sm btn-ghost', text: 'Cancel', onclick: () => { trace('You tapped Cancel'); cancelAppKitConnect(); } }));
 }
+function addWaitActions() {
+    const el = $('chainWalletNotice');
+    if (!el) return;
+    el.append(' ',
+        h('button', { type: 'button', class: 'btn btn-sm btn-ghost', text: 'Pick another wallet', onclick: () => reopenAppKitPicker() }), ' ',
+        h('button', { type: 'button', class: 'btn btn-sm btn-ghost', text: 'Cancel', onclick: () => { trace('You tapped Cancel'); cancelAppKitConnect(); clearLinkPending(); setNotice(''); } }));
+}
 function clearWaitingForWallet() { if (waitingShown) { waitingShown = false; setNotice(''); } }
 
 // Shown when the wallet is connected but the link was not completed: a button, so signing starts from a tap
@@ -647,12 +654,18 @@ async function resumePendingBnbLink() {
         await loadNetworkConfig();
         nudgeAppKitConnection();
         setNotice('Reconnecting to your wallet… this can take up to a minute.');
-        const restored = await restoredAppKitProvider(state.network && state.network.chain_id, 45000);
+        addWaitActions();                                   // never a dead end: the user can always switch wallet or cancel
+        const t0 = Date.now();
+        const ticker = setInterval(() => trace(`Still looking for your wallet (${Math.round((Date.now() - t0) / 1000)}s)`), 15000);
+        let restored;
+        try { restored = await restoredAppKitProvider(state.network && state.network.chain_id, 45000); }
+        finally { clearInterval(ticker); }
         if (!restored || !restored.address) {
             // Keep the pending mark and KEEP LOOKING (every few seconds, while this page is open and the link is still
             // fresh): the wallet app may still be answering, and a phone can take a while to bring its connection back.
             trace('No connected wallet found yet, will keep checking');
             setNotice('Still waiting for your wallet. Approve the request in your wallet app. We keep checking, no need to start again.');
+            addWaitActions();
             setTimeout(() => { if (linkPendingFresh() && document.visibilityState === 'visible') resumePendingBnbLink(); }, 4000);
             return;
         }
