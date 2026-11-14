@@ -12,7 +12,7 @@
 // wallet password. Manual input is rejected client-side if it looks like one.
 
 import { TonConnectUI } from '@tonconnect/ui';
-import { appKitConfigured, connectWithAppKit, cancelAppKitConnect, reopenAppKitPicker, restoredAppKitProvider, disconnectAppKit, switchAppKitNetwork, nudgeAppKitConnection, appKitDiagnostics, openChosenWalletApp } from './xera-appkit.js';
+import { appKitConfigured, connectWithAppKit, cancelAppKitConnect, reopenAppKitPicker, restoredAppKitProvider, disconnectAppKit, switchAppKitNetwork, nudgeAppKitConnection, appKitDiagnostics, openChosenWalletApp, liveWalletSession, waitForRelay } from './xera-appkit.js';
 
 const API = window.XERA_API_BASE || (import.meta.env && import.meta.env.VITE_API_BASE_URL) || ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.evoshub.xyz');
 const $ = (id) => document.getElementById(id);
@@ -617,7 +617,10 @@ function offerFinishLink(restored) {
     const el = $('chainWalletNotice');
     const b = h('button', { type: 'button', class: 'btn btn-sm', text: 'Finish connecting', onclick: async () => {
         b.disabled = true; clearMessages(); clearLinkPending(); setBusy('BNB', true);
-        try { await linkWithProvider({ info: { uuid: 'appkit', name: 'WalletConnect', icon: '' }, provider: restored.provider, appkit: true, chainId: restored.chainId }, restored.address, restored.chainId); }
+        try {
+            const now = (await restoredAppKitProvider(state.network && state.network.chain_id, 4000)) || restored;     // fresh, not the one saved earlier
+            await linkWithProvider({ info: { uuid: 'appkit', name: 'WalletConnect', icon: '' }, provider: now.provider, appkit: true, chainId: now.chainId }, now.address, now.chainId);
+        }
         catch (err) { setError(userMessage(err, 'Could not finish connecting your wallet. Tap “Change wallet” and try again.')); }
         finally { state.busy.BNB = false; await refreshWallets(); }
     } });
@@ -628,6 +631,7 @@ function offerFinishLink(restored) {
 // was in progress: finish it. Order: (1) a signature we already collected is just sent; (2) a restored wallet
 // session is asked to sign ONCE automatically; (3) if that does not work, a "Finish connecting" button.
 let resumingLink = false;
+let signInFlight = false;       // a sign-in request is already waiting in the wallet: never send a second one on top of it
 const LINK_AUTO_KEY = 'xera_bnb_link_auto';
 function pendingStamp() { try { return localStorage.getItem(LINK_PENDING_KEY) || ''; } catch (_e) { return ''; } }
 function autoAlreadyTried() { try { return localStorage.getItem(LINK_AUTO_KEY) === pendingStamp(); } catch (_e) { return true; } }
@@ -635,6 +639,7 @@ function markAutoTried() { try { localStorage.setItem(LINK_AUTO_KEY, pendingStam
 
 async function resumePendingBnbLink() {
     if (resumingLink || state.busy.BNB || !linkPendingFresh() || !appKitConfigured()) return;
+    if (signInFlight) { trace('A sign-in request is already waiting in your wallet app. Open it and approve.'); return; }
     resumingLink = true;
     trace('Back on the page while a wallet link was in progress');
     try {
@@ -739,7 +744,7 @@ function renderProviderPicker(providers) {
 }
 
 async function linkWithProvider(entry, knownAddress, knownChainId) {
-    const { provider } = entry;
+    let { provider } = entry;
     let address = knownAddress;
     if (!address) {
         const accounts = await provider.request({ method: 'eth_requestAccounts' });
@@ -757,6 +762,16 @@ async function linkWithProvider(entry, knownAddress, knownChainId) {
     // (It does block settling a claim; see settleClaim.)
     trace(`Asking the server for a sign-in code for ${shorten(address)}`);
     const nonceRes = await req(PFX + '/wallet/link/nonce', { method: 'POST', body: JSON.stringify({ chain: 'BNB', address }) });
+    if (signInFlight) throw userError('A sign-in request is already waiting in your wallet app. Open your wallet and approve it.');
+    if (entry.appkit) {                                    // use the connection as it is NOW, and make sure it is up
+        const live = liveWalletSession();
+        if (live && live.provider) { provider = live.provider; entry.provider = provider; }
+        const up = await waitForRelay(4000);
+        if (!up) trace('Connection to your wallet is slow to come back (' + appKitDiagnostics() + ')');
+    }
+    if (!provider || typeof provider.request !== 'function') {
+        throw userError('Your wallet connection was lost while you were in your wallet app. Tap “Change wallet” and connect again.');
+    }
     trace('Waiting for you to sign in your wallet app');
     // The sign-in request goes to the wallet app, but on a phone the wallet is not in front: bring it there, and
     // leave a button in case the phone blocks the automatic jump.
@@ -774,13 +789,24 @@ async function linkWithProvider(entry, knownAddress, knownChainId) {
         openTimer = setTimeout(() => {
             const name = openChosenWalletApp();
             trace(name ? `Opened ${name} so you can approve the request` : 'No wallet app link saved: open your wallet app yourself and look for the pending request');
-        }, 800);                                           // after the request has been sent
+        }, 2500);                                          // give the request time to leave the page before the wallet takes the screen
     }
     const t1 = Date.now();
     const waitTick = setInterval(() => trace(`Still waiting for the sign-in approval (${Math.round((Date.now() - t1) / 1000)}s; ${appKitDiagnostics()})`), 20000);
     let signature;
-    try { signature = await provider.request({ method: 'personal_sign', params: [utf8ToHex(nonceRes.message_to_sign), address] }); }
-    finally { clearTimeout(openTimer); clearInterval(waitTick); }
+    signInFlight = true;
+    try {
+        const send = (pv) => pv.request({ method: 'personal_sign', params: [utf8ToHex(nonceRes.message_to_sign), address] });
+        try { signature = await send(provider); }
+        catch (err) {
+            if (!(err instanceof TypeError)) throw err;     // "reading 'request'": the connection object went stale. Rebuild it once.
+            trace('Wallet connection object was stale, reconnecting and trying once more');
+            nudgeAppKitConnection(); await waitForRelay(4000); await sleep(800);
+            const live = liveWalletSession();
+            if (!live || !live.provider) throw userError('Your wallet connection was lost. Tap “Change wallet” and connect again.');
+            signature = await send(live.provider);
+        }
+    } finally { signInFlight = false; clearTimeout(openTimer); clearInterval(waitTick); }
     trace('Signed. Saving to your account');
     stashSignature({ address: nonceRes.address || address, nonce: nonceRes.nonce, signature });
     try {

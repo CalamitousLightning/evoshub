@@ -188,6 +188,29 @@ export function nudgeAppKitConnection() {
     return false;
 }
 
+// The wallet session AppKit holds RIGHT NOW (a provider saved earlier can be dead after the page was in the background).
+export function liveWalletSession() {
+    try { return modalRef ? currentSession(modalRef) : null; } catch (_e) { return null; }
+}
+
+// A phone cuts the page's connection to the wallet while the wallet app is in front. Before sending a request,
+// make sure that connection is back (restart it and wait up to `ms`); resolves true when it is up or cannot be checked.
+export async function waitForRelay(ms = 4000) {
+    const end = Date.now() + ms;
+    for (let kicked = false; ;) {
+        let relayer = null;
+        try {
+            const provider = modalRef && modalRef.getWalletProvider && modalRef.getWalletProvider();
+            relayer = provider && provider.client && provider.client.core && provider.client.core.relayer;
+        } catch (_e) { /* ignore */ }
+        if (!relayer || typeof relayer.connected !== 'boolean') return true;      // cannot check: do not block
+        if (relayer.connected) return true;
+        if (!kicked && typeof relayer.restartTransport === 'function') { kicked = true; relayer.restartTransport().catch(() => {}); }
+        if (Date.now() >= end) return false;
+        await sleep(250);
+    }
+}
+
 // Brings the wallet app the user chose back to the front (so a pending sign-in request is actually seen).
 // WalletConnect/AppKit remember the chosen wallet's deep link in localStorage when it is picked on a phone.
 // Returns the wallet's name when a link was opened, or '' when there is nothing to open.
