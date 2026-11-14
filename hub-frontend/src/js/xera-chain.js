@@ -12,7 +12,7 @@
 // wallet password. Manual input is rejected client-side if it looks like one.
 
 import { TonConnectUI } from '@tonconnect/ui';
-import { appKitConfigured, connectWithAppKit, cancelAppKitConnect, reopenAppKitPicker, restoredAppKitProvider, disconnectAppKit, switchAppKitNetwork, nudgeAppKitConnection, appKitDiagnostics } from './xera-appkit.js';
+import { appKitConfigured, connectWithAppKit, cancelAppKitConnect, reopenAppKitPicker, restoredAppKitProvider, disconnectAppKit, switchAppKitNetwork, nudgeAppKitConnection, appKitDiagnostics, openChosenWalletApp } from './xera-appkit.js';
 
 const API = window.XERA_API_BASE || (import.meta.env && import.meta.env.VITE_API_BASE_URL) || ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.evoshub.xyz');
 const $ = (id) => document.getElementById(id);
@@ -758,7 +758,29 @@ async function linkWithProvider(entry, knownAddress, knownChainId) {
     trace(`Asking the server for a sign-in code for ${shorten(address)}`);
     const nonceRes = await req(PFX + '/wallet/link/nonce', { method: 'POST', body: JSON.stringify({ chain: 'BNB', address }) });
     trace('Waiting for you to sign in your wallet app');
-    const signature = await provider.request({ method: 'personal_sign', params: [utf8ToHex(nonceRes.message_to_sign), address] });
+    // The sign-in request goes to the wallet app, but on a phone the wallet is not in front: bring it there, and
+    // leave a button in case the phone blocks the automatic jump.
+    const isPhone = /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+    setNotice('Step 2: open your wallet app and approve the sign-in request (it only proves you own this address and costs nothing).');
+    const noticeEl = $('chainWalletNotice');
+    if (noticeEl && isPhone) {
+        noticeEl.append(' ', h('button', { type: 'button', class: 'btn btn-sm', text: 'Open my wallet', onclick: () => {
+            const name = openChosenWalletApp();
+            trace(name ? `Opening ${name} for you` : 'No wallet app link saved: open your wallet app yourself and look for the pending request');
+        } }));
+    }
+    let openTimer = null;
+    if (isPhone) {
+        openTimer = setTimeout(() => {
+            const name = openChosenWalletApp();
+            trace(name ? `Opened ${name} so you can approve the request` : 'No wallet app link saved: open your wallet app yourself and look for the pending request');
+        }, 800);                                           // after the request has been sent
+    }
+    const t1 = Date.now();
+    const waitTick = setInterval(() => trace(`Still waiting for the sign-in approval (${Math.round((Date.now() - t1) / 1000)}s; ${appKitDiagnostics()})`), 20000);
+    let signature;
+    try { signature = await provider.request({ method: 'personal_sign', params: [utf8ToHex(nonceRes.message_to_sign), address] }); }
+    finally { clearTimeout(openTimer); clearInterval(waitTick); }
     trace('Signed. Saving to your account');
     stashSignature({ address: nonceRes.address || address, nonce: nonceRes.nonce, signature });
     try {

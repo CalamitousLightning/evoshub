@@ -188,6 +188,22 @@ export function nudgeAppKitConnection() {
     return false;
 }
 
+// Brings the wallet app the user chose back to the front (so a pending sign-in request is actually seen).
+// WalletConnect/AppKit remember the chosen wallet's deep link in localStorage when it is picked on a phone.
+// Returns the wallet's name when a link was opened, or '' when there is nothing to open.
+export function openChosenWalletApp() {
+    try {
+        const raw = localStorage.getItem('WALLETCONNECT_DEEPLINK_CHOICE');
+        if (!raw) return '';
+        const choice = JSON.parse(raw);
+        const href = choice && choice.href;
+        if (!href || !/^[a-z][a-z0-9+.-]*:/i.test(href)) return '';
+        const link = /^https?:/i.test(href) || /:\/\/$/.test(href) || href.includes('://') ? href : href + '//';
+        window.location.href = link;
+        return String((choice && choice.name) || 'your wallet');
+    } catch (_e) { return ''; }
+}
+
 // One line describing what AppKit can see right now, for the "Wallet link steps" log. Never throws.
 export function appKitDiagnostics() {
     try {
