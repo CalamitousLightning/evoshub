@@ -48,6 +48,9 @@ async function getModal(expectedChainId) {
                 description: 'XERA by EVOXERA Technology',
                 url: location.origin,
                 icons: [`${location.origin}/assets/icons/xera-icon-192.png`],
+                // Where the wallet app sends the user back after they approve (the page they connected from).
+                // Without this the wallet only knows the site address and may not return to the browser at all.
+                redirect: { universal: location.origin + location.pathname },
             },
             // Wallet connection only: no email/social login, on-ramp, swaps or analytics.
             features: { analytics: false, email: false, socials: false, onramp: false, swaps: false, send: false, receive: false, history: false },
