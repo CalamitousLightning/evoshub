@@ -76,15 +76,20 @@ export default function ForgotPassword({ setPage }) {
   // ── Step 3: Reset Password ──
   const handleResetPassword = async () => {
     setError("");
-    if (!newPassword || !confirmPassword) {
+    // Login and Register both trim the password, so the reset must store the trimmed
+    // value too — otherwise a stray space (paste / keyboard autocomplete) makes the
+    // new password impossible to sign in with.
+    const pw = newPassword.trim();
+    const pwConfirm = confirmPassword.trim();
+    if (!pw || !pwConfirm) {
       setError("Please fill in both password fields");
       return;
     }
-    if (newPassword.length < 6) {
+    if (pw.length < 6) {
       setError("Password must be at least 6 characters");
       return;
     }
-    if (newPassword !== confirmPassword) {
+    if (pw !== pwConfirm) {
       setError("Passwords do not match");
       return;
     }
@@ -93,7 +98,7 @@ export default function ForgotPassword({ setPage }) {
       const res = await smartPost(`/auth/reset-password`, {
         email: email.trim().toLowerCase(),
         otp: otp.trim(),
-        new_password: newPassword,
+        new_password: pw,
       });
       if (res.data?.status === "success") {
         setSuccess("Password reset successfully! Redirecting to login...");
