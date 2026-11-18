@@ -198,7 +198,7 @@
         <h1 class="section-title" style="margin-bottom:10px;">XERA</h1>
         <p class="section-desc">
           XERA is a digital asset built by EVOXERA TECHNOLOGY as part of the EVOS ecosystem. It is being introduced in stages.
-          This page explains what is available today and shows the current supply figures from the XERA ledger.
+          Pure XERA is the in-app balance; claiming turns it into XERA, the on-chain token, and that is one-way. This page explains what is available today and shows the current supply figures from the XERA ledger.
         </p>
         <div class="tk-hero-actions">
           <a class="btn btn--primary" href="/xera" id="heroCta">Start mining</a>
@@ -216,9 +216,10 @@
         <div class="tk-col live">
           <h4>Live today</h4>
           <ul>
-            <li>XERA account and wallet</li>
+            <li>XERA account and wallet (Pure XERA in-app balance)</li>
             <li>24-hour mining sessions</li>
             <li>Daily claiming</li>
+            <li>Pure XERA transfers between users</li>
             <li>Transaction history</li>
             <li>Ecosystem directory</li>
             <li>XERA token contracts on BNB Smart Chain, verified on BscScan</li>
@@ -227,9 +228,8 @@
         <div class="tk-col off">
           <h4>Not live yet</h4>
           <ul>
-            <li>Moving XERA to your own wallet (opening in stages)</li>
+            <li>Moving Pure XERA to your own wallet as on-chain XERA (opening in stages)</li>
             <li>Buying and selling</li>
-            <li>Transfers between users</li>
             <li>Exchange listing</li>
           </ul>
         </div>
@@ -346,7 +346,8 @@
           <h4 style="color:var(--green);"><span class="badge badge--live"><span class="badge-pulse"></span></span>Live now</h4>
           <ul>
             <li>XERA account and wallet</li>
-            <li>Mining and daily claiming</li>
+            <li>Mining and daily claiming (Pure XERA)</li>
+            <li>Pure XERA transfers between users</li>
             <li>Transaction history</li>
             <li>Token contracts live on BNB Smart Chain</li>
           </ul>
@@ -362,8 +363,7 @@
         <div class="tk-roadmap-col">
           <h4 style="color:var(--text3);"><span class="badge badge--soon">Under consideration</span></h4>
           <ul>
-            <li>Buying and selling XERA</li>
-            <li>Transfers between users</li>
+            <li>Buying Pure XERA in the app, and selling XERA</li>
             <li>Exchange or marketplace listing</li>
           </ul>
         </div>
@@ -459,7 +459,7 @@
         const pct = d.mining_allocation > 0 ? Math.min(100, (d.mining_distributed / d.mining_allocation) * 100) : 0;
         document.getElementById('miningProgressBar').style.width = pct.toFixed(2) + '%';
         document.getElementById('miningProgressLabel').textContent =
-          `${fmtXera(d.mining_distributed)} of ${fmtXera(d.mining_allocation)} XERA mining allocation distributed (${pct.toFixed(2)}%)`;
+          `${fmtXera(d.mining_distributed)} of ${fmtXera(d.mining_allocation)} Pure XERA mining allocation distributed (${pct.toFixed(2)}%)`;
       } catch (err) {
         document.getElementById('tokenomicsError').textContent = 'Tokenomics data is temporarily unavailable. Please try again shortly.';
       }

@@ -58,7 +58,7 @@
       <div class="stat-box"><span>Registered users</span><b id="s-users">—</b></div>
       <div class="stat-box"><span>Active miners</span><b id="s-active">—</b></div>
       <div class="stat-box"><span>Completed mining sessions</span><b id="s-sessions">—</b></div>
-      <div class="stat-box"><span>Total XERA claimed</span><b id="s-claimed">—</b></div>
+      <div class="stat-box"><span>Total claimed on-chain (XERA)</span><b id="s-claimed">—</b></div>
       <div class="stat-box"><span>Mining status</span><b id="s-status">—</b></div>
     </div>
 
@@ -116,8 +116,8 @@
       try {
         const d = await fetchPublicJson('/api/xera/public/stats');
         document.getElementById('s-total').textContent = fmtXera(d.initial_target) + ' XERA';
-        document.getElementById('s-distributed').textContent = fmtXera(d.mining_distributed) + ' XERA';
-        document.getElementById('s-remaining').textContent = fmtXera(d.mining_allocation_remaining) + ' XERA';
+        document.getElementById('s-distributed').textContent = fmtXera(d.mining_distributed) + ' Pure XERA';
+        document.getElementById('s-remaining').textContent = fmtXera(d.mining_allocation_remaining) + ' Pure XERA';
         document.getElementById('s-users').textContent = fmtXera(d.registered_users);
         document.getElementById('s-active').textContent = fmtXera(d.active_miners);
         document.getElementById('s-sessions').textContent = fmtXera(d.completed_mining_sessions);

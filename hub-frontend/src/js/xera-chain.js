@@ -1058,7 +1058,7 @@ async function loadClaimables({ keepError = false } = {}) {
     try {
         const ov = await req(PFX + '/claim/overview');
         state.claimOverview = ov;
-        $('chainClaimableAmount').textContent = `${trimNum(ov.claimable)} XERA`;
+        $('chainClaimableAmount').textContent = `${trimNum(ov.claimable)} Pure XERA`;
         list.replaceChildren();
         if (!ov.claims.length) {
             list.append(h('p', { class: 'chain-empty', text: 'Nothing moved yet. Claims you start will appear here with their status.' }));
@@ -1142,7 +1142,7 @@ async function checkTransferReady(errEl) {
     try { d = await req('/api/xera/readiness'); } catch (_e) { return true; }
     const missing = Array.isArray(d.missing) ? d.missing : [];
     if (!missing.length) return true;
-    errEl.textContent = 'Before you can move XERA to your wallet: ' + missing.map((c) => REQ_TEXT[c] || c).join(' ');
+    errEl.textContent = 'Before you can move Pure XERA to your wallet: ' + missing.map((c) => REQ_TEXT[c] || c).join(' ');
     if (window.XeraReadiness) window.XeraReadiness.showRequirements(missing);
     return false;
 }
@@ -1187,7 +1187,7 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
     }
 
     const wallet = state.wallets.BNB;
-    if (!wallet) { errEl.textContent = 'Your BNB wallet must be connected before you can move XERA to it.'; return; }
+    if (!wallet) { errEl.textContent = 'Your BNB wallet must be connected before you can move Pure XERA to it.'; return; }
     if (!wallet.verified) { errEl.textContent = 'Your BNB address was added manually and hasn’t been verified. Connect the wallet and sign the ownership request first.'; return; }
 
     if (inFlight.has(busyKey)) return;
@@ -1280,7 +1280,7 @@ async function settleViaRelayer({ busyKey, button, idleLabel, body }) {
     clearMessages();
     if ($('chainSelect').value !== 'BNB') { errEl.textContent = 'Automatic sending supports BNB Smart Chain only for now. Please choose BNB.'; return; }
     const wallet = state.wallets.BNB;
-    if (!wallet) { errEl.textContent = 'Your BNB wallet must be connected (or added) before you can move XERA to it.'; return; }
+    if (!wallet) { errEl.textContent = 'Your BNB wallet must be connected (or added) before you can move Pure XERA to it.'; return; }
     if (!wallet.verified) { errEl.textContent = 'Your BNB address was added manually and has not been verified. Connect the wallet and sign the ownership request first.'; return; }
     if (inFlight.has(busyKey)) return;
     inFlight.add(busyKey);

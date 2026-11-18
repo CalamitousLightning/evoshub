@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <meta name="robots" content="noindex, nofollow"/>
 <meta name="theme-color" content="#060810"/>
-<title>XERA wallet | EVOXERA TECHNOLOGY</title>
+<title>Move to wallet | EVOXERA TECHNOLOGY</title>
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/xera-icon-192.png"/>
 <link href="../css/xera.css" rel="stylesheet"/>
 <style>
@@ -20,14 +20,15 @@
   <div class="wallet-top">
     <a href="/xera">&larr; Back to XERA</a>
   </div>
-  <h1 style="font-size:1.25rem;margin:0">XERA wallet</h1>
+  <h1 style="font-size:1.25rem;margin:0">Move to your wallet</h1>
+  <p class="wallet-box">Your in-app balance is <b>Pure XERA</b>. When you move it to your own wallet it becomes <b>XERA</b>, the on-chain token on BNB Smart Chain. This is one-way: on-chain XERA cannot be sent back into the app or used for in-app discounts.</p>
   <p class="wallet-box" id="walletClosed" hidden>On-chain claiming is not open yet. You can come back here when it is. <a href="/xera">Back to XERA</a></p>
-  <p class="wallet-box" id="walletReadyNote" hidden>To move XERA to your wallet you may need to finish identity verification and the one-time fee first. You can do that in the XERA app: <a href="/xera">open XERA</a>.</p>
+  <p class="wallet-box" id="walletReadyNote" hidden>To move Pure XERA to your wallet you may need to finish identity verification and the one-time fee first. You can do that in the XERA app: <a href="/xera">open XERA</a>.</p>
 
   <button type="button" data-goto="chain" id="openChain" hidden></button>
 
   <section class="tab-panel active" data-panel="chain">
-          <div class="section-title">Mining balance → Blockchain claim</div>
+          <div class="section-title">Pure XERA → XERA on-chain claim</div>
           <p style="font-size:.8rem;color:var(--text-secondary)">
             Settling a mined entitlement on-chain sends <b>25% straight to your wallet</b> and locks the remaining
             <b>75% for the 6-month launch phase</b>, releasing gradually. The 75% is not spendable until it vests —
@@ -46,7 +47,7 @@
           <p class="banner-info" id="chainWalletNotice" hidden></p>
           <p class="banner-error" id="chainWalletError"></p>
 
-          <div class="section-title" style="margin-top:18px">Move XERA to your wallet</div>
+          <div class="section-title" style="margin-top:18px">Move Pure XERA to your wallet as XERA</div>
           <div class="chain-claim-selector">
             <label for="chainSelect">Send to</label>
             <select id="chainSelect">
@@ -73,7 +74,7 @@
             <button type="button" class="btn chain-claim-submit" id="chainClaimSubmit" disabled>Move to wallet</button>
             <p class="chain-manual-hint">
               <b>25%</b> arrives in your wallet right away. The other <b>75%</b> is locked in vesting and unlocks
-              gradually — you can follow it under “Vesting status”. The amount you move is taken off your in-app balance.
+              gradually — you can follow it under “Vesting status”. The amount you move is taken off your in-app Pure XERA balance and arrives in your wallet as XERA.
             </p>
           </div>
 

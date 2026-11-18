@@ -19,8 +19,8 @@ const WELCOME_COPY = {
     lead: 'The official mining phase is now live. Thank you for being part of the evolving XERA ecosystem.',
     points: [
         { icon: '🔄', title: 'Fresh start', text: 'The test period has ended and all test data (balances, sessions, transactions and daily-claim progress) was reset. Your account was kept.' },
-        { icon: '🎁', title: 'Early-miner bonus', text: 'The first 100 eligible miners to start a mining session may receive a one-time bonus of 100 XERA. Eligibility is decided by the platform when your session starts and is not guaranteed.' },
-        { icon: '🔒', title: 'In-platform balance', text: 'Your XERA balance is an in-platform balance. On-chain claiming to your own wallet is opening in stages for verified users. No value, exchange listing or profit is promised.' },
+        { icon: '🎁', title: 'Early-miner bonus', text: 'The first 100 eligible miners to start a mining session may receive a one-time bonus of 100 Pure XERA. Eligibility is decided by the platform when your session starts and is not guaranteed.' },
+        { icon: '🔒', title: 'In-platform balance', text: 'Your Pure XERA balance is an in-platform balance. On-chain claiming to your own wallet is opening in stages for verified users. No value, exchange listing or profit is promised.' },
     ],
 };
 
@@ -308,10 +308,10 @@ function showCongrats(m) {
                 el('h2', { id: 'xlDoneTitle', class: 'xl-title xl-center', text: 'Mining started 🎉' }),
                 el('p', { class: 'xl-lead', text: 'Welcome to XERA Mining!' }),
                 el('div', { class: 'xl-stats' }, [
-                    m.estimated_reward != null ? stat('Session reward', `${Number(m.estimated_reward).toLocaleString('en-US')} XERA`) : null,
+                    m.estimated_reward != null ? stat('Session reward', `${Number(m.estimated_reward).toLocaleString('en-US')} Pure XERA`) : null,
                     m.expires_at ? stat('Ends', new Date(m.expires_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })) : null,
                 ]),
-                granted ? el('p', { class: 'xl-bonus', text: `🎁 Early-miner bonus credited: ${Number(bonus.amount).toLocaleString('en-US')} XERA` }) : null,
+                granted ? el('p', { class: 'xl-bonus', text: `🎁 Early-miner bonus credited: ${Number(bonus.amount).toLocaleString('en-US')} Pure XERA` }) : null,
                 el('p', { class: 'xl-fine', text: CONGRATS_COPY }),
                 el('div', { class: 'xl-actions xl-actions-full' }, [
                     el('button', { class: 'xl-btn xl-primary', type: 'button', text: 'Continue', onclick: () => close('continue') }),
