@@ -4,9 +4,10 @@ import { IS_HUB_MOUNT } from "../lib/basePath";
 import { hubSignInUrl } from "../lib/hubSession";
 
 // Inside the Hub (evoshub.xyz/evosdata) accounts sign in on the Hub login page,
-// so send people there; standalone (evosdata.xyz) uses the in-app login.
+// and after signing in they land on the Hub's own dashboard (/hub/), not EVOS Data.
+// Standalone (evosdata.xyz) uses the in-app login.
 const goToLogin = (setPage) => {
-  if (IS_HUB_MOUNT) window.location.assign(hubSignInUrl("/evosdata/dashboard"));
+  if (IS_HUB_MOUNT) window.location.assign(hubSignInUrl("/hub/"));
   else setPage("login");
 };
 
