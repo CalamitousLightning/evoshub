@@ -1,6 +1,4 @@
-# Install button: apply
+# Withdraw chip fix
 Copy over the same paths (no backend, no migration):
-- hub-frontend/src/js/install-fab.js              (new)
-- hub-frontend/src/pages/home.html                (1 script line added)
-- hub-frontend/src/pages/xera/index.html          (1 script line added; this is your copy WITH the Pure XERA labels)
-appevoxera already has its own install button and is untouched.
+- hub-frontend/src/pages/xera/index.html   (both Withdraw chips marked; built on your latest copy)
+- hub-frontend/src/js/xera.js              (small block in applyOnchainGate: Withdraw shows SOON while on-chain is closed, links to /xera-wallet.html once it is open)

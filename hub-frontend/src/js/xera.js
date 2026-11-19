@@ -74,6 +74,15 @@ let onchainEnabled = false;
 function applyOnchainGate() {
     const btn = $('openChainClaim');
     if (btn) { btn.hidden = !onchainEnabled; btn.style.display = onchainEnabled ? '' : 'none'; }
+    // Withdraw chips (= the on-chain claim): SOON while the master switch is off, a link to the claim screen once it is on.
+    document.querySelectorAll('[data-withdraw-chip]').forEach((chip) => {
+        const soon = chip.querySelector('.soon');
+        if (soon) soon.hidden = onchainEnabled;
+        chip.style.cursor = onchainEnabled ? 'pointer' : '';
+        chip.onclick = onchainEnabled ? () => { window.location.href = '/xera-wallet.html'; } : null;
+        chip.onkeydown = onchainEnabled ? (e) => { if (e.key === 'Enter') window.location.href = '/xera-wallet.html'; } : null;
+        if (onchainEnabled) { chip.setAttribute('role', 'link'); chip.tabIndex = 0; } else { chip.removeAttribute('role'); chip.removeAttribute('tabindex'); }
+    });
     window.__xeraOnchainEnabled = onchainEnabled;
 }
 async function loadOnchainGate() {
