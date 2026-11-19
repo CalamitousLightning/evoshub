@@ -20,6 +20,21 @@ export async function fetchUpdates({ limit = 20, before } = {}) {
   return { updates: j.updates || [], hasMore: !!j.has_more }
 }
 
+// Runs `fn` every `ms` (default 5 minutes) while the tab is visible. When the tab comes back after being
+// hidden for longer than `ms`, it refreshes straight away. Errors are swallowed so one bad call never stops the loop.
+export const UPDATES_REFRESH_MS = 5 * 60 * 1000
+export function startAutoRefresh(fn, ms = UPDATES_REFRESH_MS) {
+  let last = Date.now()
+  const run = async () => {
+    last = Date.now()
+    try { await fn() } catch (_e) { /* keep what is on screen */ }
+  }
+  setInterval(() => { if (!document.hidden) run() }, ms)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && Date.now() - last >= ms) run()
+  })
+}
+
 export function ago(iso) {
   const t = new Date(iso).getTime()
   if (!Number.isFinite(t)) return ''

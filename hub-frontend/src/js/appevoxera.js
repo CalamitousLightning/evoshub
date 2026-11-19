@@ -10,7 +10,7 @@ import { apiFetch as api } from './hub-api.js'
 import { requireAuthFor } from './guest-access.js'
 import { fetchPublicJson } from './xera-public.js'
 import { resolveEcosystemLink, makeEcosystemDeduper } from './internal-links.js'
-import { fetchUpdates, getSeen, ago as updatesAgo } from './updates-core.js'
+import { fetchUpdates, getSeen, startAutoRefresh, ago as updatesAgo } from './updates-core.js'
 
 initInstallButton(document.getElementById('install-btn'), { alwaysShow: true, hint: document.getElementById('install-hint') })
 
@@ -119,7 +119,7 @@ loadXera()
 loadActivity()
 
 // ---- Updates card: newest announcement + unread count (read-only, public, no sign-in needed) ----
-async function loadUpdatesCard() {
+async function loadUpdatesCard({ quiet = false } = {}) {
   const row = $('updatesRow')
   try {
     const { updates, hasMore } = await fetchUpdates({ limit: 10 })
@@ -130,6 +130,9 @@ async function loadUpdatesCard() {
       $('updatesCount').textContent = `${fresh >= 10 && hasMore ? '10+' : fresh} new`
       $('updatesCount').hidden = false
       $('updatesCard').classList.add('has-new')
+    } else {
+      $('updatesCount').hidden = true
+      $('updatesCard').classList.remove('has-new')
     }
     const top = updates[0]
     row.textContent = ''
@@ -144,9 +147,13 @@ async function loadUpdatesCard() {
     const tm = document.createElement('p'); tm.className = 'ah-updates-time'; tm.textContent = updatesAgo(top.created_at)
     box.append(txt, tm)
     row.appendChild(box)
-  } catch (e) { row.innerHTML = '<p class="ah-updates-empty">Tap to see the latest updates.</p>' }
+  } catch (e) {
+    // On a background refresh keep whatever is already showing; only the first load shows the fallback text.
+    if (!quiet) row.innerHTML = '<p class="ah-updates-empty">Tap to see the latest updates.</p>'
+  }
 }
 loadUpdatesCard()
+startAutoRefresh(() => loadUpdatesCard({ quiet: true }))   // every 5 minutes while the app is open
 
 // ---- Admin shortcut: only for an active admin agent. This just shows a button; every admin page still needs the admin login. ----
 async function initAdminStrip() {
