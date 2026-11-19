@@ -76,6 +76,7 @@ async function loadMe() {
     $('tfBalance').textContent = fmt(w.balance);
   } catch (_e) { $('tfBalance').textContent = '—'; }
 
+  if (me.locked) { $('tfLocked').textContent = me.lock_message || 'Transfers and withdrawals are paused: suspected breach of agreement. Contact support for details.'; show('tfLocked', true); return; }
   if (!me.enabled) { show('tfClosed', true); return; }
   if (!me.complete) {
     $('tfFeeNote').textContent = `Until your steps are complete, each transfer costs an extra ${fmt(me.fee_percent)}% of the amount, and you can send up to ${fmt(me.limits.daily_total)} Pure XERA per 24 hours.`;
