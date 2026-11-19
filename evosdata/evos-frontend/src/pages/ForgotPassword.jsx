@@ -22,6 +22,7 @@ export default function ForgotPassword({ setPage }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [notFound, setNotFound] = useState(false); // "no account with this email" dialog
 
   // ── Step 1: Send OTP ──
   const handleSendOTP = async () => {
@@ -36,13 +37,14 @@ export default function ForgotPassword({ setPage }) {
         email: email.trim().toLowerCase(),
       });
       if (res.data?.status === "sent") {
-        setSuccess("OTP sent! Check your email inbox.");
+        setSuccess("");
         setStep(2);
       } else {
         setError("Something went wrong. Try again.");
       }
     } catch (err) {
-      setError(err?.response?.data?.detail || "Server error. Try again.");
+      if (err?.response?.status === 404) setNotFound(true);
+      else setError(err?.response?.data?.detail || "Server error. Try again.");
     } finally {
       setLoading(false);
     }
@@ -62,7 +64,7 @@ export default function ForgotPassword({ setPage }) {
         otp: otp.trim(),
       });
       if (res.data?.status === "valid") {
-        setSuccess("OTP verified! Set your new password.");
+        setSuccess("");
         setStep(3);
       } else {
         setError("Invalid or expired OTP. Try again.");
@@ -156,12 +158,26 @@ export default function ForgotPassword({ setPage }) {
           {step === 3 && "New Password"}
         </h2>
         <p style={s.sub}>
-          {step === 1 && "We'll send a 6-digit OTP to your email"}
-          {step === 2 && `OTP sent to ${email}`}
+          {step === 1 && "Enter the email on your account. You will receive a 6-digit OTP from the Evoxera Technology Team."}
+          {step === 2 && `Expect an OTP from the Evoxera Technology Team. We sent it to ${email.trim().toLowerCase()}. Check your inbox and spam folder.`}
           {step === 3 && "Choose a strong new password"}
         </p>
 
-        {/* Success Banner */}
+        {/* No-account dialog (the only popup on this page) */}
+        {notFound && (
+          <div style={s.overlay} role="alertdialog" aria-modal="true" aria-labelledby="fpNfTitle" onClick={() => setNotFound(false)}>
+            <div style={s.dialog} onClick={(e) => e.stopPropagation()}>
+              <h3 id="fpNfTitle" style={s.dialogTitle}>No account found</h3>
+              <p style={s.dialogText}>
+                This email doesn't exist. No account is registered with <b>{email.trim().toLowerCase()}</b>.
+                Please check the spelling or use the email you signed up with.
+              </p>
+              <button style={s.btn} autoFocus onClick={() => setNotFound(false)}>Try another email</button>
+            </div>
+          </div>
+        )}
+
+        {/* Success Banner (only after the password is changed) */}
         {success && (
           <div style={s.successBox}>{success}</div>
         )}
@@ -291,6 +307,16 @@ export default function ForgotPassword({ setPage }) {
 }
 
 const s = {
+  overlay: {
+    position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000,
+    display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+  },
+  dialog: {
+    width: "100%", maxWidth: 340, background: "#161e29", borderRadius: 18, padding: "24px 22px 8px",
+    border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 24px 48px rgba(0,0,0,0.5)", textAlign: "center",
+  },
+  dialogTitle: { margin: "0 0 8px", fontSize: 18, fontWeight: 900, color: "#f87171" },
+  dialogText: { margin: "0 0 18px", fontSize: 13, lineHeight: 1.5, color: "#b3bece" },
   help: { fontSize: 12, color: "#8b98ab", textAlign: "center", margin: "16px 0 0" },
   page: {
     minHeight: "calc(100dvh - var(--dock, 0px) - 58px)",
