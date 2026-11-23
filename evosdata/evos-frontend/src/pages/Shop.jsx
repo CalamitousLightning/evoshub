@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import API, { verifyNumber } from "../api";
-import { getCachedPrices, subscribePrices, refreshPrices } from "../lib/pricesStore";
+import { getCachedPrices, subscribePrices, refreshPrices, startAutoRefresh } from "../lib/pricesStore";
 import { isGhanaPhone, toGhanaPhone, GHANA_ONLY_MSG } from "../lib/ghanaPhone";
 
 export default function Shop({ setPage } = {}) {
@@ -93,7 +93,8 @@ export default function Shop({ setPage } = {}) {
     // stock or a new bundle size changed on the server.
     const off = subscribePrices(setPrices);
     refreshPrices();
-    return off;
+    const stop = startAutoRefresh(60000);   // stock can change while the page is open
+    return () => { off(); stop(); };
   }, []);
 
   const OUT_OF_STOCK = [];
@@ -412,15 +413,15 @@ export default function Shop({ setPage } = {}) {
                 <input type="checkbox" checked={useXera} onChange={(e) => setUseXera(e.target.checked)}
                        style={{ marginTop: 3 }} />
                 <span style={{ fontSize: 13, lineHeight: 1.45 }}>
-                  Use <b>{Number(xeraQuote.xera_amount)} Pure XERA</b> for <b>GH₵ {Number(xeraQuote.discount_ghs).toFixed(2)} off</b>
+                  Use <b>{Number(xeraQuote.xera_amount)} XERA</b> for <b>GH₵ {Number(xeraQuote.discount_ghs).toFixed(2)} off</b>
                   {" "}(pay GH₵ {Number(xeraQuote.final_price).toFixed(2)}).
                   <span style={{ display: "block", opacity: 0.6, fontSize: 11.5 }}>
-                    Promotional discount. Your Pure XERA balance: {Number(xeraQuote.spendable)}.
+                    Promotional discount. Your XERA balance: {Number(xeraQuote.spendable)}.
                     {" "}Complete your payment within {Number(xeraQuote.hold_minutes) || 60} minutes.
                   </span>
                   {xeraQuote.verified === false && Number(xeraQuote.xera_if_verified) < Number(xeraQuote.xera_amount) && (
                     <span style={{ display: "block", opacity: 0.8, fontSize: 11.5, marginTop: 2 }}>
-                      Verify your identity in the XERA app to pay only {Number(xeraQuote.xera_if_verified)} Pure XERA.
+                      Verify your identity in the XERA app to pay only {Number(xeraQuote.xera_if_verified)} XERA.
                     </span>
                   )}
                 </span>
