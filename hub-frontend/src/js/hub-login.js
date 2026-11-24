@@ -89,25 +89,63 @@ $('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
+// Real-name popup: shown before the account is created. Resolves with the
+// name the person confirmed, or null if they go back.
+let regName = '';
+function askRealName(prefill, errorText) {
+    return new Promise((resolve) => {
+        const modal = $('nameModal'), input = $('nmInput'), box = $('nmConfirm'), err = $('nmErr');
+        input.value = prefill || '';
+        box.checked = false;
+        err.textContent = errorText || '';
+        modal.hidden = false;
+        setTimeout(() => input.focus(), 30);
+        const done = (val) => {
+            modal.hidden = true;
+            $('nameForm').onsubmit = null; $('nmCancel').onclick = null; modal.onkeydown = null;
+            resolve(val);
+        };
+        $('nameForm').onsubmit = (ev) => {
+            ev.preventDefault();
+            const v = input.value.replace(/\s+/g, ' ').trim();
+            if (v.split(' ').filter(Boolean).length < 2) { err.textContent = 'Enter your first and last name, as on your ID.'; return; }
+            if (!box.checked) { err.textContent = 'Please confirm this is your real name.'; return; }
+            done(v);
+        };
+        $('nmCancel').onclick = () => done(null);
+        modal.onkeydown = (ev) => { if (ev.key === 'Escape') done(null); };
+    });
+}
+
 $('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     $('registerError').textContent = '';
     const password = $('regPassword').value;
     if (password !== $('regPassword2').value) { $('registerError').textContent = "Passwords don't match."; return; }
     const btn = e.target.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    try {
-        finish(await post('/api/xera/auth/register', {
-            full_name: $('regFullName').value,
+    let nameErr = '';
+    for (;;) {
+        const name = await askRealName(regName, nameErr);
+        if (name === null) return;
+        regName = name;
+        btn.disabled = true;
+        try {
+            finish(await post('/api/xera/auth/register', {
+            full_name: name,
             username: $('regUsername').value,
             email: $('regEmail').value,
             phone: $('regPhone').value.trim() || undefined,
             password,
             ref: $('regRef').value.trim() || undefined,
-        }));
-    } catch (err) {
-        $('registerError').textContent = err.message;
-        btn.disabled = false;
+            }));
+            return;
+        } catch (err) {
+            btn.disabled = false;
+            // A name problem reopens the popup so it can be fixed in place.
+            if (/real name|first and last|name is too long|can't be used|letters only/i.test(err.message)) { nameErr = err.message; continue; }
+            $('registerError').textContent = err.message;
+            return;
+        }
     }
 });
 

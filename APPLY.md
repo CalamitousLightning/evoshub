@@ -1,19 +1,10 @@
-# Company whitepaper + social links
-Copy over the same paths (frontend only, no backend, no migration):
+Step 1: real-name rules + signup popup. Copy these files over your repo (same paths).
 
-NEW
-- hub-frontend/public/socials.js                      (the 3 social links, one place)
-- hub-frontend/src/pages/company-whitepaper.html      (EVOXERA Technology whitepaper: /company-whitepaper.html)
+NEW      python/xera/name_rules.py            shared name rules (also used later by the paid name change)
+CHANGED  python/xera/routes_auth.py           Hub/XERA signup checks the name (+1 import, +5 lines in xera_register)
+CHANGED  python/services/evosdata/core.py     EVOS Data signup checks the name (+5 lines at the top of register)
+CHANGED  hub-frontend/src/pages/login.html    "Full name" field removed from the form; real-name popup added
+CHANGED  hub-frontend/src/js/hub-login.js     popup shown before the account is created
 
-CHANGED
-- hub-frontend/vite.config.js                         (registers the new page)
-- hub-frontend/public/sitemap.xml                     (adds the new page)
-- hub-frontend/src/pages/ecosystem.html               (Whitepaper tile beside Roadmap, footer link, follow block)
-- hub-frontend/src/pages/appevoxera.html              (Whitepaper link, follow block)
-- hub-frontend/src/pages/xera/index.html              (Follow card on the Profile tab). Built on top of the Withdraw fix.
-- hub-frontend/src/pages/xera/whitepaper.html         (follow block)
-- socials added to the footer (one script line each): about, contact, home, integrated, policy, privacy, services, terms,
-  business-tools, website-creation, xera/faq, xera/roadmap, xera/disclosure, xera/stats, xera/tokenomics
-  (home.html and business-tools.html include the earlier link-preview fix)
-
-To change a link later, edit only public/socials.js.
+Deploy the backend (Render) and the frontend. No database change.
+Existing users are not affected. Only new signups.
