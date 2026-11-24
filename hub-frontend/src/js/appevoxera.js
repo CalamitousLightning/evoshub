@@ -12,7 +12,7 @@ import { fetchPublicJson } from './xera-public.js'
 import { resolveEcosystemLink, makeEcosystemDeduper } from './internal-links.js'
 import { fetchUpdates, getSeen, startAutoRefresh, ago as updatesAgo } from './updates-core.js'
 
-initInstallButton(document.getElementById('install-btn'), { alwaysShow: true, hint: document.getElementById('install-hint') })
+initInstallButton(document.getElementById('install-btn'), { alwaysShow: true })
 
 const $ = (id) => document.getElementById(id)
 const signedIn = isLoggedIn()
@@ -115,8 +115,53 @@ $('barActivity').addEventListener('click', (e) => {
   if (!signedIn) { e.preventDefault(); requireAuthFor('see your activity', { next: '/appevoxera' }) }
 })
 
+// ---- My activity / Global ledger switch ----
+// "My activity" is private (needs sign-in). "Global ledger" is public: every Pure XERA transfer between users,
+// with the XERA IDs partly hidden (XR-A…H79) and no names, so anyone can see the ecosystem is alive.
+let view = signedIn ? 'mine' : 'ledger'
+let ledgerHtml = ''
+let ledgerBusy = false
+const fmtAmt = (n) => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 4 })
+
+function ledgerRow(t) {
+  return `<div class="ah-row"><div class="ah-row-main"><p class="ah-row-title ah-led-ids"><span>${esc(t.sender)}</span><i aria-hidden="true">&rarr;</i><span class="ah-sr">sent to</span><span>${esc(t.recipient)}</span></p>` +
+    `<p class="ah-row-time">Transfer #${esc(t.id)} · ${esc(t.created_at ? ago(t.created_at) : '')}</p></div>` +
+    `<span class="ah-row-amt">${esc(fmtAmt(t.amount))}<small>Pure XERA</small></span></div>`
+}
+async function loadLedger() {
+  if (ledgerBusy) return
+  ledgerBusy = true
+  const list = $('ledgerList')
+  try {
+    const d = await fetchPublicJson('/api/xera/transfer/ledger?limit=10')
+    const rows = (d.transfers || []).slice(0, 10)
+    const html = rows.length ? rows.map(ledgerRow).join('') : '<p class="ah-empty">No transfers yet.</p>'
+    if (html !== ledgerHtml) { list.innerHTML = html; ledgerHtml = html }   // only redraw when something changed
+    $('ledgerMore').hidden = view !== 'ledger' || !rows.length
+  } catch (e) {
+    if (!ledgerHtml) list.innerHTML = '<p class="ah-empty">Couldn’t load the ledger right now.</p>'
+  } finally { ledgerBusy = false }
+}
+
+function setView(v) {
+  view = v
+  const mine = v === 'mine'
+  $('tabMine').setAttribute('aria-selected', String(mine))
+  $('tabLedger').setAttribute('aria-selected', String(!mine))
+  $('activityList').hidden = !mine
+  $('ledgerList').hidden = mine
+  $('ledgerMore').hidden = mine || !ledgerHtml || ledgerHtml.includes('ah-empty')
+  if (mine) loadActivity(); else loadLedger()
+}
+$('tabMine').addEventListener('click', () => setView('mine'))
+$('tabLedger').addEventListener('click', () => setView('ledger'))
+
+// Keep whichever list is open fresh (only while this tab is visible).
+setInterval(() => { if (!document.hidden) { if (view === 'ledger') loadLedger(); else if (signedIn) loadActivity() } }, 15000)
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (view === 'ledger') loadLedger(); else if (signedIn) loadActivity() } })
+
 loadXera()
-loadActivity()
+setView(view)
 
 // ---- Updates card: newest announcement + unread count (read-only, public, no sign-in needed) ----
 async function loadUpdatesCard({ quiet = false } = {}) {
