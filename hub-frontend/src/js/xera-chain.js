@@ -126,6 +126,68 @@ function userMessage(err, fallback) {
 }
 const userError = (message) => Object.assign(new Error(message), { userFacing: true });
 
+// ---------------------------------------------------------------- manual (typed) address helpers
+// A typed address can receive withdrawals, but only after a safety wait and with the account password.
+// The server enforces both; the checks here only explain things early and save a round trip.
+const isManual = (w) => !!w && !w.verified && w.connection_method === 'manual';
+
+function manualReadyMs(w) {
+    const t = w && w.withdraw_ready_at ? Date.parse(w.withdraw_ready_at) : NaN;
+    return Number.isNaN(t) ? null : t;
+}
+
+function waitText(ms) {
+    const mins = Math.max(1, Math.ceil(ms / 60000));
+    const hrs = Math.floor(mins / 60);
+    return hrs ? `${hrs} h ${mins % 60} min` : `${mins} min`;
+}
+
+// The address with its first and last 6 characters set apart, so a typo or a swapped address is easy to spot.
+function addressWithEnds(addr) {
+    const box = h('div', { style: 'font-family:ui-monospace,Menlo,monospace;font-size:.9rem;line-height:1.5;word-break:break-all;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14)' });
+    const strong = 'color:#5ee0a0;font-weight:700';
+    box.append(h('span', { style: strong, text: addr.slice(0, 6) }), addr.slice(6, -6), h('span', { style: strong, text: addr.slice(-6) }));
+    return box;
+}
+
+// Confirmation + password popup shown before a withdrawal to a manual address. Resolves to the password,
+// or null if the user cancels. Nothing is reserved or signed until this returns a password.
+function confirmManualWithdraw(wallet, amountText) {
+    return new Promise((resolve) => {
+        const overlay = h('div', { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Confirm withdrawal address',
+            style: 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,8,18,.78)' });
+        const card = h('div', { style: 'width:100%;max-width:420px;max-height:92vh;overflow:auto;box-sizing:border-box;padding:18px;border-radius:18px;background:#0f1424;color:#e8ecf7;border:1px solid rgba(255,255,255,.14);display:grid;gap:12px' });
+        const pw = h('input', { type: 'password', autocomplete: 'current-password', placeholder: 'Account password', 'aria-label': 'Account password',
+            style: 'width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:inherit;font-size:1rem' });
+        const check = h('input', { type: 'checkbox', id: 'mwdCheck', style: 'margin-top:3px' });
+        const err = h('p', { role: 'alert', style: 'margin:0;color:#ff7b8a;font-size:.85rem;min-height:1em' });
+        const go = h('button', { type: 'button', class: 'btn', text: 'Withdraw', disabled: true });
+        const cancel = h('button', { type: 'button', class: 'btn btn-ghost', text: 'Cancel' });
+        const sync = () => { go.disabled = !(check.checked && pw.value.length > 0); };
+        check.addEventListener('change', sync);
+        pw.addEventListener('input', sync);
+        const finish = (value) => { document.removeEventListener('keydown', onKey); overlay.remove(); resolve(value); };
+        const onKey = (e) => { if (e.key === 'Escape') finish(null); };
+        document.addEventListener('keydown', onKey);
+        cancel.addEventListener('click', () => finish(null));
+        go.addEventListener('click', () => { if (!go.disabled) finish(pw.value); });
+        pw.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !go.disabled) finish(pw.value); });
+        card.append(
+            h('h3', { style: 'margin:0;font-size:1.05rem', text: 'Check the address before you withdraw' }),
+            h('p', { style: 'margin:0;font-size:.85rem;line-height:1.45;color:#aeb8d0', text: `${amountText ? `${amountText} XERA will be` : 'XERA will be'} sent to this address. This address was typed in, not verified by your wallet. XERA sent to a wrong address cannot be recovered.` }),
+            addressWithEnds(wallet.address),
+            h('p', { style: 'margin:0;font-size:.85rem;line-height:1.45;color:#aeb8d0', text: 'Compare the first 6 and last 6 characters (green) with the address in your wallet app.' }),
+            h('label', { for: 'mwdCheck', style: 'display:flex;gap:8px;align-items:flex-start;font-size:.85rem;line-height:1.4' }, check,
+                h('span', { text: 'I checked this address. It is my own wallet and it holds BNB for the network fee.' })),
+            pw, err,
+            h('div', { style: 'display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap' }, cancel, go),
+        );
+        overlay.append(card);
+        document.body.append(overlay);
+        pw.focus();
+    });
+}
+
 function setError(msg) {
     $('chainWalletError').textContent = msg || '';
 }
@@ -396,8 +458,18 @@ function manualForm(chain, w) {
         h('label', { class: 'chain-manual-label', for: `chainManualInput${chain}`, text: `Add ${chain} wallet address manually` }),
         input,
         h('button', { type: 'button', class: 'btn btn-sm chain-manual-submit', text: w && w.connection_method === 'manual' ? 'Update address' : 'Add wallet', onclick: submit }),
-        h('p', { class: 'chain-manual-hint', text: 'Public address only — never a seed phrase or private key. A typed address is saved as unverified.' }),
+        h('p', { class: 'chain-manual-hint', text: 'Public address only — never a seed phrase or private key. A new or changed address can receive XERA after a 12-hour safety wait, and each withdrawal asks for your password. XERA sent to a wrong address cannot be recovered.' }),
     );
+}
+
+function manualWaitNote(w) {
+    const ms = manualReadyMs(w);
+    if (ms === null) return null;
+    const left = ms - Date.now();
+    return h('p', { class: `chain-gas-note ${left > 0 ? 'warn' : 'ok'}`,
+        text: left > 0
+            ? `Safety wait: you can withdraw to this address in ${waitText(left)}. A new or changed address always waits before it can receive XERA.`
+            : 'This address is ready to receive withdrawals.' });
 }
 
 function renderWalletCard(chain) {
@@ -441,7 +513,8 @@ function renderWalletCard(chain) {
     card.append(
         walletCardHeader(chain, 'Manual address · not verified', 'warn'),
         addressRow(w),
-        h('p', { class: 'chain-manual-hint', text: 'Saved to your account, but ownership is not proven — this address can’t be used to settle a claim until you connect the wallet and sign the ownership request.' }),
+        h('p', { class: 'chain-manual-hint', text: 'Saved to your account. You can withdraw XERA to this address. Each withdrawal asks for your password, and this wallet must hold a little BNB for the network fee. You can also verify it with your wallet.' }),
+        manualWaitNote(w),
         h('div', { class: 'chain-actions' },
             connectBtn('Verify with wallet'),
             h('button', { type: 'button', class: 'btn btn-sm btn-ghost', disabled: busy, text: 'Change', onclick: () => { state.manualFormOpen[chain] = !state.manualFormOpen[chain]; renderWalletCard(chain); } }),
@@ -499,7 +572,7 @@ async function addManualWallet(chain, input) {
     try {
         const res = await req(PFX + '/wallet/manual', { method: 'POST', body: JSON.stringify({ chain, address: value }) });
         state.manualFormOpen[chain] = false;
-        setNotice(res.notice || 'Wallet address added. This address has not been cryptographically verified as wallet ownership.');
+        setNotice(res.notice || 'Wallet address saved. You can withdraw to it after a safety waiting period, with your password.');
     } catch (err) {
         setError(userMessage(err, 'Could not save this wallet address. Please try again.'));
     } finally {
@@ -976,8 +1049,8 @@ async function readBnbBalance(address, provider) {
     } catch (_e) { return null; }
 }
 
-function lowBnbMessage(balance) {
-    return `You need a little BNB for the network fee. Your wallet has ${fmtBnb(balance)} BNB. Add a small amount of BNB to your linked wallet, then try again.`;
+function lowBnbMessage(balance, manual) {
+    return `You need a little BNB for the network fee. Your wallet has ${fmtBnb(balance)} BNB. Add a small amount of BNB to ${manual ? 'the wallet address you saved for withdrawals' : 'your linked wallet'}, then try again.`;
 }
 
 // Shows the wallet's BNB balance on the claim card and (user mode only) holds the button back when
@@ -987,7 +1060,7 @@ async function refreshGasNote() {
     if (!el) return;
     const w = state.wallets.BNB;
     state.gasLow = false;
-    if (CFG.relay || !w || !w.verified) { el.hidden = true; updateClaimPreview(); return; }
+    if (CFG.relay || !w || (!w.verified && !isManual(w))) { el.hidden = true; updateClaimPreview(); return; }
     await loadNetworkConfig();
     const bal = await readBnbBalance(w.address, null);
     if (bal === null) { el.hidden = true; updateClaimPreview(); return; }
@@ -995,8 +1068,8 @@ async function refreshGasNote() {
     el.hidden = false;
     el.className = `chain-gas-note ${state.gasLow ? 'warn' : 'ok'}`;
     el.textContent = state.gasLow
-        ? lowBnbMessage(bal)
-        : `Network fee: you pay a small BNB fee from your own wallet. Your wallet has ${fmtBnb(bal)} BNB.`;
+        ? lowBnbMessage(bal, isManual(w))
+        : `Network fee: you pay a small BNB fee from your own wallet${isManual(w) ? ' (the address you saved)' : ''}. Your wallet has ${fmtBnb(bal)} BNB.`;
     updateClaimPreview();
 }
 
@@ -1172,7 +1245,7 @@ async function reconnectLinkedWallet(wallet) {
 //   3. backend reserves the amount (balance debited atomically) and signs it
 //   4. user confirms the transaction in their wallet
 //   5. backend independently verifies the transaction on-chain and only THEN marks it settled
-async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownRef }) {
+async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownRef, amountText }) {
     const chain = $('chainSelect').value;
     const errEl = $('chainClaimError');
     errEl.textContent = '';
@@ -1188,7 +1261,23 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
 
     const wallet = state.wallets.BNB;
     if (!wallet) { errEl.textContent = 'Your BNB wallet must be connected before you can move Pure XERA to it.'; return; }
-    if (!wallet.verified) { errEl.textContent = 'Your BNB address was added manually and hasn’t been verified. Connect the wallet and sign the ownership request first.'; return; }
+    const manual = isManual(wallet);
+    if (!wallet.verified && !manual) { errEl.textContent = 'Your BNB address was added manually and hasn’t been verified. Connect the wallet and sign the ownership request first.'; return; }
+
+    // A typed address: explain the safety wait up front, then confirm the address and ask for the password
+    // BEFORE anything is reserved. (Resuming an already-signed claim needs neither: the password was checked when it was signed.)
+    let password = null;
+    if (manual && !(knownRef && signedClaims.has(knownRef))) {
+        const readyMs = manualReadyMs(wallet);
+        if (readyMs === null || readyMs > Date.now()) {
+            errEl.textContent = readyMs === null
+                ? 'Your saved address is still in its safety waiting period. Please try again later.'
+                : `For your safety, a newly added or changed address can receive XERA after a waiting period. Yours unlocks in ${waitText(readyMs - Date.now())}.`;
+            return;
+        }
+        password = await confirmManualWithdraw(wallet, amountText);
+        if (password === null) return;   // cancelled: nothing was changed
+    }
 
     if (inFlight.has(busyKey)) return;
     inFlight.add(busyKey);
@@ -1219,6 +1308,15 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
             }
         }
         if (!entry) throw userError('Several wallets are installed. Use “Change wallet” above to pick the one linked to this account, then try again.');
+        if (manual) {
+            // The wallet that sends the transaction must be the saved address: it pays the gas, and
+            // being able to use it is the proof that the address is really yours.
+            let accts = [];
+            try { accts = await entry.provider.request({ method: 'eth_accounts' }); } catch (_e) { /* locked */ }
+            if (!accts.some((a) => a.toLowerCase() === wallet.address.toLowerCase())) {
+                throw userError(`Your wallet is connected as ${accts[0] ? shorten(accts[0]) : 'a different account'}, but the address saved for withdrawals is ${shorten(wallet.address)}. Open the wallet that owns the saved address, then try again. Nothing was reserved.`);
+            }
+        }
         state.provider = entry;
         attachProviderListeners(entry);
         state.providerChainId = await readChainId(entry.provider, entry.chainId);
@@ -1237,11 +1335,11 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
                 payer = accts.find((a) => a.toLowerCase() === wallet.address.toLowerCase()) || accts[0] || payer;
             } catch (_e) { /* keep the linked address */ }
             const bal = await readBnbBalance(payer, entry.provider);
-            if (bal !== null && bal < MIN_BNB_FOR_GAS) throw userError(lowBnbMessage(bal));
+            if (bal !== null && bal < MIN_BNB_FOR_GAS) throw userError(lowBnbMessage(bal, manual));
         }
 
         if (button) button.textContent = 'Signing…';
-        const claim = await fetchClaim(chain);
+        const claim = await fetchClaim(chain, password);
         referenceId = claim.reference_id || knownRef;
         signedClaims.set(referenceId, { ...claim, reference_id: referenceId });
 
@@ -1310,8 +1408,8 @@ function settleAmount() {
     if (amountToCents(text) === null) { updateClaimPreview(); return; }
     if (CFG.relay) return settleViaRelayer({ busyKey: 'amount', button: $('chainClaimSubmit'), idleLabel: 'Move to wallet', body: { amount: text } });
     return settleWithWallet({
-        busyKey: 'amount', button: $('chainClaimSubmit'), idleLabel: 'Move to wallet',
-        fetchClaim: async (chain) => (await req(PFX + '/claim/sign-amount', { method: 'POST', body: JSON.stringify({ chain, amount: text }) })).claim,
+        busyKey: 'amount', button: $('chainClaimSubmit'), idleLabel: 'Move to wallet', amountText: text,
+        fetchClaim: async (chain, password) => (await req(PFX + '/claim/sign-amount', { method: 'POST', body: JSON.stringify({ chain, amount: text, ...(password ? { password } : {}) }) })).claim,
     });
 }
 
@@ -1319,7 +1417,7 @@ function retryClaim(referenceId, button) {
     if (CFG.relay) return settleViaRelayer({ busyKey: referenceId, button, idleLabel: 'Try again', body: { reference_id: referenceId } });
     return settleWithWallet({
         busyKey: referenceId, button, idleLabel: 'Try again', knownRef: referenceId,
-        fetchClaim: async (chain) => (await req(PFX + '/claim/retry', { method: 'POST', body: JSON.stringify({ reference_id: referenceId, chain }) })).claim,
+        fetchClaim: async (chain, password) => (await req(PFX + '/claim/retry', { method: 'POST', body: JSON.stringify({ reference_id: referenceId, chain, ...(password ? { password } : {}) }) })).claim,
     });
 }
 
