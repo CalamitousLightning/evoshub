@@ -458,7 +458,7 @@ function manualForm(chain, w) {
         h('label', { class: 'chain-manual-label', for: `chainManualInput${chain}`, text: `Add ${chain} wallet address manually` }),
         input,
         h('button', { type: 'button', class: 'btn btn-sm chain-manual-submit', text: w && w.connection_method === 'manual' ? 'Update address' : 'Add wallet', onclick: submit }),
-        h('p', { class: 'chain-manual-hint', text: 'Public address only — never a seed phrase or private key. A new or changed address can receive XERA after a 12-hour safety wait, and each withdrawal asks for your password. XERA sent to a wrong address cannot be recovered.' }),
+        h('p', { class: 'chain-manual-hint', text: 'Public address only. A new address waits 12 hours, each withdrawal needs your password, and a wrong address can’t be recovered.' }),
     );
 }
 
@@ -468,8 +468,8 @@ function manualWaitNote(w) {
     const left = ms - Date.now();
     return h('p', { class: `chain-gas-note ${left > 0 ? 'warn' : 'ok'}`,
         text: left > 0
-            ? `Safety wait: you can withdraw to this address in ${waitText(left)}. A new or changed address always waits before it can receive XERA.`
-            : 'This address is ready to receive withdrawals.' });
+            ? `Safety wait: ready in ${waitText(left)}.`
+            : 'Ready for withdrawals.' });
 }
 
 function renderWalletCard(chain) {
@@ -513,7 +513,7 @@ function renderWalletCard(chain) {
     card.append(
         walletCardHeader(chain, 'Manual address · not verified', 'warn'),
         addressRow(w),
-        h('p', { class: 'chain-manual-hint', text: 'Saved to your account. You can withdraw XERA to this address. Each withdrawal asks for your password, and this wallet must hold a little BNB for the network fee. You can also verify it with your wallet.' }),
+        h('p', { class: 'chain-manual-hint', text: 'Saved. Withdrawals ask for your password, and this wallet needs a little BNB for gas.' }),
         manualWaitNote(w),
         h('div', { class: 'chain-actions' },
             connectBtn('Verify with wallet'),

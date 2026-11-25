@@ -13,6 +13,13 @@
   .wallet-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .wallet-top a{font:inherit;color:var(--text-secondary,#9aa5b8);text-decoration:underline}
   .wallet-box{border:1px solid var(--border,rgba(255,255,255,.1));border-radius:14px;padding:12px 14px;font-size:.82rem;line-height:1.5;background:var(--surface,rgba(255,255,255,.03))}
+  .xera-hero{position:relative;overflow:hidden;border-radius:18px;border:1px solid var(--border-strong,rgba(255,255,255,.14));min-height:150px;display:flex;align-items:flex-end;background:#060810}
+  .xera-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .xera-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,16,.05) 0%,rgba(6,8,16,.82) 100%)}
+  .xera-hero-tx{position:relative;z-index:1;padding:14px 16px}
+  .xera-hero-tx b{display:block;font-family:var(--font-display,inherit);font-size:1.15rem;line-height:1.2}
+  .xera-hero-tx span{display:block;font-size:.8rem;color:var(--text-secondary,#c3cbda);margin-top:2px}
+  .xera-strip{display:block;width:100%;height:84px;object-fit:cover;border-radius:14px;border:1px solid var(--border,rgba(255,255,255,.1))}
 </style>
 </head>
 <body>
@@ -20,36 +27,32 @@
   <div class="wallet-top">
     <a href="/xera">&larr; Back to XERA</a>
   </div>
-  <h1 style="font-size:1.25rem;margin:0">Move to your wallet</h1>
-  <p class="wallet-box">Your in-app balance is <b>Pure XERA</b>. When you move it to your own wallet it becomes <b>XERA</b>, the on-chain token on BNB Smart Chain. This is one-way: on-chain XERA cannot be sent back into the app or used for in-app discounts.</p>
-  <p class="wallet-box" id="walletClosed" hidden>On-chain claiming is not open yet. You can come back here when it is. <a href="/xera">Back to XERA</a></p>
-  <p class="wallet-box" id="walletReadyNote" hidden>To move Pure XERA to your wallet you may need to finish identity verification and the one-time fee first. You can do that in the XERA app: <a href="/xera">open XERA</a>.</p>
+  <div class="xera-hero">
+    <img src="/assets/images/xera-backgrounds/xera-blockchain.jpg" alt="" width="1200" height="600" decoding="async" fetchpriority="high">
+    <div class="xera-hero-tx"><b>Move to your wallet</b><span>Pure XERA becomes on-chain XERA on BNB Smart Chain.</span></div>
+  </div>
+  <p class="wallet-box">This is one-way. On-chain XERA can't come back into the app.</p>
+  <p class="wallet-box" id="walletClosed" hidden>On-chain claiming is not open yet. <a href="/xera">Back to XERA</a></p>
+  <p class="wallet-box" id="walletReadyNote" hidden>You may need to finish verification and the one-time fee first. <a href="/xera">Open XERA</a></p>
 
   <button type="button" data-goto="chain" id="openChain" hidden></button>
 
   <section class="tab-panel active" data-panel="chain">
-          <div class="section-title">Pure XERA → XERA on-chain claim</div>
-          <p style="font-size:.8rem;color:var(--text-secondary)">
-            Settling a mined entitlement on-chain sends <b>25% straight to your wallet</b> and locks the remaining
-            <b>75% for the 6-month launch phase</b>, releasing gradually. The 75% is not spendable until it vests —
-            it is not lost, just locked.
-          </p>
+          <div class="section-title">On-chain claim</div>
+          <p style="font-size:.8rem;color:var(--text-secondary)"><b>25%</b> goes to your wallet now. <b>75%</b> unlocks over 6 months.</p>
 
           <div class="section-title" style="margin-top:18px">Wallets</div>
           <div id="chainNetworkBanner" class="chain-network" hidden></div>
           <div id="chainWalletCardBNB" class="chain-wallet-card" data-chain="BNB"></div>
           <div id="chainWalletCardTON" class="chain-wallet-card" data-chain="TON" aria-disabled="true" title="TON is coming soon" style="opacity:.4;pointer-events:none;filter:grayscale(1)"></div>
-          <p style="font-size:.74rem;color:var(--text-secondary);margin:-4px 0 8px">TON wallets are coming soon. BNB Smart Chain only for now.</p>
-          <p class="chain-safety-note">
-            Only ever enter your <b>public wallet address</b>. XERA never asks for a seed phrase, recovery phrase,
-            private key or wallet password — if anything asks you for one, it is not us.
-          </p>
+          <p style="font-size:.74rem;color:var(--text-secondary);margin:-4px 0 8px">TON is coming soon. BNB only for now.</p>
+          <p class="chain-safety-note">Enter your <b>public address</b> only. We never ask for a seed phrase or private key.</p>
           <p class="banner-info" id="chainWalletNotice" hidden></p>
           <p class="banner-error" id="chainWalletError"></p>
 
-          <div class="section-title" style="margin-top:18px">Move Pure XERA to your wallet as XERA</div>
+          <div class="section-title" style="margin-top:18px">Move to wallet</div>
           <div class="chain-claim-selector">
-            <label for="chainSelect">Send to</label>
+            <label for="chainSelect">Network</label>
             <select id="chainSelect">
               <option value="BNB">BNB Smart Chain</option>
               <option value="TON" disabled>TON (coming soon)</option>
@@ -61,7 +64,7 @@
               <span>Available to move</span>
               <b id="chainClaimableAmount">—</b>
             </div>
-            <label class="chain-manual-label" for="chainClaimAmount">How much do you want to move?</label>
+            <label class="chain-manual-label" for="chainClaimAmount">Amount</label>
             <div class="chain-claim-amount-row">
               <input id="chainClaimAmount" class="chain-claim-input" type="text" inputmode="decimal"
                      autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done"
@@ -72,28 +75,26 @@
             <div class="chain-claim-split" id="chainClaimSplit" aria-live="polite"></div>
             <p class="chain-gas-note" id="chainGasNote" role="status" aria-live="polite" hidden></p>
             <button type="button" class="btn chain-claim-submit" id="chainClaimSubmit" disabled>Move to wallet</button>
-            <p class="chain-manual-hint">
-              <b>25%</b> arrives in your wallet right away. The other <b>75%</b> is locked in vesting and unlocks
-              gradually — you can follow it under “Vesting status”. The amount you move is taken off your in-app Pure XERA balance and arrives in your wallet as XERA.
-            </p>
+            <p class="chain-manual-hint">The amount is taken from your Pure XERA balance.</p>
           </div>
 
-          <div class="section-title" style="margin-top:18px">Your on-chain claims</div>
+          <div class="section-title" style="margin-top:18px">Your claims</div>
           <div id="chainClaimableList" class="chain-claimable-list"></div>
           <p class="banner-error" id="chainClaimError"></p>
 
-          <div class="section-title" style="margin-top:18px">Vesting status</div>
+          <div class="section-title" style="margin-top:18px">Vesting</div>
+          <img class="xera-strip" src="/assets/images/xera-backgrounds/xera-digital-mining.jpg" alt="" width="1200" height="168" loading="lazy" decoding="async">
           <div class="wp-stat-grid">
-            <div class="wp-stat"><span>Transferable so far</span><b id="chainReleasable">—</b></div>
-            <div class="wp-stat"><span>Still locked</span><b id="chainLocked">—</b></div>
+            <div class="wp-stat"><span>Unlocked</span><b id="chainReleasable">—</b></div>
+            <div class="wp-stat"><span>Locked</span><b id="chainLocked">—</b></div>
           </div>
 
-          <div class="section-title" style="margin-top:18px">Legacy balance migration</div>
+          <div class="section-title" style="margin-top:18px">Legacy balance</div>
           <div id="chainMigrationBlock">
-            <p style="font-size:.78rem;color:var(--text-secondary)">Checking for a pre-blockchain legacy balance…</p>
+            <p style="font-size:.78rem;color:var(--text-secondary)">Checking…</p>
           </div>
 
-          <div class="section-title" style="margin-top:18px">Recent on-chain settlements</div>
+          <div class="section-title" style="margin-top:18px">Recent claims</div>
           <div id="chainClaimHistory"></div>
         </section>
 </main>
