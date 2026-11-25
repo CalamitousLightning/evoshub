@@ -10,6 +10,8 @@ import { safeNext, isExpired, notifyAuthChange } from './evos-session.js';
 import { mountGuestBanner, requireAuthFor } from './guest-access.js';
 import { maybeShowWelcome, startMiningWithOnboarding, resetLaunchSession, showAgreementView } from './xera-launch.js';
 import { initReadiness, resetReadiness } from './xera-readiness.js';
+import { initNameChange } from './xera-name-change.js';
+import { initAccountDeletion } from './xera-account-deletion.js';
 
 const token = () => localStorage.getItem('xera_evos_token') || '';
 const fmt = (n) => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
@@ -220,6 +222,8 @@ function renderProfile() {
     $('profileEmail').textContent = user.email || '—';
 }
 
+initNameChange(() => renderProfile());
+initAccountDeletion();
 $('logoutProfile').onclick = () => { doLogout(); };
 $('profileOpenStats').onclick = openStats;
 $('profileOpenAgreement').onclick = async (e) => {
