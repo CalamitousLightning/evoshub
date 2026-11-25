@@ -124,6 +124,11 @@ let ledgerBusy = false
 const fmtAmt = (n) => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 4 })
 
 function ledgerRow(t) {
+  if (t.kind === 'onchain') {
+    return `<div class="ah-row"><div class="ah-row-main"><p class="ah-row-title ah-led-ids"><span>${esc(t.sender)}</span><span>claimed on-chain</span></p>` +
+      `<p class="ah-row-time">${esc(t.created_at ? ago(t.created_at) : '')}</p></div>` +
+      `<span class="ah-row-amt">${esc(fmtAmt(t.amount))}<small>XERA on-chain</small></span></div>`
+  }
   return `<div class="ah-row"><div class="ah-row-main"><p class="ah-row-title ah-led-ids"><span>${esc(t.sender)}</span><i aria-hidden="true">&rarr;</i><span class="ah-sr">sent to</span><span>${esc(t.recipient)}</span></p>` +
     `<p class="ah-row-time">Transfer #${esc(t.id)} · ${esc(t.created_at ? ago(t.created_at) : '')}</p></div>` +
     `<span class="ah-row-amt">${esc(fmtAmt(t.amount))}<small>Pure XERA</small></span></div>`

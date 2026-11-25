@@ -211,14 +211,17 @@ function ledgerRow(t) {
   const l1 = document.createElement('div');
   l1.className = 'tf-l1';
   const who = document.createElement('span');
-  who.textContent = `${t.sender} → ${t.recipient}`;
+  const onchain = t.kind === 'onchain';
+  who.textContent = onchain ? `${t.sender} claimed on-chain` : `${t.sender} → ${t.recipient}`;
   const amt = document.createElement('span');
-  amt.textContent = `${fmt(t.amount)} Pure XERA`;
+  amt.textContent = onchain ? `${fmt(t.amount)} XERA on-chain` : `${fmt(t.amount)} Pure XERA`;
   l1.append(who, amt);
   const l2 = document.createElement('div');
   l2.className = 'tf-l2';
   const when = new Date(t.created_at);
-  l2.textContent = `#${t.id} · ${isNaN(when) ? '' : when.toLocaleString()} · ${t.status}`;
+  l2.textContent = onchain
+    ? `${isNaN(when) ? '' : when.toLocaleString()} · On-chain claim`
+    : `#${t.id} · ${isNaN(when) ? '' : when.toLocaleString()} · ${t.status}`;
   row.append(l1, l2);
   return row;
 }
