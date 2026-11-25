@@ -510,22 +510,20 @@
             <a class="profile-link" href="/xera/whitepaper.html"><img src="/assets/images/xera-token-logo-32.png" alt="" width="40" height="40" loading="lazy"/><span>Whitepaper</span></a>
             <button type="button" class="profile-link" id="profileOpenStats"><img src="/assets/images/xeracoin-round.png" alt="" width="40" height="40" loading="lazy"/><span>XERA statistics</span></button>
             <a class="profile-link" href="/appevoxera"><img src="/assets/images/evoxera-mark.png" alt="" width="40" height="40" loading="lazy"/><span>Back to EVOS Hub</span></a>
-          </div>
 
-          <div class="mini-card" id="deleteAccountCard" hidden>
-            <div class="mini-card-head"><span class="mini-card-title">Delete account</span></div>
-            <div id="daStartBox">
-              <p class="rd-fine" style="margin-bottom:10px">Delete your account and personal details. You get <span data-da-days>7</span> days to change your mind.</p>
-              <button type="button" class="btn btn-ghost" id="daOpen" style="width:100%;color:#ff8a8a;border-color:rgba(255,107,107,.35)">Delete my account</button>
+            <!-- Delete account: a bin tile in the grid. The grey/pending/blocked states open below it, full width. -->
+            <div class="da-slot" id="deleteAccountCard" hidden>
+              <div class="da-slot" id="daStartBox">
+                <button type="button" class="profile-link profile-link-danger" id="daOpen" aria-label="Delete account" title="Delete account (you get a few days to change your mind)"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg><span>Delete account</span></button>
+              </div>
+              <div class="mini-card da-wide" id="daPendingBox" hidden>
+                <p class="rd-fine" id="daPendingText" style="margin-bottom:10px"></p>
+                <button type="button" class="btn" id="daUndo" style="width:100%">Cancel deletion</button>
+              </div>
+              <p class="rd-fine da-wide" id="daBlocked" style="color:#ffb86b" hidden></p>
             </div>
-            <div id="daPendingBox" hidden>
-              <p class="rd-fine" id="daPendingText" style="margin-bottom:10px"></p>
-              <button type="button" class="btn" id="daUndo" style="width:100%">Cancel deletion</button>
-            </div>
-            <p class="rd-fine" id="daBlocked" style="margin-top:10px;color:#ffb86b" hidden></p>
+            <button type="button" class="profile-link profile-link-danger" id="logoutProfile" aria-label="Sign out"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M16 8l4 4-4 4"/><path d="M20 12H9"/></svg><span>Sign out</span></button>
           </div>
-
-          <button type="button" class="btn logout-btn" id="logoutProfile">Sign out</button>
         </section>
 
       </div>

@@ -328,6 +328,14 @@ button{-webkit-tap-highlight-color:transparent}
 .profile-link img{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#fff;flex:none}
 .profile-link span{min-width:0;word-break:break-word}
 .logout-btn{background:transparent;border:1px solid var(--border-strong);color:var(--danger);margin-top:6px}
+/* Delete (bin) and Sign out sit in the same grid as the other profile tiles */
+.da-slot{display:contents}
+.da-slot[hidden]{display:none}
+.da-wide{grid-column:1 / -1;margin:0}
+.profile-link.profile-link-danger{color:#ff8a8a;border-color:rgba(255,107,107,.35)}
+.profile-link.profile-link-danger svg{flex:none}
+.profile-link.profile-link-danger:hover{border-color:rgba(255,107,107,.7);box-shadow:0 0 24px rgba(255,90,110,.12)}
+.profile-link:disabled{opacity:.45;cursor:not-allowed}
 
 .balance-block{
     text-align:center;
