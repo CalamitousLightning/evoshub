@@ -176,9 +176,9 @@ function confirmManualWithdraw(wallet, amountText) {
             h('h3', { style: 'margin:0;font-size:1.05rem', text: 'Check the address before you withdraw' }),
             h('p', { style: 'margin:0;font-size:.85rem;line-height:1.45;color:#aeb8d0', text: `${amountText ? `${amountText} XERA will be` : 'XERA will be'} sent to this address. This address was typed in, not verified by your wallet. XERA sent to a wrong address cannot be recovered.` }),
             addressWithEnds(wallet.address),
-            h('p', { style: 'margin:0;font-size:.85rem;line-height:1.45;color:#aeb8d0', text: 'Compare the first 6 and last 6 characters (green) with the address in your wallet app.' }),
+            h('p', { style: 'margin:0;font-size:.85rem;line-height:1.45;color:#aeb8d0', text: 'Compare the first 6 and last 6 characters (green) with the address in your wallet app. You will then confirm in a wallet that has a little BNB for the network fee; it can be a different wallet, and the XERA still goes to the address above.' }),
             h('label', { for: 'mwdCheck', style: 'display:flex;gap:8px;align-items:flex-start;font-size:.85rem;line-height:1.4' }, check,
-                h('span', { text: 'I checked this address. It is my own wallet and it holds BNB for the network fee.' })),
+                h('span', { text: 'I checked this address. It is my own wallet.' })),
             pw, err,
             h('div', { style: 'display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap' }, cancel, go),
         );
@@ -287,6 +287,16 @@ function hexToInt(hex) { return parseInt(hex, 16); }
 
 async function readChainId(provider, fallback = null) {
     try { return hexToInt(await provider.request({ method: 'eth_chainId' })); } catch (_e) { return fallback; }
+}
+
+// The accounts a wallet connection is sharing with this page. A restored WalletConnect session can be alive but share
+// nothing (expired, or the wallet app was closed), so an empty answer gets one explicit request before we give up.
+async function readAccounts(provider) {
+    let accts = [];
+    try { accts = await provider.request({ method: 'eth_accounts' }); } catch (_e) { /* locked */ }
+    if (Array.isArray(accts) && accts.length) return accts;
+    try { accts = await provider.request({ method: 'eth_requestAccounts' }); } catch (_e) { accts = []; }
+    return Array.isArray(accts) ? accts : [];
 }
 
 function attachProviderListeners(entry) {
@@ -513,7 +523,7 @@ function renderWalletCard(chain) {
     card.append(
         walletCardHeader(chain, 'Manual address · not verified', 'warn'),
         addressRow(w),
-        h('p', { class: 'chain-manual-hint', text: 'Saved. Withdrawals ask for your password, and this wallet needs a little BNB for gas.' }),
+        h('p', { class: 'chain-manual-hint', text: 'Saved. Withdrawals ask for your password. You confirm with any wallet that has a little BNB for the network fee; your XERA goes to this address.' }),
         manualWaitNote(w),
         h('div', { class: 'chain-actions' },
             connectBtn('Verify with wallet'),
@@ -1050,7 +1060,7 @@ async function readBnbBalance(address, provider) {
 }
 
 function lowBnbMessage(balance, manual) {
-    return `You need a little BNB for the network fee. Your wallet has ${fmtBnb(balance)} BNB. Add a small amount of BNB to ${manual ? 'the wallet address you saved for withdrawals' : 'your linked wallet'}, then try again.`;
+    return `You need a little BNB for the network fee. Your wallet has ${fmtBnb(balance)} BNB. Add a small amount of BNB to ${manual ? 'the wallet you use to confirm the withdrawal (it pays the network fee)' : 'your linked wallet'}, then try again.`;
 }
 
 // Shows the wallet's BNB balance on the claim card and (user mode only) holds the button back when
@@ -1062,6 +1072,14 @@ async function refreshGasNote() {
     state.gasLow = false;
     if (CFG.relay || !w || (!w.verified && !isManual(w))) { el.hidden = true; updateClaimPreview(); return; }
     await loadNetworkConfig();
+    if (isManual(w)) {
+        // The wallet that pays the fee is only known once it is connected at withdrawal time, so no balance gate here.
+        el.hidden = false;
+        el.className = 'chain-gas-note ok';
+        el.textContent = 'Network fee: you pay a small BNB fee from the wallet you use to confirm the withdrawal. Your XERA goes to the address you saved.';
+        updateClaimPreview();
+        return;
+    }
     const bal = await readBnbBalance(w.address, null);
     if (bal === null) { el.hidden = true; updateClaimPreview(); return; }
     state.gasLow = bal < MIN_BNB_FOR_GAS;
@@ -1223,7 +1241,7 @@ async function checkTransferReady(errEl) {
 // The linked wallet is verified, but this visit has no live connection to it (page reloaded, or the
 // WalletConnect session expired, or this browser has no wallet extension). Open the wallet picker so the
 // user can reconnect it, and make sure it is the SAME wallet that is linked to the account.
-async function reconnectLinkedWallet(wallet) {
+async function reconnectLinkedWallet(wallet, { any = false } = {}) {
     if (!appKitConfigured()) return null;
     let picked;
     try {
@@ -1233,10 +1251,11 @@ async function reconnectLinkedWallet(wallet) {
         throw err;
     }
     if (!picked || !picked.address) return null;
-    if (picked.address.toLowerCase() !== wallet.address.toLowerCase()) {
+    // any: a withdrawal to a typed address may be confirmed from any wallet (it only pays the network fee).
+    if (!any && picked.address.toLowerCase() !== wallet.address.toLowerCase()) {
         throw userError(`That wallet (${shorten(picked.address)}) is not the one linked to your account (${shorten(wallet.address)}). Connect the linked wallet, or use “Change wallet” above to link this one.`);
     }
-    return { info: { uuid: 'appkit', name: 'WalletConnect', icon: '' }, provider: picked.provider, appkit: true, chainId: picked.chainId };
+    return { info: { uuid: 'appkit', name: 'WalletConnect', icon: '' }, provider: picked.provider, appkit: true, chainId: picked.chainId, address: picked.address };
 }
 
 // Settlement, in order:
@@ -1293,7 +1312,7 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
         if (!providers.length) {
             // No live wallet connection: reconnect the linked wallet through the picker instead of dead-ending.
             if (button) button.textContent = 'Connect your wallet…';
-            const again = await reconnectLinkedWallet(wallet);
+            const again = await reconnectLinkedWallet(wallet, { any: manual });
             if (again) providers = [again];
         }
         if (!providers.length) throw userError('Your wallet is linked, but this browser can’t reach it right now. Tap “Change wallet” above to reconnect it, or open this page inside your wallet app’s browser (Trust Wallet, MetaMask, Binance…), then try again. Nothing was reserved.');
@@ -1307,15 +1326,25 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
                 } catch (_e) { /* wallet locked */ }
             }
         }
+        if (!entry && manual) entry = providers[0];     // a typed address: any wallet can confirm and pay the fee
         if (!entry) throw userError('Several wallets are installed. Use “Change wallet” above to pick the one linked to this account, then try again.');
+
+        // A withdrawal to a typed address is confirmed from WHICHEVER wallet the user connects: that wallet only
+        // pays the network fee, the XERA always goes to the saved address (the contract sends it to the address in
+        // the server-signed claim, whoever submits it). We only need a connected account that can pay.
+        let payerAccount = null;
         if (manual) {
-            // The wallet that sends the transaction must be the saved address: it pays the gas, and
-            // being able to use it is the proof that the address is really yours.
-            let accts = [];
-            try { accts = await entry.provider.request({ method: 'eth_accounts' }); } catch (_e) { /* locked */ }
-            if (!accts.some((a) => a.toLowerCase() === wallet.address.toLowerCase())) {
-                throw userError(`Your wallet is connected as ${accts[0] ? shorten(accts[0]) : 'a different account'}, but the address saved for withdrawals is ${shorten(wallet.address)}. Open the wallet that owns the saved address, then try again. Nothing was reserved.`);
+            let accts = await readAccounts(entry.provider);
+            if (!accts.length && appKitConfigured()) {
+                // The connection exists but shares no account (expired session): reconnect through the picker.
+                if (button) button.textContent = 'Connect your wallet…';
+                const again = await reconnectLinkedWallet(wallet, { any: true });
+                if (again) { entry = again; accts = await readAccounts(entry.provider); if (!accts.length && again.address) accts = [again.address]; }
             }
+            if (!accts.length) {
+                throw userError('Your wallet is not sharing an account with this page yet. Open your wallet app, connect it to this site, then try again. Nothing was reserved.');
+            }
+            payerAccount = accts.find((a) => a.toLowerCase() === wallet.address.toLowerCase()) || accts[0];
         }
         state.provider = entry;
         attachProviderListeners(entry);
@@ -1329,11 +1358,13 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
         // Check BEFORE the server signs: signing reserves the amount, and a claim that can't be
         // sent for lack of gas would just sit as "in progress". Uses the account that will pay.
         if (!CFG.relay) {
-            let payer = wallet.address;
-            try {
-                const accts = await entry.provider.request({ method: 'eth_accounts' });
-                payer = accts.find((a) => a.toLowerCase() === wallet.address.toLowerCase()) || accts[0] || payer;
-            } catch (_e) { /* keep the linked address */ }
+            let payer = payerAccount || wallet.address;
+            if (!payerAccount) {
+                try {
+                    const accts = await entry.provider.request({ method: 'eth_accounts' });
+                    payer = accts.find((a) => a.toLowerCase() === wallet.address.toLowerCase()) || accts[0] || payer;
+                } catch (_e) { /* keep the linked address */ }
+            }
             const bal = await readBnbBalance(payer, entry.provider);
             if (bal !== null && bal < MIN_BNB_FOR_GAS) throw userError(lowBnbMessage(bal, manual));
         }
