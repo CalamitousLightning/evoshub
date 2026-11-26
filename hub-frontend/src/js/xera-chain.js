@@ -430,6 +430,29 @@ async function addXeraToWallet(btn, msgEl) {
     }
 }
 
+// After a successful claim, ask the wallet to start tracking XERA so the balance shows up without a manual step.
+// Best effort: wallets that can't do it (or a declined prompt) just leave the "Add XERA to my wallet" button to use.
+async function autoAddXeraAfterClaim() {
+    try {
+        const net = state.network;
+        const addr = net && net.xera_token_address;
+        if (!addr) return;
+        let provider = state.provider && state.provider.provider;
+        if (!provider) {
+            const restored = await restoredAppKitProvider(net.chain_id, 3000);
+            provider = restored && restored.provider;
+        }
+        if (!provider || typeof provider.request !== 'function') return;
+        const chainId = await readChainId(provider, state.providerChainId);
+        if (chainId != null && Number(chainId) !== Number(net.chain_id)) return;
+        const ok = await provider.request({
+            method: 'wallet_watchAsset',
+            params: { type: 'ERC20', options: { address: addr, symbol: XERA_TOKEN_SYMBOL, decimals: XERA_TOKEN_DECIMALS, image: XERA_TOKEN_LOGO } },
+        });
+        if (ok) setNotice('Moved on-chain. XERA has been added to your wallet.');
+    } catch (_e) { /* declined or unsupported: the manual button still works */ }
+}
+
 function xeraTokenRow() {
     const net = state.network;
     if (!net || !net.xera_token_address) return null;
@@ -1404,6 +1427,7 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
         forgetPendingTx(referenceId);
         signedClaims.delete(referenceId);
         setNotice(`Moved on-chain. Transaction ${shorten(tx.hash)}`);
+        await autoAddXeraAfterClaim();
         window.open(explorerTx('BNB', tx.hash), '_blank', 'noopener');
         const amt = $('chainClaimAmount'); if (amt) amt.value = '';
     } catch (err) {
@@ -1434,6 +1458,7 @@ async function settleViaRelayer({ busyKey, button, idleLabel, body }) {
         const res = await req(PFX + '/claim/relay', { method: 'POST', body: JSON.stringify({ chain: 'BNB', ...body }) });
         if (res.confirmed) {
             setNotice(`Moved on-chain. Transaction ${shorten(res.transaction_hash)}`);
+            await autoAddXeraAfterClaim();
             window.open(explorerTx('BNB', res.transaction_hash), '_blank', 'noopener');
             const amt = $('chainClaimAmount'); if (amt) amt.value = '';
         } else {
