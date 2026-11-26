@@ -1,0 +1,39 @@
+/* XERA dashboard cards: a futuristic XERA picture behind each card, dimmed so the text stays easy to read.
+   Images are small copies (about 30 KB) in /assets/images/xera-cards/ and load lazily with the card. */
+.mini-card.sq-card.rd-status-card,
+.mini-card.rewards-mini {
+  background-image: linear-gradient(180deg, rgba(6,8,16,.38) 0%, rgba(6,8,16,.7) 60%, rgba(6,8,16,.88) 100%), var(--card-art);
+  background-size: auto 165%;
+  background-position: 4% 40%;
+  background-repeat: no-repeat;
+}
+#notifCard { --card-art: url(/assets/images/xera-cards/card-notifications.jpg); }
+#kycCard   { --card-art: url(/assets/images/xera-cards/card-verification.jpg); }
+#feeCard   { --card-art: url(/assets/images/xera-cards/card-fee.jpg); }
+#hashCard  { --card-art: url(/assets/images/xera-cards/card-hashrate.jpg); }
+#rewardsMiniDash { --card-art: url(/assets/images/xera-cards/card-daily.jpg); background-size: 125% auto; background-position: 0% 45%; }
+.mini-card.sq-card.rd-status-card .sq-title,
+.mini-card.sq-card.rd-status-card .sq-label,
+.mini-card.rewards-mini .mini-card-title { text-shadow: 0 1px 8px rgba(0,0,0,.7); }
+.mini-card.sq-card.rd-status-card .sq-hint { color: rgba(226,236,255,.82); text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+
+/* Other tabs: same pictures, faded in from the right so the text on the left stays easy to read. */
+[data-panel="rewards"] > .mini-card:first-child,
+.coming-later-item,
+.wp-stat,
+.chip,
+.daily-card {
+  background-image: linear-gradient(90deg, rgba(6,8,16,.94) 0%, rgba(6,8,16,.78) 50%, rgba(6,8,16,.38) 100%), var(--card-art, none);
+  background-size: cover;
+  background-position: 100% 50%;
+  background-repeat: no-repeat;
+}
+[data-panel="rewards"] > .mini-card:first-child { --card-art: url(/assets/images/xera-cards/card-daily.jpg); }
+.coming-later-item:nth-child(1) { --card-art: url(/assets/images/xera-cards/card-hashrate.jpg); }
+.coming-later-item:nth-child(2) { --card-art: url(/assets/images/xera-cards/card-notifications.jpg); }
+.wp-stat:nth-child(odd)  { --card-art: url(/assets/images/xera-cards/card-fee.jpg); }
+.wp-stat:nth-child(even) { --card-art: url(/assets/images/xera-cards/card-verification.jpg); }
+.chip-row .chip:nth-child(1) { --card-art: url(/assets/images/xera-cards/card-fee.jpg); background-size: auto 230%; }
+.chip-row .chip:nth-child(2) { --card-art: url(/assets/images/xera-cards/card-hashrate.jpg); background-size: auto 230%; }
+.chip-row .chip:nth-child(3) { --card-art: url(/assets/images/xera-cards/card-notifications.jpg); background-size: auto 230%; }
+.daily-card { --card-art: url(/assets/images/xera-cards/card-daily.jpg); }
