@@ -1,0 +1,34 @@
+/* Home: the daily reward sits right under the mining card as a slim notification strip,
+   and the mining card shrinks to a compact row while a session is running. */
+
+/* Compact mining card while mining is active (idle and ready keep the big card + button). */
+.home-hero[data-state="active"]{
+  display:grid;grid-template-columns:124px 1fr;
+  grid-template-areas:"ring status" "ring cta" "ring earn" "hint hint";
+  align-items:center;text-align:left;gap:8px 16px;padding:14px 16px;margin:10px 0 8px;
+}
+.home-hero[data-state="active"] .hh-ring{grid-area:ring;width:124px;height:124px;align-self:center;justify-self:center}
+.home-hero[data-state="active"] .hh-status{grid-area:status;justify-content:flex-start;font-size:.72rem}
+.home-hero[data-state="active"] .hh-cta{grid-area:cta;width:100%;min-height:0;padding:11px 14px;font-size:.95rem}
+.home-hero[data-state="active"] .hh-earn{grid-area:earn;justify-content:flex-start;font-size:.72rem;padding:5px 10px;width:fit-content;max-width:100%}
+.home-hero[data-state="active"] .hh-hint,
+.home-hero[data-state="active"] .banner-error{grid-area:hint;margin:0;text-align:center}
+.home-hero[data-state="active"] .hh-hint:empty,
+.home-hero[data-state="active"] .banner-error:empty{display:none}
+.home-hero[data-state="active"] .hh-time{font-size:.95rem;text-align:center;bottom:20%}
+
+/* Daily reward strip. */
+#rewardsMiniDash:not([hidden]){
+  display:flex;flex-direction:row;align-items:center;gap:12px;
+  padding:10px 12px 10px 14px;margin:0 0 14px;
+  border:1px solid rgba(51,230,200,.5);
+  box-shadow:0 0 0 1px rgba(51,230,200,.12),0 6px 22px rgba(51,230,200,.18);
+  background-image:linear-gradient(90deg,rgba(6,8,16,.96) 0%,rgba(6,8,16,.86) 55%,rgba(6,8,16,.45) 100%),var(--card-art);
+  background-size:cover;background-position:100% 50%;
+}
+#rewardsMiniDash .mini-card-head{display:none}
+#rewardsMiniDash .daily-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+#rewardsMiniDash .daily-info::before{content:"\25CF  DAILY REWARD READY";font-size:.62rem;letter-spacing:.1em;color:#33e6c8;font-weight:700}
+#rewardsMiniDash .daily-amount{font-size:1.05rem}
+#rewardsMiniDash .daily-streak{font-size:.72rem}
+#rewardsMiniDash .daily-btn{width:auto;margin:0;padding:9px 20px;flex:0 0 auto;position:relative;z-index:2}

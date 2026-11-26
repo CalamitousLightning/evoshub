@@ -302,7 +302,8 @@ function renderDaily(daily) {
         : 'Claim daily to start a streak';
 
     // Dashboard mini card (same data, compact)
-    $('rewardsMiniDash').hidden = false;
+    // Only show the strip under the mining card while a claim is ready; once claimed it disappears until the next reward.
+    $('rewardsMiniDash').hidden = !daily.can_claim;
     $('dailyAmountDash').textContent = fmt(daily.reward_amount);
     $('dailyStreakDash').textContent = daily.streak > 0 ? `${daily.streak}-day streak` : 'Start a streak';
 
