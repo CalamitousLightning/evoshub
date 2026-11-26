@@ -283,10 +283,26 @@ async function activeProviders() {
     return discoverProviders();
 }
 
-function hexToInt(hex) { return parseInt(hex, 16); }
+// Wallets report the chain in different shapes: '0x38', 56, '56', 'eip155:56'. Reading '56' as hex gave 86, which is
+// what made the page call a correct BNB wallet an "unsupported network".
+function toChainNumber(v) {
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    if (typeof v !== 'string') return null;
+    const s = v.trim().toLowerCase().replace(/^eip155:/, '');
+    if (/^0x[0-9a-f]+$/.test(s)) return parseInt(s, 16);
+    if (/^\d+$/.test(s)) return parseInt(s, 10);
+    return null;
+}
+function hexToInt(v) { return toChainNumber(v); }
 
+// For a WalletConnect/AppKit connection, AppKit's own live chain id is the source of truth.
 async function readChainId(provider, fallback = null) {
-    try { return hexToInt(await provider.request({ method: 'eth_chainId' })); } catch (_e) { return fallback; }
+    const live = liveWalletSession();
+    if (live && live.provider === provider && live.chainId != null) return live.chainId;
+    try {
+        const n = toChainNumber(await provider.request({ method: 'eth_chainId' }));
+        return n != null ? n : fallback;
+    } catch (_e) { return fallback; }
 }
 
 // The accounts a wallet connection is sharing with this page. A restored WalletConnect session can be alive but share
@@ -303,7 +319,7 @@ function attachProviderListeners(entry) {
     const p = entry.provider;
     if (!p.on || entry.__listening) return;
     entry.__listening = true;
-    p.on('chainChanged', (hex) => { state.providerChainId = hexToInt(hex); renderNetworkBanner(); });
+    p.on('chainChanged', (v) => { const n = toChainNumber(v); if (n != null) state.providerChainId = n; renderNetworkBanner(); });
     // Switching accounts in the wallet means the connected address may no longer
     // be the linked one — just refresh the view; claims always go to the LINKED address.
     p.on('accountsChanged', () => { renderNetworkBanner(); });
@@ -328,7 +344,7 @@ function renderNetworkBanner() {
     el.append(h('span', { class: 'chain-network-expected', text: `Network: ${expected.name}` }));
 
     if (state.provider && walletId !== null) {
-        if (walletId === expected.chain_id) {
+        if (Number(walletId) === Number(expected.chain_id)) {
             el.className = 'chain-network ok';
             el.append(h('span', { class: 'chain-network-state', text: 'Your wallet is on the right network.' }));
         } else {
@@ -1351,7 +1367,7 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
         state.providerChainId = await readChainId(entry.provider, entry.chainId);
         renderNetworkBanner();
 
-        if (state.network && state.providerChainId !== state.network.chain_id) {
+        if (state.network && Number(state.providerChainId) !== Number(state.network.chain_id)) {
             throw userError(`Wrong network. Please switch your wallet to ${state.network.name} before continuing.`);
         }
 
@@ -1513,7 +1529,7 @@ async function claimLegacyMigration() {
         const entry = providers[0];
         if (!entry) throw userError('No browser wallet detected. Open this page in a wallet-enabled browser to confirm the transaction.');
         state.providerChainId = await readChainId(entry.provider, entry.chainId);
-        if (state.network && state.providerChainId !== state.network.chain_id) {
+        if (state.network && Number(state.providerChainId) !== Number(state.network.chain_id)) {
             throw userError(`Wrong network. Please switch your wallet to ${state.network.name} before continuing.`);
         }
         const { claim } = await req(PFX + '/migration/claim/prepare', { method: 'POST', body: JSON.stringify({ chain: 'BNB' }) });
