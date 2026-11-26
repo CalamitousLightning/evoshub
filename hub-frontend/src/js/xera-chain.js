@@ -293,6 +293,18 @@ function toChainNumber(v) {
     if (/^\d+$/.test(s)) return parseInt(s, 10);
     return null;
 }
+// On a phone the wallet app is not in front when we send it a request (approve a claim, switch network, add token),
+// so the user sees nothing happen. Run the request, and after a moment jump to the wallet app the user picked.
+// Only for WalletConnect connections; wallets with an in-page provider show their own prompt.
+const IS_PHONE = typeof navigator !== 'undefined' && /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+async function withWalletRedirect(entry, fn, delayMs = 1500) {
+    if (!IS_PHONE || !entry || !entry.appkit) return fn();
+    nudgeAppKitConnection();
+    await waitForRelay(4000);
+    const timer = setTimeout(() => { openChosenWalletApp(); }, delayMs);     // lets the request leave the page first
+    try { return await fn(); } finally { clearTimeout(timer); }
+}
+
 function hexToInt(v) { return toChainNumber(v); }
 
 // For a WalletConnect/AppKit connection, AppKit's own live chain id is the source of truth.
@@ -367,7 +379,7 @@ async function switchNetwork() {
     if (!state.provider || !net) return;
     const { provider } = state.provider;
     if (state.provider.appkit) {
-        await switchAppKitNetwork(net.chain_id);
+        await withWalletRedirect(state.provider, () => switchAppKitNetwork(net.chain_id));
         state.providerChainId = net.chain_id;
         renderNetworkBanner();
         return;
@@ -417,10 +429,10 @@ async function addXeraToWallet(btn, msgEl) {
     }
     btn.disabled = true;
     try {
-        const ok = await provider.request({
+        const ok = await withWalletRedirect(state.provider, () => provider.request({
             method: 'wallet_watchAsset',
             params: { type: 'ERC20', options: { address: addr, symbol: XERA_TOKEN_SYMBOL, decimals: XERA_TOKEN_DECIMALS, image: XERA_TOKEN_LOGO } },
-        });
+        }));
         say(ok ? 'XERA added to your wallet.' : 'Not added — you can tap again any time.');
     } catch (err) {
         if (err && err.code === 4001) say('Cancelled in your wallet.');
@@ -445,10 +457,10 @@ async function autoAddXeraAfterClaim() {
         if (!provider || typeof provider.request !== 'function') return;
         const chainId = await readChainId(provider, state.providerChainId);
         if (chainId != null && Number(chainId) !== Number(net.chain_id)) return;
-        const ok = await provider.request({
+        const ok = await withWalletRedirect(state.provider, () => provider.request({
             method: 'wallet_watchAsset',
             params: { type: 'ERC20', options: { address: addr, symbol: XERA_TOKEN_SYMBOL, decimals: XERA_TOKEN_DECIMALS, image: XERA_TOKEN_LOGO } },
-        });
+        }));
         if (ok) setNotice('Moved on-chain. XERA has been added to your wallet.');
     } catch (_e) { /* declined or unsupported: the manual button still works */ }
 }
@@ -1418,7 +1430,7 @@ async function settleWithWallet({ busyKey, button, idleLabel, fetchClaim, knownR
         const browserProvider = new BrowserProvider(entry.provider);
         const signer = await browserProvider.getSigner();
         const contract = new Contract(claim.contract_address, [DISTRIBUTOR_CLAIM_ABI], signer);
-        const tx = await contract.claim(claim.user, claim.amount_wei, claim.reference_id_hash, claim.deadline, claim.signature);
+        const tx = await withWalletRedirect(entry, () => contract.claim(claim.user, claim.amount_wei, claim.reference_id_hash, claim.deadline, claim.signature));
         rememberPendingTx(referenceId, tx.hash);   // so a failed confirm call can be retried without re-sending
 
         if (button) button.textContent = 'Waiting for network…';
@@ -1563,7 +1575,7 @@ async function claimLegacyMigration() {
         const abi = 'function claim(uint256 leafIndex,address account,uint256 amount,bytes32[] proof)';
         const contract = new Contract(claim.contract_address, [abi], signer);
         const account = await signer.getAddress();
-        const tx = await contract.claim(claim.leaf_index, account, claim.amount_wei, claim.merkle_proof);
+        const tx = await withWalletRedirect(entry, () => contract.claim(claim.leaf_index, account, claim.amount_wei, claim.merkle_proof));
         await tx.wait();
         await req(PFX + '/migration/claim/confirm', { method: 'POST', body: JSON.stringify({ chain: 'BNB', transaction_hash: tx.hash }) });
         await loadMigrationStatus();
@@ -1630,7 +1642,7 @@ function initChainPanel() {
     if (CFG.autoOpen) openChainTab();
     returnToWalletScreen();
     // Back from the wallet app without a reload (tab was only in the background): finish the link too.
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && linkPendingFresh()) { nudgeAppKitConnection(); resumePendingBnbLink(); } });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') nudgeAppKitConnection(); if (document.visibilityState === 'visible' && linkPendingFresh()) { nudgeAppKitConnection(); resumePendingBnbLink(); } });
 }
 
 if (document.readyState === 'loading') {
