@@ -1228,6 +1228,10 @@ function renderClaimRow(c) {
         row.append(h('span', { class: 'chain-pill ok', text: `Settled on ${c.chain || 'chain'}` }));
         return row;
     }
+    if (status === 'CANCELLED') {
+        row.append(h('span', { class: 'chain-pill', text: 'Cancelled — refunded to your balance' }));
+        return row;
+    }
 
     const savedHash = pendingTxs()[ref];
     // A transaction we already sent can still be confirmed even if the signature window has since closed.
@@ -1249,8 +1253,27 @@ function renderClaimRow(c) {
     }
     // FAILED / EXPIRED: the funds are still held for this claim — re-sign the SAME claim.
     const btn = h('button', { type: 'button', class: 'btn btn-sm', text: 'Try again', onclick: () => retryClaim(ref, btn) });
-    row.append(btn);
+    const cancelBtn = h('button', { type: 'button', class: 'btn btn-sm btn-ghost', text: 'Cancel', onclick: () => cancelClaim(ref, cancelBtn) });
+    row.append(btn, ' ', cancelBtn);
     return row;
+}
+
+// Give an unfinished claim back to the in-app Pure XERA balance. The server only allows it once the old signature
+// has expired and the contract confirms nothing was paid out. (It also happens by itself 2 hours after signing.)
+async function cancelClaim(ref, btn) {
+    $('chainClaimError').textContent = '';
+    if (!window.confirm('Cancel this claim and return the XERA to your Pure XERA balance?')) return;
+    btn.disabled = true;
+    try {
+        const res = await req(PFX + '/claim/cancel', { method: 'POST', body: JSON.stringify({ reference_id: ref }) });
+        forgetPendingTx(ref);
+        signedClaims.delete(ref);
+        setNotice(res && res.refunded ? `Claim cancelled. ${res.refunded} XERA is back in your Pure XERA balance.` : 'Claim cancelled.');
+        await Promise.all([loadClaimables(), loadVestingStatus()]);
+    } catch (err) {
+        $('chainClaimError').textContent = userMessage(err, 'Could not cancel this claim. Please try again in a moment.');
+        btn.disabled = false;
+    }
 }
 
 async function confirmSaved(ref, hash) {
